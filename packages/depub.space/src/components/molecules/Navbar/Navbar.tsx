@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Text, HStack, Box, StatusBar, Flex } from 'native-base';
+import { Link, Text, HStack, Box, StatusBar, Flex } from 'native-base';
 import { LogoIcon } from '../../atoms';
 
 export interface NavbarProps {
@@ -32,7 +32,9 @@ export const Navbar: FC<NavbarProps> = ({ walletAddress }) => {
         <Box flex={1} />
 
         <Box alignItems="center" flex={1} justifyContent="center">
-          <LogoIcon width="160px" />
+          <Link href="/">
+            <LogoIcon width="160px" />
+          </Link>
         </Box>
 
         <HStack flex={1}>

@@ -45,7 +45,7 @@ export default function IndexPage() {
   return account ? (
     <Layout metadata={{ title: walletAddress }} walletAddress={walletAddress}>
       <VStack h="100%" maxWidth="480px" mx="auto" px={4} space={8} w="100%">
-        <Heading>{account}</Heading>
+        <Heading fontSize="xl">{account}</Heading>
 
         <Divider />
         <FlatList<Message>
