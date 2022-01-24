@@ -1,7 +1,7 @@
 # @generated: @expo/next-adapter@3.1.10
-/.expo/*
+.expo/*
 # Expo Web
-/web-build/*
+web-build/*
 # Expo Native
 *.jks
 *.p8
