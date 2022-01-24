@@ -38,6 +38,8 @@ export default class MyDocument extends Document {
   public static async getInitialProps({ renderPage }: DocumentContext) {
     AppRegistry.registerComponent(config.name, () => Main);
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     const { getStyleElement } = AppRegistry.getApplication(config.name);
     const page = await renderPage();
     const styles = [
