@@ -118,7 +118,7 @@ export const AppStateProvider: FC = ({ children }) => {
         await client.connect(PUBLIC_RPC_ENDPOINT);
 
         const makeFetchRequest = async (nextSeq: number) => {
-          const res = await client.queryRecordsByOwner(owner);
+          const res = await client.queryRecordsByOwner(owner, nextSeq);
 
           debug('fetchMessagesByOwner(nextSeq: %d) -> records: %O', nextSeq, res);
 

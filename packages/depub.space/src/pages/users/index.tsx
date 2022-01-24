@@ -1,13 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { useToast, Divider, VStack, Heading, FlatList } from 'native-base';
-import { useRouter } from 'next/router';
+import {
+  Link,
+  Box,
+  IconButton,
+  HStack,
+  useToast,
+  Divider,
+  VStack,
+  Heading,
+  FlatList,
+  Avatar,
+} from 'native-base';
+import { Platform } from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
 import { MessageRow, Layout } from '../../components';
 import { Message, useAppState, useSigningCosmWasmClient } from '../../hooks';
 
 export default function IndexPage() {
+  const urlParams = new URLSearchParams(
+    typeof window !== 'undefined' ? window.location.search : ''
+  );
+  const account = urlParams.get('account');
+  const shortenAccount = account ? `${account.slice(0, 10)}...${account.slice(-4)}` : '';
   const [messages, setMessages] = useState<Message[]>([]);
-  const router = useRouter();
-  const account = router.query.account?.toString();
   const { error: connectError, walletAddress } = useSigningCosmWasmClient();
   const { isLoading, fetchMessagesByOwner } = useAppState();
   const toast = useToast();
@@ -22,6 +37,10 @@ export default function IndexPage() {
     // eslint-disable-next-line func-names
     void (async function () {
       if (!account) {
+        if (Platform.OS === 'web') {
+          window.location.href = '/';
+        }
+
         return;
       }
 
@@ -31,6 +50,7 @@ export default function IndexPage() {
         setMessages(res.messages);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchMessagesByOwner, account]);
 
   useEffect(() => {
@@ -45,7 +65,24 @@ export default function IndexPage() {
   return account ? (
     <Layout metadata={{ title: walletAddress }} walletAddress={walletAddress}>
       <VStack h="100%" maxWidth="480px" mx="auto" px={4} space={8} w="100%">
-        <Heading fontSize="xl">{account}</Heading>
+        <HStack alignItems="center" flex={1} justifyContent="center" space={2}>
+          <Link href="/">
+            <IconButton
+              _icon={{
+                as: AntDesign,
+                name: 'back',
+              }}
+            />
+          </Link>
+          <HStack alignItems="center" flex={1} justifyContent="center" space={2}>
+            <Avatar bg="black" size="md" />
+            <Heading fontSize="xl" textAlign="center">
+              {shortenAccount}
+            </Heading>
+          </HStack>
+
+          <Box w="48px" />
+        </HStack>
 
         <Divider />
         <FlatList<Message>

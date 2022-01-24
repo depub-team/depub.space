@@ -27,7 +27,7 @@ export const MessageRow: FC<MessageRowProps> = ({
         <VStack flex={1} space={2}>
           <HStack alignItems="center" justifyContent="space-between">
             <Skeleton.Text isLoaded={!isLoading} lines={1}>
-              <Link href={`/users/${from}`}>
+              <Link href={`/users?account=${from}`}>
                 <Text fontSize="sm" fontWeight="bold">
                   {shortenWalletAddress}
                 </Text>

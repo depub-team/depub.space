@@ -119,9 +119,19 @@ export default function IndexPage() {
     date: new Date(),
   }));
 
+  const fetchNewMessages = async () => {
+    const res = await fetchMessages();
+
+    if (res) {
+      setMessages(res.messages);
+    }
+  };
+
   const handleOnSubmit: SubmitHandler<MessageFormType> = async data => {
     try {
       const txn = await postMessage(data.message);
+
+      await fetchNewMessages();
 
       if (txn) {
         toast.show({
@@ -141,15 +151,9 @@ export default function IndexPage() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line func-names
-    void (async function () {
-      const res = await fetchMessages();
-
-      if (res) {
-        setMessages(res.messages);
-      }
-    })();
-  }, [fetchMessages]);
+    void fetchNewMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (connectError) {

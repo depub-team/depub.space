@@ -43,7 +43,7 @@ export const Navbar: FC<NavbarProps> = ({ walletAddress }) => {
               bg="black"
               borderRadius="full"
               color="white"
-              fontSize="2xs"
+              fontSize={{ base: '2xs', md: 'sm' }}
               ml="auto"
               px={2}
               py={1}

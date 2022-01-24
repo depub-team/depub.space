@@ -17,8 +17,9 @@ export const theme = extendTheme({
     },
   },
   fonts: {
+    body: 'Inter',
+    heading: 'Inter_bold',
     monospace: 'Courier, Monaco, monospace',
-    Georgia: 'Georgia, serif',
   },
   components: {
     Text: {
@@ -74,13 +75,6 @@ export const theme = extendTheme({
     Heading: {
       baseStyle: {
         color: 'primary.500',
-      },
-    },
-    Link: {
-      defaultProps: {
-        _hover: {
-          textDecoration: 'underline',
-        },
       },
     },
   },
