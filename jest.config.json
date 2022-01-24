@@ -1,0 +1,49 @@
+{
+  "roots": [
+    "<rootDir>/packages"
+  ],
+  "testEnvironment": "jest-environment-jsdom-sixteen",
+  "moduleFileExtensions": [
+    "ts",
+    "tsx",
+    "js",
+    "json"
+  ],
+  "coverageReporters": [
+    "json",
+    "lcov",
+    "text",
+    "clover"
+  ],
+  "coverageDirectory": "coverage",
+  "collectCoverageFrom": [
+    "packages/**/src/**/*.ts",
+    "!packages/**/src/**/*.interface.ts",
+    "!packages/**/src/**/*.dto.ts"
+  ],
+  "testPathIgnorePatterns": [
+    "<rootDir>/node_modules/"
+  ],
+  "transformIgnorePatterns": [
+    "<rootDir>/node_modules/"
+  ],
+  "moduleNameMapper": {
+    "^react$": "<rootDir>/node_modules/react",
+    "^react-dom$": "<rootDir>/node_modules/react-dom",
+    "\\.(css|jpg|png)$": "<rootDir>/test/empty-module.js",
+    "\\.(svg)$": "<rootDir>/test/empty-component.js"
+  },
+  "testMatch": [
+    "**/*.(spec|test).ts?(x)",
+    "**/*.(spec|test).js?(x)"
+  ],
+  "transform": {
+    "^.+\\.(ts|tsx)$": "ts-jest"
+  },
+  "globals": {
+    "ts-jest": {
+      "tsConfig": "tsconfig.spec.json",
+      "diagnostics": false
+    }
+  }
+}

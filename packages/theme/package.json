@@ -1,0 +1,17 @@
+{
+  "name": "@depub/theme",
+  "version": "1.0.0",
+  "license": "wtfpl",
+  "private": true,
+  "description": "Theme based on Native base",
+  "author": "0xNaN Team",
+  "scripts": {
+    "prebuild": "yarn clean",
+    "build": "tsc -p ./tsconfig.json",
+    "clean": "rm -rf ./dist"
+  },
+  "dependencies": {
+    "native-base": "3.3.3"
+  },
+  "devDependencies": {}
+}

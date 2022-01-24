@@ -1,0 +1,29 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "jsx": "preserve",
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "composite": true,
+    "typeRoots": [
+      "node_modules/@types",
+      "types"
+    ],
+    "lib": [
+      "DOM",
+      "DOM.iterable",
+      "ESNext"
+    ],
+  },
+  "include": [
+    "src",
+    "types"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

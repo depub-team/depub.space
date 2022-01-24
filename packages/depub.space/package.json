@@ -1,0 +1,55 @@
+{
+  "name": "@depub/space",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Decentralized social media platform",
+  "license": "wtfpl",
+  "author": "0xNaN Team",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "lint": "next lint",
+    "start": "next start",
+    "svgr": "svgr ./public/icons -d ./src/components/atoms/icons --typescript --native --svg-props className="
+  },
+  "dependencies": {
+    "@cosmjs/cosmwasm-stargate": "0.27.0",
+    "@cosmjs/stargate": "0.26.5",
+    "@depub/theme": "*",
+    "@expo/vector-icons": "12.0.5",
+    "@hookform/resolvers": "2.8.8",
+    "@likecoin/iscn-js": "0.0.7",
+    "cosmjs-types": "0.4.1",
+    "dayjs": "1.10.7",
+    "debug": "4.3.3",
+    "expo": "44.0.5",
+    "expo-font": "10.0.4",
+    "native-base": "3.3.3",
+    "next": "12.0.8",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-hook-form": "7.25.0",
+    "react-native": "0.67.1",
+    "react-native-safe-area-context": "3.3.2",
+    "react-native-svg": "12.1.1",
+    "react-native-web": "0.17.5",
+    "yup": "0.32.11"
+  },
+  "devDependencies": {
+    "@expo/next-adapter": "3.1.17",
+    "@svgr/cli": "6.2.0",
+    "@types/debug": "4.1.7",
+    "@types/react": "17.0.38",
+    "@types/react-dom": "17.0.11",
+    "@types/react-native": "0.66.15",
+    "babel-preset-expo": "9.0.2",
+    "eslint": "8",
+    "eslint-config-next": "12.0.8",
+    "next-compose-plugins": "2.2.1",
+    "next-fonts": "1.5.1",
+    "next-transpile-modules": "9.0.0"
+  },
+  "peerDependencies": {
+    "@depub/theme": "1.0.0"
+  }
+}

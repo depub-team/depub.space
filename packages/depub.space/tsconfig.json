@@ -1,0 +1,37 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "noEmit": false,
+    "isolatedModules": true,
+    "typeRoots": [
+      "node_modules/@types",
+      "types"
+    ],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true
+  },
+  "include": [
+    "./src/**/*",
+    "./types/**/*",
+    "./next.config.js",
+    "./.eslintrc.js",
+    "./babel.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ],
+  "references": [
+    {
+      "path": "../theme"
+    }
+  ]
+}

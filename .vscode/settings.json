@@ -1,0 +1,14 @@
+{
+  "cSpell.words": [
+    "cosmjs",
+    "cosmwasm",
+    "depub",
+    "keplr",
+    "monospace",
+    "stargate"
+  ],
+  "eslint.workingDirectories": [
+    "./packages/depub.space",
+    "./packages/theme"
+  ]
+}
