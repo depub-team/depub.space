@@ -7,10 +7,12 @@ import React, {
   useMemo,
   useReducer,
 } from 'react';
+import * as Crypto from 'expo-crypto';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import { ISCNQueryClient, ISCNRecord, ISCNSigningClient } from '@likecoin/iscn-js';
 import Debug from 'debug';
+import { replaceURLs } from '../utils';
 
 const debug = Debug('web:useAppState');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
@@ -26,7 +28,7 @@ const transformRecord = (records: ISCNRecord[]) => {
 
     return {
       id: data['@id'] as string,
-      message: data.contentMetadata.description,
+      message: replaceURLs(data.contentMetadata.description),
       from: author.entity['@id'],
       date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp),
     };
@@ -123,7 +125,10 @@ export const AppStateProvider: FC = ({ children }) => {
           debug('fetchMessagesByOwner(nextSeq: %d) -> records: %O', nextSeq, res);
 
           if (res) {
-            const messages = transformRecord(res.records);
+            const messages = transformRecord(
+              // only get those transactions with specific fingerprint
+              res.records.filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT))
+            );
 
             return { messages, nextSequence: res.nextSequence };
           }
@@ -252,8 +257,12 @@ export const AppStateProvider: FC = ({ children }) => {
 
         const recordTimestamp = new Date().toISOString();
         const datePublished = recordTimestamp.split('T')[0];
+        const messageSha256Hash = await Crypto.digestStringAsync(
+          Crypto.CryptoDigestAlgorithm.SHA256,
+          message
+        );
         const payload = {
-          contentFingerprints: [ISCN_FINGERPRINT],
+          contentFingerprints: [ISCN_FINGERPRINT, `hash://sha256/${messageSha256Hash}`],
           recordTimestamp,
           datePublished,
           stakeholders: [

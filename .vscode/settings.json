@@ -5,7 +5,8 @@
     "depub",
     "keplr",
     "monospace",
-    "stargate"
+    "stargate",
+    "stylelint"
   ],
   "eslint.workingDirectories": [
     "./packages/depub.space",

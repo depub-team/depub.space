@@ -2,7 +2,7 @@
 
 This is monorepo for depub products
 
-# Packages
+## Packages
 
 ### depub.space
 
@@ -12,3 +12,15 @@ This is monorepo for depub products
 ### theme
 
 Common theme definition and components based on [Native Base](https://nativebase.io/)
+
+## Development
+
+This monorepo used yarn workspace to manage dependencies and packages please do `yarn install` to initialize the package linking and install dependencies.
+
+### Enviroment variables
+
+Please find the .env.sample under individual package.
+
+## Deployment
+
+- **_depub.space_** is deploying to IPFS via fleek.co
