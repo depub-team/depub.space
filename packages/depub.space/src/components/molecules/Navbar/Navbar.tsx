@@ -33,7 +33,7 @@ export const Navbar: FC<NavbarProps> = ({ walletAddress }) => {
 
         <Box alignItems="center" flex={1} justifyContent="center">
           <Link href="/">
-            <LogoIcon width="160px" />
+            <LogoIcon height="22px" width="160px" />
           </Link>
         </Box>
 

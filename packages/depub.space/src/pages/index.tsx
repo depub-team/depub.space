@@ -22,7 +22,7 @@ interface MessageFormType {
   message: string;
 }
 
-const MAX_CHAR_LIMIT = 120;
+const MAX_CHAR_LIMIT = 280;
 
 interface MessageInputSectionProps {
   isLoading?: boolean;
