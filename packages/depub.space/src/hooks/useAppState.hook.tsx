@@ -124,7 +124,10 @@ export const AppStateProvider: FC = ({ children }) => {
           debug('fetchMessagesByOwner(nextSeq: %d) -> records: %O', nextSeq, res);
 
           if (res) {
-            const messages = transformRecord(res.records);
+            const messages = transformRecord(
+              // only get those transactions with specific fingerprint
+              res.records.filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT))
+            );
 
             return { messages, nextSequence: res.nextSequence };
           }
