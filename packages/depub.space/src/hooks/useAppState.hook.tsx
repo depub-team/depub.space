@@ -250,10 +250,11 @@ export const AppStateProvider: FC = ({ children }) => {
 
         await signingClient.connectWithSigner(PUBLIC_RPC_ENDPOINT, signer);
 
-        const datePublished = new Date().toISOString().split('T')[0];
+        const recordTimestamp = new Date().toISOString();
+        const datePublished = recordTimestamp.split('T')[0];
         const payload = {
           contentFingerprints: [ISCN_FINGERPRINT],
-          recordTimestamp: new Date().toISOString(),
+          recordTimestamp,
           datePublished,
           stakeholders: [
             {
@@ -273,7 +274,7 @@ export const AppStateProvider: FC = ({ children }) => {
               rewardProportion: 0.1,
             },
           ],
-          name: 'A Message posted on depub.space',
+          name: `depub.space-${recordTimestamp}`,
           recordNotes: 'A Message posted on depub.space',
           type: 'Article',
           author: wallet.address,
