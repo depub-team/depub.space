@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useReducer,
 } from 'react';
+import * as Crypto from 'expo-crypto';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import { ISCNQueryClient, ISCNRecord, ISCNSigningClient } from '@likecoin/iscn-js';
@@ -252,8 +253,12 @@ export const AppStateProvider: FC = ({ children }) => {
 
         const recordTimestamp = new Date().toISOString();
         const datePublished = recordTimestamp.split('T')[0];
+        const messageSha256Hash = await Crypto.digestStringAsync(
+          Crypto.CryptoDigestAlgorithm.SHA256,
+          message
+        );
         const payload = {
-          contentFingerprints: [ISCN_FINGERPRINT],
+          contentFingerprints: [ISCN_FINGERPRINT, `hash://sha256/${messageSha256Hash}`],
           recordTimestamp,
           datePublished,
           stakeholders: [
