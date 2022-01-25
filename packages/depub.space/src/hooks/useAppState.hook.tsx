@@ -12,6 +12,7 @@ import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import { ISCNQueryClient, ISCNRecord, ISCNSigningClient } from '@likecoin/iscn-js';
 import Debug from 'debug';
+import { replaceURLs } from '../utils';
 
 const debug = Debug('web:useAppState');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
@@ -27,7 +28,7 @@ const transformRecord = (records: ISCNRecord[]) => {
 
     return {
       id: data['@id'] as string,
-      message: data.contentMetadata.description,
+      message: replaceURLs(data.contentMetadata.description),
       from: author.entity['@id'],
       date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp),
     };

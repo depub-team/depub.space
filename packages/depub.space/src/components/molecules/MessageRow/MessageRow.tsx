@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 import { Link, Divider, Text, Skeleton, HStack, VStack, Avatar } from 'native-base';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { Platform } from 'react-native';
 import { Message } from '../../../hooks';
 
 dayjs.extend(relativeTime);
@@ -43,7 +44,8 @@ export const MessageRow: FC<MessageRowProps> = ({
 
           <Skeleton.Text isLoaded={!isLoading} lines={2} space={2}>
             <Text fontFamily="monospace" fontSize="lg" whiteSpace="pre-wrap">
-              {message}
+              {/* eslint-disable-next-line react/no-danger */}
+              {Platform.OS === 'web' ? <div dangerouslySetInnerHTML={{ __html: message }} /> : null}
             </Text>
           </Skeleton.Text>
         </VStack>
