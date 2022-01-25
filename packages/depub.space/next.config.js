@@ -12,6 +12,7 @@ const withTM = require("next-transpile-modules")([
 
 const nextConfig = {
   webpack5: true,
+  trailingSlash: true,
 };
 
 module.exports = withPlugins(

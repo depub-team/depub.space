@@ -4,7 +4,7 @@ import Debug from 'debug';
 
 const debug = Debug('web:useSigningCosmWasmClient');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
-const PUBLIC_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID;
+const PUBLIC_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID || '';
 
 export interface ISigningCosmWasmClientContext {
   walletAddress: string;
@@ -127,7 +127,7 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
 
     try {
       // suggest likechain
-      await suggestChain();
+      await suggestChain(/testnet/.test(PUBLIC_CHAIN_ID));
 
       // enable website to access kepler
       await (window as any).keplr.enable(PUBLIC_CHAIN_ID);
