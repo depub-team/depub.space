@@ -1,14 +1,9 @@
 {
   "name": "@depub/theme",
-<<<<<<< HEAD
   "version": "1.0.1",
   "license": "wtfpl",
-=======
-  "version": "1.0.0",
->>>>>>> f774dc8bbb3987335c922ea3a25bd83a950c9a6e
   "private": true,
   "description": "Theme based on Native base",
-  "license": "wtfpl",
   "author": "0xNaN Team",
   "scripts": {
     "prebuild": "yarn clean",
