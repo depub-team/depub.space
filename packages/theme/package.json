@@ -1,17 +1,23 @@
 {
   "name": "@depub/theme",
   "version": "1.0.0",
-  "license": "wtfpl",
   "private": true,
   "description": "Theme based on Native base",
+  "license": "wtfpl",
   "author": "0xNaN Team",
   "scripts": {
     "prebuild": "yarn clean",
     "build": "tsc -p ./tsconfig.json",
-    "clean": "rm -rf ./dist"
+    "clean": "rm -rf ./dist",
+    "svgr": "svgr ./assets/icons -d ./src/components/atoms/icons --typescript --native --svg-props className="
   },
   "dependencies": {
-    "native-base": "3.3.3"
+    "native-base": "3.3.3",
+    "react": "17.0.2",
+    "react-native-svg": "12.1.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@svgr/cli": "6.2.0",
+    "@types/react": "17.0.38"
+  }
 }
