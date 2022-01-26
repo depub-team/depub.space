@@ -1,3 +1,5 @@
+![depub.space](/packages/theme/assets/icons/logo-icon-text.svg)
+
 # DePub
 
 This is monorepo for depub products
@@ -9,9 +11,9 @@ This is monorepo for depub products
 - Production: [https://depub.space](https://depub.space)
 - Staging: [https://stag.depub.space](https://stag.depub.space)
 
-### theme
+### Theme
 
-Common theme definition and components based on [Native Base](https://nativebase.io/)
+Common theme definition and components based on [Native Base](https://nativebase.io/).
 
 ## Development
 
