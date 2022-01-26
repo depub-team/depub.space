@@ -9,8 +9,7 @@
     "build": "next build && next export",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start",
-    "svgr": "svgr ./public/icons -d ./src/components/atoms/icons --typescript --native --svg-props className="
+    "start": "next start"
   },
   "dependencies": {
     "@cosmjs/cosmwasm-stargate": "0.27.0",
@@ -40,7 +39,6 @@
   },
   "devDependencies": {
     "@expo/next-adapter": "3.1.17",
-    "@svgr/cli": "6.2.0",
     "@types/debug": "4.1.7",
     "@types/react": "17.0.38",
     "@types/react-dom": "17.0.11",
