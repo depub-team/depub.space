@@ -16,7 +16,8 @@ import {
   WarningOutlineIcon,
 } from 'native-base';
 import { Layout, MessageRow } from '../components';
-import { AppStateError, Message, useAppState, useSigningCosmWasmClient } from '../hooks';
+import { Message } from '../interfaces';
+import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
 
 interface MessageFormType {
   message: string;
@@ -177,7 +178,8 @@ export default function IndexPage() {
 
         <FlatList<Message>
           data={isLoading ? dummyItems : messages}
-          renderItem={({ item }) => <MessageRow isLoading={isLoading} message={item} />}
+          keyExtractor={item => item.id}
+          renderItem={ctx => <MessageRow isLoading={isLoading} message={ctx.item} />}
         />
       </VStack>
     </Layout>

@@ -5,6 +5,7 @@ import Debug from 'debug';
 const debug = Debug('web:useSigningCosmWasmClient');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
 const PUBLIC_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID || '';
+const isTestnet = /testnet/.test(PUBLIC_CHAIN_ID);
 
 export interface ISigningCosmWasmClientContext {
   walletAddress: string;
@@ -15,7 +16,7 @@ export interface ISigningCosmWasmClientContext {
   disconnect: () => void;
 }
 
-const suggestChain = async (isTestnet = true) => {
+export const getChainInfo = () => {
   const mainnet = {
     chainId: 'likecoin-mainnet-2',
     chainName: 'LikeCoin chain',
@@ -111,7 +112,11 @@ const suggestChain = async (isTestnet = true) => {
     },
   };
 
-  await (window as any).keplr.experimentalSuggestChain(isTestnet ? testnet : mainnet);
+  return isTestnet ? testnet : mainnet;
+};
+
+const suggestChain = async () => {
+  await (window as any).keplr.experimentalSuggestChain(getChainInfo());
 };
 
 export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
@@ -127,7 +132,7 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
 
     try {
       // suggest likechain
-      await suggestChain(/testnet/.test(PUBLIC_CHAIN_ID));
+      await suggestChain();
 
       // enable website to access kepler
       await (window as any).keplr.enable(PUBLIC_CHAIN_ID);
