@@ -22,7 +22,7 @@ export const MessageRow: FC<MessageRowProps> = ({
     <>
       <HStack flex={1} mb={{ base: 4, md: 6 }} minHeight="80px" space={4} w="100%">
         <Skeleton isLoaded={!isLoading} rounded="full" size="12">
-          <Avatar bg="black" size="md" />
+          <Avatar bg="primary.500" size="md" />
         </Skeleton>
 
         <VStack flex={1} space={2}>
@@ -36,14 +36,14 @@ export const MessageRow: FC<MessageRowProps> = ({
             </Skeleton.Text>
 
             <Skeleton.Text isLoaded={!isLoading} lines={1}>
-              <Text color="gray.500" fontSize="sm" ml={8}>
+              <Text color="gray.500" fontSize="xs" ml={8}>
                 {dayFrom}
               </Text>
             </Skeleton.Text>
           </HStack>
 
           <Skeleton.Text isLoaded={!isLoading} lines={2} space={2}>
-            <Text fontFamily="monospace" fontSize="lg" whiteSpace="pre-wrap">
+            <Text fontFamily="monospace" fontSize={{ base: 'md', md: 'lg' }} whiteSpace="pre-wrap">
               {/* eslint-disable-next-line react/no-danger */}
               {Platform.OS === 'web' ? <div dangerouslySetInnerHTML={{ __html: message }} /> : null}
             </Text>
