@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
-import { Link, Text, HStack, Box, StatusBar, Flex } from 'native-base';
-import { LogoIcon } from '../../atoms';
+import { Link, Text, HStack, Box, StatusBar, Flex, Hidden } from 'native-base';
+import { LogoIcon, HLogoText } from '@depub/theme';
 
 export interface NavbarProps {
   walletAddress?: string;
@@ -29,18 +29,24 @@ export const Navbar: FC<NavbarProps> = ({ walletAddress }) => {
         }}
         py={4}
       >
-        <Box flex={1} />
-
-        <Box alignItems="center" flex={1} justifyContent="center">
-          <Link href="/">
-            <LogoIcon height="22px" width="160px" />
-          </Link>
+        <Box flex={1}>
+          <Hidden from="md">
+            <LogoIcon width="42px" />
+          </Hidden>
         </Box>
+
+        <Hidden from="base" till="md">
+          <Box alignItems="center" flex={1} justifyContent="center">
+            <Link href="/">
+              <HLogoText height="45px" width="220px" />
+            </Link>
+          </Box>
+        </Hidden>
 
         <HStack flex={1}>
           {walletAddress ? (
             <Text
-              bg="black"
+              bg="primary"
               borderRadius="full"
               color="white"
               fontSize={{ base: '2xs', md: 'sm' }}
