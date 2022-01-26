@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import * as React from 'react';
 import Svg, { SvgProps, Path, G } from 'react-native-svg';
 
@@ -113,3 +115,4 @@ const SvgLogoIcon = (props: SvgProps) => (
 );
 
 export default SvgLogoIcon;
+/* eslint-enable @typescript-eslint/ban-ts-comment */
