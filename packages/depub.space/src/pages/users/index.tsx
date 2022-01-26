@@ -14,7 +14,8 @@ import {
 import { Platform } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { MessageRow, Layout } from '../../components';
-import { Message, useAppState, useSigningCosmWasmClient } from '../../hooks';
+import { Message } from '../../interfaces';
+import { useAppState, useSigningCosmWasmClient } from '../../hooks';
 
 export default function IndexPage() {
   const urlParams = new URLSearchParams(
@@ -75,7 +76,7 @@ export default function IndexPage() {
             />
           </Link>
           <HStack alignItems="center" flex={1} justifyContent="center" space={2}>
-            <Avatar bg="black" size="md" />
+            <Avatar bg="primary.500" size="md" />
             <Heading fontSize="xl" textAlign="center">
               {shortenAccount}
             </Heading>

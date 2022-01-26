@@ -12,7 +12,8 @@ import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import { ISCNQueryClient, ISCNRecord, ISCNSigningClient } from '@likecoin/iscn-js';
 import Debug from 'debug';
-import { replaceURLs } from '../utils';
+import { Message } from '../interfaces';
+import { replaceURLs, fetchDesmosProfile } from '../utils';
 
 const debug = Debug('web:useAppState');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
@@ -21,28 +22,33 @@ const PUBLIC_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID || '';
 export class AppStateError extends Error {}
 
 const transformRecord = (records: ISCNRecord[]) => {
-  const messages = records.reverse().map(({ data }) => {
-    const author = data.stakeholders.find(
-      stakeholder => stakeholder.contributionType === 'http://schema.org/author'
-    );
+  const messages = records
+    .reverse()
+    .map(({ data }) => async () => {
+      const author = data.stakeholders.find(
+        stakeholder => stakeholder.contributionType === 'http://schema.org/author'
+      );
+      const from = author.entity['@id'];
+      const profile = await fetchDesmosProfile(from);
 
-    return {
-      id: data['@id'] as string,
-      message: replaceURLs(data.contentMetadata.description),
-      from: author.entity['@id'],
-      date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp),
-    };
-  });
+      return {
+        id: data['@id'] as string,
+        message: replaceURLs(data.contentMetadata.description),
+        from,
+        date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp),
+        profilePic: profile?.profilePicture,
+        dtag: profile?.dtag,
+        nickname: profile?.nickname,
+      } as Message;
+    })
+    .reduce(async (p, op) => {
+      const arr = await p;
+
+      return arr.concat(await op());
+    }, Promise.resolve([] as Message[]));
 
   return messages;
 };
-
-export interface Message {
-  id: string;
-  message: string;
-  from: string;
-  date: Date;
-}
 
 export interface MessageQueryType {
   messages: Message[];
@@ -125,7 +131,7 @@ export const AppStateProvider: FC = ({ children }) => {
           debug('fetchMessagesByOwner(nextSeq: %d) -> records: %O', nextSeq, res);
 
           if (res) {
-            const messages = transformRecord(
+            const messages = await transformRecord(
               // only get those transactions with specific fingerprint
               res.records.filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT))
             );
@@ -193,7 +199,7 @@ export const AppStateProvider: FC = ({ children }) => {
         debug('fetchMessages(nextSeq: %d) -> records: %O', nextSeq, res);
 
         if (res) {
-          const messages = transformRecord(res.records);
+          const messages = await transformRecord(res.records);
 
           return { messages, nextSequence: res.nextSequence };
         }
