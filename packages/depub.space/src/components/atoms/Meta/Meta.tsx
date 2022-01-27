@@ -18,6 +18,7 @@ export const Meta: FC<MetaProps> = ({
   lang = 'en-HK',
 }) => {
   const titleWithTagline = title ? `${title} | Depub Space` : 'Depub Space';
+  const defaultDescription = 'Not your key, not your tweet. Be web3 native.';
 
   return (
     <>
@@ -34,7 +35,7 @@ export const Meta: FC<MetaProps> = ({
         {/* eslint-disable react/no-invalid-html-attribute */}
         {/* eslint-disable-next-line global-require */}
         <meta content={titleWithTagline} property="og:title" />
-        {description && <meta content={description} property="og:description" />}
+        <meta content={description || defaultDescription} property="og:description" />
         <meta content="website" property="og:type" />
         <meta content="https://depub.space" property="og:url" />
         <link href="/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180" />
@@ -47,7 +48,7 @@ export const Meta: FC<MetaProps> = ({
 
         <title>{titleWithTagline}</title>
         {canonical && <link href={canonical} rel="canonical" />}
-        {description && <meta content={description} name="description" />}
+        <meta content={description || defaultDescription} name="description" />
         {keywords && <meta content={keywords} name="keywords" />}
       </NextHead>
 

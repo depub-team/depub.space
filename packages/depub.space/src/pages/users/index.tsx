@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
+import Debug from 'debug';
 import {
   Link,
   Box,
@@ -7,15 +8,22 @@ import {
   useToast,
   Divider,
   VStack,
+  Text,
   Heading,
   FlatList,
   Avatar,
 } from 'native-base';
-import { Platform } from 'react-native';
+import { Platform, RefreshControl } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
-import { MessageRow, Layout } from '../../components';
+import { MessageCard, Layout } from '../../components';
 import { Message } from '../../interfaces';
 import { useAppState, useSigningCosmWasmClient } from '../../hooks';
+
+const MAX_WIDTH = '640px';
+const ROWS_PER_PAGE = 12;
+const debug = Debug('web:<UserPage />');
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
 
 export default function IndexPage() {
   const urlParams = new URLSearchParams(
@@ -24,15 +32,65 @@ export default function IndexPage() {
   const account = urlParams.get('account');
   const shortenAccount = account ? `${account.slice(0, 10)}...${account.slice(-4)}` : '';
   const [messages, setMessages] = useState<Message[]>([]);
-  const { error: connectError, walletAddress } = useSigningCosmWasmClient();
+  const [refreshing, setRefreshing] = React.useState(false);
+  const [offset, setOffset] = useState(0);
+  const [messagesWithPaging, setMessagesWithPaging] = useState(messages.slice(0, ROWS_PER_PAGE));
+  const { error: connectError, profile, walletAddress } = useSigningCosmWasmClient();
   const { isLoading, fetchMessagesByOwner } = useAppState();
   const toast = useToast();
+  const profilePic = profile?.profilePic;
+  const nicname = profile?.nickname || shortenAccount;
+  const bio = profile?.bio;
   const dummyItems = Array.from(new Array(12)).map<Message>(() => ({
-    id: `id-${Math.floor(Math.random() * 1000)}`,
+    id: `id-${uid()}`,
     message: '',
+    rawMessage: '',
     from: '',
     date: new Date(),
   }));
+
+  const fetchNewMessages = async () => {
+    if (!account) {
+      return;
+    }
+
+    const res = await fetchMessagesByOwner(account);
+
+    if (res) {
+      setMessages(res.messages);
+    }
+  };
+
+  const handleOnEndReached = ({ distanceFromEnd }: { distanceFromEnd: number }) => {
+    debug(
+      'handleOnEndReached() -> distanceFromEnd: %d, offset: %d, ROWS_PER_PAGE: %d, messages.length: %d',
+      distanceFromEnd,
+      offset,
+      ROWS_PER_PAGE,
+      messages.length
+    );
+
+    if (distanceFromEnd < 0) {
+      return;
+    }
+
+    const newOffset = Math.min(offset + ROWS_PER_PAGE, messages.length);
+
+    setMessagesWithPaging(messages.slice(0, newOffset));
+    setOffset(newOffset);
+  };
+
+  const handleOnRefresh = async () => {
+    setRefreshing(true);
+
+    try {
+      await fetchNewMessages();
+    } catch (ex) {
+      debug('handleOnRefresh() -> error: %O', ex);
+    }
+
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     // eslint-disable-next-line func-names
@@ -63,34 +121,57 @@ export default function IndexPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectError]);
 
-  return account ? (
-    <Layout metadata={{ title: walletAddress }} walletAddress={walletAddress}>
-      <VStack h="100%" maxWidth="480px" mx="auto" px={4} space={8} w="100%">
-        <HStack alignItems="center" flex={1} justifyContent="center" space={2}>
-          <Link href="/">
-            <IconButton
-              _icon={{
-                as: AntDesign,
-                name: 'back',
-              }}
-            />
-          </Link>
-          <HStack alignItems="center" flex={1} justifyContent="center" space={2}>
-            <Avatar bg="primary.500" size="md" />
-            <Heading fontSize="xl" textAlign="center">
-              {shortenAccount}
-            </Heading>
-          </HStack>
+  // get first batch of messages
+  useEffect(() => {
+    setMessagesWithPaging(messages.slice(0, ROWS_PER_PAGE));
+  }, [messages]);
 
-          <Box w="48px" />
+  const ListHeaderComponent = memo(() => (
+    <VStack h="100%" maxW="640px" mx="auto" my={4} px={4} space={8} w="100%">
+      <HStack alignItems="center" flex={1} justifyContent="center" space={2}>
+        <Link href="/">
+          <IconButton
+            _icon={{
+              as: AntDesign,
+              name: 'back',
+            }}
+          />
+        </Link>
+        <HStack alignItems="center" flex={1} justifyContent="center" space={3}>
+          <Avatar size="md" source={profilePic ? { uri: profilePic } : undefined} />
+          <VStack space={1}>
+            <Heading fontSize="xl" textAlign="center">
+              {nicname}
+            </Heading>
+            {bio ? <Text fontSize="sm">{bio}</Text> : null}
+          </VStack>
         </HStack>
 
-        <Divider />
-        <FlatList<Message>
-          data={isLoading ? dummyItems : messages}
-          renderItem={({ item }) => <MessageRow isLoading={isLoading} message={item} />}
-        />
-      </VStack>
+        <Box w="48px" />
+      </HStack>
+
+      <Divider mb={8} />
+    </VStack>
+  ));
+
+  const ListItemSeparatorComponent = memo(() => (
+    <Divider maxW={MAX_WIDTH} mx="auto" my={4} w="100%" />
+  ));
+
+  return account ? (
+    <Layout metadata={{ title: walletAddress }}>
+      <FlatList<Message>
+        data={refreshing || isLoading ? dummyItems : messagesWithPaging}
+        ItemSeparatorComponent={ListItemSeparatorComponent}
+        keyExtractor={item => item.id}
+        ListHeaderComponent={ListHeaderComponent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleOnRefresh} />}
+        renderItem={ctx => (
+          <MessageCard isLoading={isLoading} maxW={MAX_WIDTH} message={ctx.item} mx="auto" />
+        )}
+        onEndReached={handleOnEndReached}
+        onEndReachedThreshold={0.5}
+      />
     </Layout>
   ) : null;
 }
