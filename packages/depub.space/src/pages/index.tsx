@@ -6,6 +6,7 @@ import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import {
   Divider,
   Text,
+  Box,
   Button,
   useToast,
   FormControl,
@@ -68,12 +69,22 @@ const MessageInputSection: FC<MessageInputSectionProps> = ({
   };
 
   return (
-    <HStack flex={1} mt={4} space={4}>
-      <Skeleton isLoaded={!isLoading} rounded="full" size="12">
-        <Avatar size="md" source={profilePic ? { uri: profilePic } : undefined}>
-          {`${displayName[0]}${displayName[displayName.length - 1]}`}
-        </Avatar>
-      </Skeleton>
+    <Stack
+      direction={{
+        base: 'column',
+        md: 'row',
+      }}
+      flex={1}
+      mt={4}
+      space={4}
+    >
+      <Box alignItems="center" flex={{ base: 1, md: 'unset' }}>
+        <Skeleton isLoaded={!isLoading} rounded="full" size="12">
+          <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
+            {`${displayName[0]}${displayName[displayName.length - 1]}`}
+          </Avatar>
+        </Skeleton>
+      </Box>
       <VStack flex={1} minHeight="180px" space={4}>
         <FormControl isInvalid={Boolean(errors.message)} isRequired>
           <Stack>
@@ -110,7 +121,7 @@ const MessageInputSection: FC<MessageInputSectionProps> = ({
           </Button>
         </HStack>
       </VStack>
-    </HStack>
+    </Stack>
   );
 };
 
@@ -234,7 +245,7 @@ export default function IndexPage() {
   }, [connectError]);
 
   const ListHeaderComponent = memo(() => (
-    <VStack maxW={MAX_WIDTH} mb={8} mx="auto" space={8} w="100%">
+    <VStack maxW={MAX_WIDTH} mb={8} mx="auto" px={4} space={8} w="100%">
       {walletAddress && !isConnectLoading ? (
         <MessageInputSection
           address={walletAddress}

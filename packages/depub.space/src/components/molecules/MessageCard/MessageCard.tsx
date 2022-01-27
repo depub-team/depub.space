@@ -7,7 +7,12 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { Platform } from 'react-native';
 import { LinkPreview, Message } from '../../../interfaces';
 import { LinkPreviewCard } from '../LinkPreviewCard';
-import { DesmosProfile, fetchDesmosProfile } from '../../../utils';
+import {
+  DesmosProfile,
+  fetchDesmosProfile,
+  getAbbrNickname,
+  getShortenAddress,
+} from '../../../utils';
 
 dayjs.extend(relativeTime);
 
@@ -22,12 +27,13 @@ export const MessageCard: FC<MessageCardProps> = ({
   message: { from, date, message, rawMessage },
   ...props
 }) => {
-  const shortenWalletAddress = `${from.slice(0, 10)}...${from.slice(-4)}`;
+  const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
   const dayFrom = dayjs(date).fromNow();
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const [linkPreivew, setLinkPreview] = useState<LinkPreview | null>(null);
-  const displayName = profile?.nickname || shortenWalletAddress;
+  const displayName = profile?.nickname || shortenAddress;
   const isMessageContainsUrl = /https?/.test(message);
+  const abbrNickname = getAbbrNickname(displayName);
 
   useEffect(() => {
     if (!isMessageContainsUrl) {
@@ -62,10 +68,14 @@ export const MessageCard: FC<MessageCardProps> = ({
   }, [from]);
 
   return (
-    <HStack flex={1} mb={{ base: 4, md: 6 }} minHeight="80px" space={4} w="100%" {...props}>
+    <HStack flex={1} mb={{ base: 4, md: 6 }} minHeight="80px" px={4} space={4} w="100%" {...props}>
       <Skeleton isLoaded={!isLoading} rounded="full" size="12">
-        <Avatar size="md" source={profile?.profilePic ? { uri: profile.profilePic } : undefined}>
-          {`${displayName[0]}${displayName[displayName.length - 1]}`}
+        <Avatar
+          bg="gray.200"
+          size="md"
+          source={profile?.profilePic ? { uri: profile.profilePic } : undefined}
+        >
+          {abbrNickname}
         </Avatar>
       </Skeleton>
 
