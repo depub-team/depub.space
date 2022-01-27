@@ -24,7 +24,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     })();
   }, []);
 
-  return isLoading ? (
+  return isLoading && process.browser ? (
     <AppLoading />
   ) : (
     <NativeBaseProvider theme={theme}>
