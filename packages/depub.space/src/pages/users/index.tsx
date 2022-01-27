@@ -20,6 +20,7 @@ import { Message } from '../../interfaces';
 import { useAppState, useSigningCosmWasmClient } from '../../hooks';
 import { DesmosProfile, fetchDesmosProfile, getAbbrNickname } from '../../utils';
 import { getShortenAddress } from '../../utils/getShortenAddress';
+import { END_REACHED_THRESHOLD } from '../../contants';
 
 const MAX_WIDTH = '640px';
 const ROWS_PER_PAGE = 12;
@@ -185,7 +186,7 @@ export default function IndexPage() {
           <MessageCard isLoading={isLoading} maxW={MAX_WIDTH} message={ctx.item} mx="auto" />
         )}
         onEndReached={handleOnEndReached}
-        onEndReachedThreshold={0.5}
+        onEndReachedThreshold={END_REACHED_THRESHOLD}
       />
     </Layout>
   ) : null;

@@ -24,6 +24,7 @@ import { Message } from '../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
 import { MessageCard, Layout } from '../components';
 import { DesmosProfile } from '../utils';
+import { END_REACHED_THRESHOLD } from '../contants';
 
 interface MessageFormType {
   message: string;
@@ -277,7 +278,7 @@ export default function IndexPage() {
           <MessageCard isLoading={isLoading} maxW={MAX_WIDTH} message={ctx.item} mx="auto" />
         )}
         onEndReached={handleOnEndReached}
-        onEndReachedThreshold={0.5}
+        onEndReachedThreshold={END_REACHED_THRESHOLD}
       />
     </Layout>
   );
