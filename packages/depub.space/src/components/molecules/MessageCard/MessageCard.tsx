@@ -17,6 +17,7 @@ import {
 dayjs.extend(relativeTime);
 
 const debug = Debug('web:<MessageCard />');
+const PROXY_URL = process.env.NEXT_PUBLIC_PROXY_URL;
 
 export interface MessageCardProps extends ComponentProps<typeof HStack> {
   message: Message;
@@ -43,7 +44,10 @@ export const MessageCard: FC<MessageCardProps> = ({
     // eslint-disable-next-line func-names
     void (async function () {
       try {
-        const myLinkPreivew = (await getLinkPreview(rawMessage)) as LinkPreview;
+        const myLinkPreivew = (await getLinkPreview(rawMessage, {
+          proxyUrl: `${PROXY_URL}/?`,
+          timeout: 6000,
+        })) as LinkPreview;
 
         debug('useEffect() -> rawMessage: %s, myLinkPreivew: %O', rawMessage, myLinkPreivew);
 
