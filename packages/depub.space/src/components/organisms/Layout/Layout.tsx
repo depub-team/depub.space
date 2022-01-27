@@ -1,25 +1,22 @@
 import React, { ComponentProps, FC } from 'react';
-import { View } from 'native-base';
+import { Box, View } from 'native-base';
+import { Dimensions } from 'react-native';
 import { Meta, MetaProps } from '../../atoms';
 import { Navbar } from '../../molecules';
 
+const NAVBAR_HEIGHT = 74;
+const windowHeight = Dimensions.get('window').height;
+
 export interface LayoutProps extends ComponentProps<typeof View> {
-  walletAddress?: string;
   metadata?: MetaProps;
   hideNavbar?: boolean;
 }
 
-export const Layout: FC<LayoutProps> = ({
-  children,
-  hideNavbar,
-  metadata,
-  walletAddress,
-  ...props
-}) => (
+export const Layout: FC<LayoutProps> = ({ children, hideNavbar, metadata, ...props }) => (
   <View {...props}>
     <Meta {...metadata} />
-    {!hideNavbar ? <Navbar walletAddress={walletAddress} /> : null}
+    {!hideNavbar ? <Navbar /> : null}
 
-    {children}
+    <Box flex={`1 0 ${windowHeight - NAVBAR_HEIGHT}px`}>{children}</Box>
   </View>
 );

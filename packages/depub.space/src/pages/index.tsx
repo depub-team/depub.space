@@ -1,5 +1,6 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, memo, useEffect, useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
+import Debug from 'debug';
 import * as Yup from 'yup';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import {
@@ -14,23 +15,38 @@ import {
   TextArea,
   VStack,
   WarningOutlineIcon,
+  Skeleton,
+  Avatar,
 } from 'native-base';
-import { Layout, MessageRow } from '../components';
+import { RefreshControl } from 'react-native';
 import { Message } from '../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
+import { MessageCard, Layout } from '../components';
+import { DesmosProfile } from '../utils';
 
 interface MessageFormType {
   message: string;
 }
 
 const MAX_CHAR_LIMIT = 280;
+const MAX_WIDTH = '640px';
+const ROWS_PER_PAGE = 12;
+const debug = Debug('web:<IndexPage />');
+const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
 
 interface MessageInputSectionProps {
   isLoading?: boolean;
+  address: string;
+  profile: DesmosProfile | null;
   onSubmit: (data: MessageFormType) => void;
 }
 
-const MessageInputSection: FC<MessageInputSectionProps> = ({ onSubmit, isLoading }) => {
+const MessageInputSection: FC<MessageInputSectionProps> = ({
+  address,
+  profile,
+  onSubmit,
+  isLoading,
+}) => {
   const formSchema = Yup.object().shape({
     message: Yup.string()
       .required('Message is required')
@@ -42,6 +58,8 @@ const MessageInputSection: FC<MessageInputSectionProps> = ({ onSubmit, isLoading
     useForm<MessageFormType>(validationOpt);
   const { errors } = formState;
   const [messageText] = watch(['message']);
+  const displayName = profile ? profile.nickname || profile.address : address;
+  const profilePic = profile?.profilePic;
 
   const handleOnSubmit = async () => {
     await handleSubmit(onSubmit)();
@@ -50,42 +68,49 @@ const MessageInputSection: FC<MessageInputSectionProps> = ({ onSubmit, isLoading
   };
 
   return (
-    <VStack flex={1} minHeight="180px" space={4}>
-      <FormControl isInvalid={Boolean(errors.message)} isRequired>
-        <Stack>
-          <Controller
-            control={control}
-            name="message"
-            render={({ field: { onChange, value } }) => (
-              <TextArea
-                defaultValue={value}
-                isReadOnly={isLoading}
-                maxLength={MAX_CHAR_LIMIT}
-                placeholder="Not your key, not your tweet. Be web3 native."
-                returnKeyType="done"
-                value={value}
-                onChangeText={onChange}
-                onSubmitEditing={handleOnSubmit}
-              />
+    <HStack flex={1} mt={4} space={4}>
+      <Skeleton isLoaded={!isLoading} rounded="full" size="12">
+        <Avatar size="md" source={profilePic ? { uri: profilePic } : undefined}>
+          {`${displayName[0]}${displayName[displayName.length - 1]}`}
+        </Avatar>
+      </Skeleton>
+      <VStack flex={1} minHeight="180px" space={4}>
+        <FormControl isInvalid={Boolean(errors.message)} isRequired>
+          <Stack>
+            <Controller
+              control={control}
+              name="message"
+              render={({ field: { onChange, value } }) => (
+                <TextArea
+                  defaultValue={value}
+                  isReadOnly={isLoading}
+                  maxLength={MAX_CHAR_LIMIT}
+                  placeholder="Not your key, not your tweet. Be web3 native."
+                  returnKeyType="done"
+                  value={value}
+                  onChangeText={onChange}
+                  onSubmitEditing={handleOnSubmit}
+                />
+              )}
+            />
+            {errors.message && (
+              <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
+                {errors.message.message}
+              </FormControl.ErrorMessage>
             )}
-          />
-          {errors.message && (
-            <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
-              {errors.message.message}
-            </FormControl.ErrorMessage>
-          )}
-        </Stack>
-      </FormControl>
+          </Stack>
+        </FormControl>
 
-      <HStack alignItems="center" justifyContent="space-between" space={4}>
-        <Text color="gray.500" fontSize="xs" ml="auto" textAlign="right">
-          {(messageText || '').length} / {MAX_CHAR_LIMIT}
-        </Text>
-        <Button isLoading={isLoading} onPress={handleOnSubmit}>
-          Submit
-        </Button>
-      </HStack>
-    </VStack>
+        <HStack alignItems="center" justifyContent="space-between" space={4}>
+          <Text color="gray.500" fontSize="xs" ml="auto" textAlign="right">
+            {(messageText || '').length} / {MAX_CHAR_LIMIT}
+          </Text>
+          <Button isLoading={isLoading} onPress={handleOnSubmit}>
+            Submit
+          </Button>
+        </HStack>
+      </VStack>
+    </HStack>
   );
 };
 
@@ -105,17 +130,22 @@ const ConnectSection: FC<ConnectSectionProps> = ({ onPress, isLoading }) => (
 
 export default function IndexPage() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [refreshing, setRefreshing] = React.useState(false);
+  const [offset, setOffset] = useState(0);
+  const [messagesWithPaging, setMessagesWithPaging] = useState(messages.slice(0, ROWS_PER_PAGE));
   const {
     error: connectError,
     isLoading: isConnectLoading,
     connectWallet,
     walletAddress,
+    profile,
   } = useSigningCosmWasmClient();
   const { isLoading, fetchMessages, postMessage } = useAppState();
   const toast = useToast();
   const dummyItems = Array.from(new Array(12)).map<Message>(() => ({
-    id: `id-${Math.floor(Math.random() * 1000)}`,
+    id: `id-${uid()}`,
     message: '',
+    rawMessage: '',
     from: '',
     date: new Date(),
   }));
@@ -126,6 +156,37 @@ export default function IndexPage() {
     if (res) {
       setMessages(res.messages);
     }
+  };
+
+  const handleOnEndReached = ({ distanceFromEnd }: { distanceFromEnd: number }) => {
+    debug(
+      'handleOnEndReached() -> distanceFromEnd: %d, offset: %d, ROWS_PER_PAGE: %d, messages.length: %d',
+      distanceFromEnd,
+      offset,
+      ROWS_PER_PAGE,
+      messages.length
+    );
+
+    if (distanceFromEnd < 0) {
+      return;
+    }
+
+    const newOffset = Math.min(offset + ROWS_PER_PAGE, messages.length);
+
+    setMessagesWithPaging(messages.slice(0, newOffset));
+    setOffset(newOffset);
+  };
+
+  const handleOnRefresh = async () => {
+    setRefreshing(true);
+
+    try {
+      await fetchNewMessages();
+    } catch (ex) {
+      debug('handleOnRefresh() -> error: %O', ex);
+    }
+
+    setRefreshing(false);
   };
 
   const handleOnSubmit: SubmitHandler<MessageFormType> = async data => {
@@ -156,32 +217,57 @@ export default function IndexPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // get first batch of messages
+  useEffect(() => {
+    setMessagesWithPaging(messages.slice(0, ROWS_PER_PAGE));
+  }, [messages]);
+
   useEffect(() => {
     if (connectError) {
       toast.show({
         title: connectError,
+        status: 'error',
+        placement: 'top',
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectError]);
 
-  return (
-    <Layout metadata={{ title: 'Home' }} walletAddress={walletAddress}>
-      <VStack h="100%" maxWidth="480px" mx="auto" px={4} space={8} w="100%">
-        {walletAddress ? (
-          <MessageInputSection isLoading={isLoading} onSubmit={handleOnSubmit} />
-        ) : (
-          <ConnectSection isLoading={isConnectLoading} onPress={connectWallet} />
-        )}
-
-        <Divider />
-
-        <FlatList<Message>
-          data={isLoading ? dummyItems : messages}
-          keyExtractor={item => item.id}
-          renderItem={ctx => <MessageRow isLoading={isLoading} message={ctx.item} />}
+  const ListHeaderComponent = memo(() => (
+    <VStack maxW={MAX_WIDTH} mb={8} mx="auto" space={8} w="100%">
+      {walletAddress && !isConnectLoading ? (
+        <MessageInputSection
+          address={walletAddress}
+          isLoading={isLoading || isConnectLoading}
+          profile={profile}
+          onSubmit={handleOnSubmit}
         />
-      </VStack>
+      ) : (
+        <ConnectSection isLoading={isLoading || isConnectLoading} onPress={connectWallet} />
+      )}
+
+      <Divider />
+    </VStack>
+  ));
+
+  const ListItemSeparatorComponent = memo(() => (
+    <Divider maxW={MAX_WIDTH} mx="auto" my={4} w="100%" />
+  ));
+
+  return (
+    <Layout metadata={{ title: 'Home' }}>
+      <FlatList<Message>
+        data={refreshing || isLoading ? dummyItems : messagesWithPaging}
+        ItemSeparatorComponent={ListItemSeparatorComponent}
+        keyExtractor={item => item.id}
+        ListHeaderComponent={ListHeaderComponent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleOnRefresh} />}
+        renderItem={ctx => (
+          <MessageCard isLoading={isLoading} maxW={MAX_WIDTH} message={ctx.item} mx="auto" />
+        )}
+        onEndReached={handleOnEndReached}
+        onEndReachedThreshold={0.5}
+      />
     </Layout>
   );
 }
