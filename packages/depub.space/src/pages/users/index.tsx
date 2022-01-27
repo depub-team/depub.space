@@ -18,7 +18,7 @@ import { AntDesign } from '@expo/vector-icons';
 import { MessageCard, Layout } from '../../components';
 import { Message } from '../../interfaces';
 import { useAppState, useSigningCosmWasmClient } from '../../hooks';
-import { getAbbrNickname } from '../../utils';
+import { DesmosProfile, fetchDesmosProfile, getAbbrNickname } from '../../utils';
 import { getShortenAddress } from '../../utils/getShortenAddress';
 
 const MAX_WIDTH = '640px';
@@ -32,18 +32,20 @@ export default function IndexPage() {
     typeof window !== 'undefined' ? window.location.search : ''
   );
   const account = urlParams.get('account');
+  const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
   const [messages, setMessages] = useState<Message[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
   const [offset, setOffset] = useState(0);
   const [messagesWithPaging, setMessagesWithPaging] = useState(messages.slice(0, ROWS_PER_PAGE));
-  const { error: connectError, profile, walletAddress } = useSigningCosmWasmClient();
+  const { error: connectError, walletAddress } = useSigningCosmWasmClient();
   const { isLoading, fetchMessagesByOwner } = useAppState();
   const toast = useToast();
   const profilePic = profile?.profilePic;
   const nickname = profile?.nickname || shortenAccount;
   const abbrNickname = getAbbrNickname(nickname);
   const bio = profile?.bio;
+  const dtag = profile?.dtag;
   const dummyItems = Array.from(new Array(12)).map<Message>(() => ({
     id: `id-${uid()}`,
     message: '',
@@ -107,6 +109,11 @@ export default function IndexPage() {
       }
 
       const res = await fetchMessagesByOwner(account);
+      const desmosProfile = await fetchDesmosProfile(account);
+
+      if (desmosProfile) {
+        setProfile(desmosProfile);
+      }
 
       if (res) {
         setMessages(res.messages);
@@ -140,14 +147,17 @@ export default function IndexPage() {
             }}
           />
         </Link>
-        <HStack alignItems="center" flex={1} justifyContent="center" space={3}>
+        <HStack flex={1} justifyContent="center" space={3}>
           <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
             {abbrNickname}
           </Avatar>
           <VStack space={1}>
-            <Heading fontSize="xl" textAlign="center">
-              {nickname}
-            </Heading>
+            <Heading fontSize="xl">{nickname}</Heading>
+            {dtag ? (
+              <Text color="gray.500" fontSize="sm">
+                {dtag}
+              </Text>
+            ) : null}
             {bio ? <Text fontSize="sm">{bio}</Text> : null}
           </VStack>
         </HStack>
