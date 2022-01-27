@@ -20,10 +20,8 @@ import { Message } from '../../interfaces';
 import { useAppState, useSigningCosmWasmClient } from '../../hooks';
 import { DesmosProfile, fetchDesmosProfile, getAbbrNickname } from '../../utils';
 import { getShortenAddress } from '../../utils/getShortenAddress';
-import { END_REACHED_THRESHOLD } from '../../contants';
+import { MAX_WIDTH, END_REACHED_THRESHOLD, ROWS_PER_PAGE } from '../../contants';
 
-const MAX_WIDTH = '640px';
-const ROWS_PER_PAGE = 12;
 const debug = Debug('web:<UserPage />');
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2);

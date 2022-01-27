@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
 import { Link, Box, StatusBar, Flex, Hidden } from 'native-base';
 import { LogoIcon, HLogoText } from '@depub/theme';
+import { NAVBAR_HEIGHT_MOBILE, NAVBAR_HEIGHT_DESKTOP } from '../../../contants';
 
 export const Navbar: FC = () => (
   <>
@@ -15,8 +16,8 @@ export const Navbar: FC = () => (
       borderBottomWidth={1}
       flexDirection="row"
       h={{
-        base: '68px',
-        md: '74px',
+        base: `${NAVBAR_HEIGHT_MOBILE}px`,
+        md: `${NAVBAR_HEIGHT_DESKTOP}px`,
       }}
       justifyContent="space-between"
       px={{

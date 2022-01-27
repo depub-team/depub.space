@@ -24,15 +24,12 @@ import { Message } from '../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
 import { MessageCard, Layout } from '../components';
 import { DesmosProfile } from '../utils';
-import { END_REACHED_THRESHOLD } from '../contants';
+import { MAX_WIDTH, ROWS_PER_PAGE, MAX_CHAR_LIMIT, END_REACHED_THRESHOLD } from '../contants';
 
 interface MessageFormType {
   message: string;
 }
 
-const MAX_CHAR_LIMIT = 280;
-const MAX_WIDTH = '640px';
-const ROWS_PER_PAGE = 12;
 const debug = Debug('web:<IndexPage />');
 const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
 
