@@ -152,11 +152,11 @@ export default function IndexPage() {
           <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
             {abbrNickname}
           </Avatar>
-          <VStack space={1}>
+          <VStack justifyContent="center" space={1}>
             <Heading fontSize="xl">{nickname}</Heading>
             {dtag ? (
               <Text color="gray.500" fontSize="sm">
-                {dtag}
+                @{dtag}
               </Text>
             ) : null}
             {bio ? <Text fontSize="sm">{bio}</Text> : null}
