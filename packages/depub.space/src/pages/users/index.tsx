@@ -35,7 +35,7 @@ export default function IndexPage() {
   const shortenAccount = account ? getShortenAddress(account) : '';
   const [messages, setMessages] = useState<Message[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
-  const [offset, setOffset] = useState(0);
+  const [offset, setOffset] = useState(ROWS_PER_PAGE);
   const [messagesWithPaging, setMessagesWithPaging] = useState(messages.slice(0, ROWS_PER_PAGE));
   const { error: connectError, walletAddress } = useSigningCosmWasmClient();
   const { isLoading, fetchMessagesByOwner } = useAppState();
