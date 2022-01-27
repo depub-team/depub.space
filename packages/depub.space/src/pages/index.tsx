@@ -140,7 +140,7 @@ const ConnectSection: FC<ConnectSectionProps> = ({ onPress, isLoading }) => (
 export default function IndexPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
-  const [offset, setOffset] = useState(0);
+  const [offset, setOffset] = useState(ROWS_PER_PAGE);
   const [isReachedEnd, setIsReachedEnd] = useState(false); // whole list shown
   const [messagesWithPaging, setMessagesWithPaging] = useState(messages.slice(0, ROWS_PER_PAGE));
   const {
