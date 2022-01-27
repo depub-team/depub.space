@@ -11,8 +11,13 @@ export const Navbar: FC = () => (
     <Flex
       alignItems="center"
       bg="#fff"
+      borderBottomColor="gray.100"
+      borderBottomWidth={1}
       flexDirection="row"
-      h="74px"
+      h={{
+        base: '68px',
+        md: '74px',
+      }}
       justifyContent="space-between"
       px={{
         base: 4,
@@ -22,7 +27,7 @@ export const Navbar: FC = () => (
       py={4}
     >
       <Hidden from="md">
-        <Box flex={1}>
+        <Box alignItems="center" flex={1} justifyContent="center">
           <LogoIcon width="42px" />
         </Box>
       </Hidden>

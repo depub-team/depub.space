@@ -4,7 +4,8 @@ import { Dimensions } from 'react-native';
 import { Meta, MetaProps } from '../../atoms';
 import { Navbar } from '../../molecules';
 
-const NAVBAR_HEIGHT = 74;
+const NAVBAR_HEIGHT_DESKTOP = 74;
+const NAVBAR_HEIGHT_MOBILE = 68;
 const windowHeight = Dimensions.get('window').height;
 
 export interface LayoutProps extends ComponentProps<typeof View> {
@@ -17,6 +18,13 @@ export const Layout: FC<LayoutProps> = ({ children, hideNavbar, metadata, ...pro
     <Meta {...metadata} />
     {!hideNavbar ? <Navbar /> : null}
 
-    <Box flex={`1 0 ${windowHeight - NAVBAR_HEIGHT}px`}>{children}</Box>
+    <Box
+      flex={{
+        base: `1 0 ${windowHeight - NAVBAR_HEIGHT_MOBILE}px`,
+        md: `1 0 ${windowHeight - NAVBAR_HEIGHT_DESKTOP}px`,
+      }}
+    >
+      {children}
+    </Box>
   </View>
 );

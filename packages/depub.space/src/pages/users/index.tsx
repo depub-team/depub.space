@@ -18,6 +18,8 @@ import { AntDesign } from '@expo/vector-icons';
 import { MessageCard, Layout } from '../../components';
 import { Message } from '../../interfaces';
 import { useAppState, useSigningCosmWasmClient } from '../../hooks';
+import { getAbbrNickname } from '../../utils';
+import { getShortenAddress } from '../../utils/getShortenAddress';
 
 const MAX_WIDTH = '640px';
 const ROWS_PER_PAGE = 12;
@@ -30,7 +32,7 @@ export default function IndexPage() {
     typeof window !== 'undefined' ? window.location.search : ''
   );
   const account = urlParams.get('account');
-  const shortenAccount = account ? `${account.slice(0, 10)}...${account.slice(-4)}` : '';
+  const shortenAccount = account ? getShortenAddress(account) : '';
   const [messages, setMessages] = useState<Message[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
   const [offset, setOffset] = useState(0);
@@ -39,7 +41,8 @@ export default function IndexPage() {
   const { isLoading, fetchMessagesByOwner } = useAppState();
   const toast = useToast();
   const profilePic = profile?.profilePic;
-  const nicname = profile?.nickname || shortenAccount;
+  const nickname = profile?.nickname || shortenAccount;
+  const abbrNickname = getAbbrNickname(nickname);
   const bio = profile?.bio;
   const dummyItems = Array.from(new Array(12)).map<Message>(() => ({
     id: `id-${uid()}`,
@@ -138,10 +141,12 @@ export default function IndexPage() {
           />
         </Link>
         <HStack alignItems="center" flex={1} justifyContent="center" space={3}>
-          <Avatar size="md" source={profilePic ? { uri: profilePic } : undefined} />
+          <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
+            {abbrNickname}
+          </Avatar>
           <VStack space={1}>
             <Heading fontSize="xl" textAlign="center">
-              {nicname}
+              {nickname}
             </Heading>
             {bio ? <Text fontSize="sm">{bio}</Text> : null}
           </VStack>
