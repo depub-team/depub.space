@@ -12,8 +12,8 @@ export const Navbar: FC = () => (
       alignItems="center"
       bg="#fff"
       flexDirection="row"
+      h="74px"
       justifyContent="space-between"
-      minHeight="74px"
       px={{
         base: 4,
         md: 6,

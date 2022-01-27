@@ -1,14 +1,38 @@
-import { DesmosProfile } from '@desmoslabs/sdk-core';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DesmosProfileLinkDocument } from './desmosProfile.graphql';
 
+export interface DesmosProfile {
+  address: string;
+  applicationLinks: [];
+  bio: string;
+  chainLinks: [];
+  coverPic: string;
+  creationTime: string; // ISO timestamp
+  dtag: string;
+  nickname: string;
+  profilePic: string;
+}
+
+const DESMOS_PROFILE_CACHE = '@DESMOS_PROFILE_CACHE';
+const CACHE_TTL = 24 * 60 * 60 * 1000;
 const PROFILE_API = 'https://gql.mainnet.desmos.network/v1/graphql';
-const cachedProfiles = new Map<string, DesmosProfile>();
 
 export const fetchDesmosProfile = async (address: string): Promise<DesmosProfile | null> => {
-  if (cachedProfiles.has(address)) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return cachedProfiles.get(address)!;
+  const cacheKey = `${DESMOS_PROFILE_CACHE}/${address}`;
+  const cachedSerializedProfile = await AsyncStorage.getItem(cacheKey);
+
+  if (cachedSerializedProfile) {
+    // check is the cache expired
+    const { profile, expiration } = JSON.parse(cachedSerializedProfile) as {
+      profile: DesmosProfile;
+      expiration: number;
+    };
+    const now = new Date();
+
+    if (now.getTime() < expiration) {
+      return profile;
+    }
   }
 
   try {
@@ -19,9 +43,18 @@ export const fetchDesmosProfile = async (address: string): Promise<DesmosProfile
       query: DesmosProfileLinkDocument,
     });
 
-    cachedProfiles.set(address, data.data);
+    if (data.data.profile[0]) {
+      const serializedProfile = JSON.stringify({
+        expiration: new Date().getTime() + CACHE_TTL,
+        profile: data.data.profile[0],
+      });
 
-    return data.data;
+      await AsyncStorage.setItem(cacheKey, serializedProfile);
+
+      return data.data.profile[0];
+    }
+
+    return null;
   } catch (error) {
     return null;
   }
