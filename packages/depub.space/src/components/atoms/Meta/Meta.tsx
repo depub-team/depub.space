@@ -38,6 +38,7 @@ export const Meta: FC<MetaProps> = ({
         <meta content={description || defaultDescription} property="og:description" />
         <meta content="website" property="og:type" />
         <meta content="https://depub.space" property="og:url" />
+        <meta content="/app-log.png" property="og:image" />
         <link href="/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180" />
         <link href="/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png" />
         <link href="/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png" />
