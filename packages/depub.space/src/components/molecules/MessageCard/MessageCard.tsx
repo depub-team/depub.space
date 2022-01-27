@@ -1,4 +1,4 @@
-import React, { ComponentProps, FC, useEffect, useState } from 'react';
+import React, { ComponentProps, FC, memo, useEffect, useState } from 'react';
 import { getLinkPreview } from 'link-preview-js';
 import { Link, Text, Skeleton, HStack, VStack, Avatar } from 'native-base';
 import dayjs from 'dayjs';
@@ -23,7 +23,8 @@ export interface MessageCardProps extends ComponentProps<typeof HStack> {
   message: Message;
   isLoading?: boolean;
 }
-export const MessageCard: FC<MessageCardProps> = ({
+
+const MessageCardComponent: FC<MessageCardProps> = ({
   isLoading,
   message: { from, date, message, rawMessage },
   ...props
@@ -122,3 +123,5 @@ export const MessageCard: FC<MessageCardProps> = ({
     </HStack>
   );
 };
+
+export const MessageCard = memo(MessageCardComponent);

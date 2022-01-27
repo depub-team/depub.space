@@ -141,6 +141,7 @@ export default function IndexPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
   const [offset, setOffset] = useState(0);
+  const [isReachedEnd, setIsReachedEnd] = useState(false); // whole list shown
   const [messagesWithPaging, setMessagesWithPaging] = useState(messages.slice(0, ROWS_PER_PAGE));
   const {
     error: connectError,
@@ -151,7 +152,7 @@ export default function IndexPage() {
   } = useSigningCosmWasmClient();
   const { isLoading, fetchMessages, postMessage } = useAppState();
   const toast = useToast();
-  const dummyItems = Array.from(new Array(12)).map<Message>(() => ({
+  const dummyItems = Array.from(new Array(ROWS_PER_PAGE)).map<Message>(() => ({
     id: `id-${uid()}`,
     message: '',
     rawMessage: '',
@@ -176,14 +177,19 @@ export default function IndexPage() {
       messages.length
     );
 
-    if (distanceFromEnd < 0) {
+    if (isReachedEnd || distanceFromEnd < 0) {
       return;
     }
 
     const newOffset = Math.min(offset + ROWS_PER_PAGE, messages.length);
+    const paginatedMessages = messages.slice(0, newOffset);
 
-    setMessagesWithPaging(messages.slice(0, newOffset));
+    setMessagesWithPaging(paginatedMessages);
     setOffset(newOffset);
+
+    if (paginatedMessages.length === messages.length && messages.length) {
+      setIsReachedEnd(true);
+    }
   };
 
   const handleOnRefresh = async () => {
