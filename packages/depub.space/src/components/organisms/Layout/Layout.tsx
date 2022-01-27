@@ -3,9 +3,8 @@ import { Box, View } from 'native-base';
 import { Dimensions } from 'react-native';
 import { Meta, MetaProps } from '../../atoms';
 import { Navbar } from '../../molecules';
+import { NAVBAR_HEIGHT_MOBILE, NAVBAR_HEIGHT_DESKTOP } from '../../../contants';
 
-const NAVBAR_HEIGHT_DESKTOP = 74;
-const NAVBAR_HEIGHT_MOBILE = 68;
 const windowHeight = Dimensions.get('window').height;
 
 export interface LayoutProps extends ComponentProps<typeof View> {
