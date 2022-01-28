@@ -141,7 +141,6 @@ export default function IndexPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
   const [offset, setOffset] = useState(ROWS_PER_PAGE);
-  const [isReachedEnd, setIsReachedEnd] = useState(false); // whole list shown
   const [messagesWithPaging, setMessagesWithPaging] = useState(messages.slice(0, ROWS_PER_PAGE));
   const {
     error: connectError,
@@ -177,7 +176,7 @@ export default function IndexPage() {
       messages.length
     );
 
-    if (isReachedEnd || distanceFromEnd < 0) {
+    if (distanceFromEnd < 0 || !messages.length) {
       return;
     }
 
@@ -186,10 +185,6 @@ export default function IndexPage() {
 
     setMessagesWithPaging(paginatedMessages);
     setOffset(newOffset);
-
-    if (paginatedMessages.length === messages.length && messages.length) {
-      setIsReachedEnd(true);
-    }
   };
 
   const handleOnRefresh = async () => {
