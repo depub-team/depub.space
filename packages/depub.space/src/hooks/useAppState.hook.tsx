@@ -280,7 +280,7 @@ export const AppStateProvider: FC = ({ children }) => {
             },
           ],
           name: `depub.space-${recordTimestamp}`,
-          recordNotes: 'A Message posted on depub.space',
+          recordNotes: 'A Message posted on depub.SPACE',
           type: 'Article',
           author: wallet.address,
           description: message,

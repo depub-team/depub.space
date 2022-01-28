@@ -17,7 +17,7 @@ export const Meta: FC<MetaProps> = ({
   description,
   lang = 'en-HK',
 }) => {
-  const titleWithTagline = title ? `${title} | depub.space` : 'depub.space';
+  const titleWithTagline = title ? `${title} | depub.SPACE` : 'depub.SPACE';
   const defaultDescription = 'Not your key, not your tweet. Be web3 native.';
 
   return (

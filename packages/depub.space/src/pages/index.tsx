@@ -133,7 +133,7 @@ const ConnectSection: FC<ConnectSectionProps> = ({ onPress, isLoading }) => (
     <Button isLoading={isLoading} onPress={onPress}>
       Connect Keplr
     </Button>
-    <Text fontSize="sm">depub.space only supports Keplr wallet</Text>
+    <Text fontSize="sm">depub.SPACE only supports Keplr wallet</Text>
   </VStack>
 );
 
