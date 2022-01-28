@@ -297,6 +297,12 @@ export const AppStateProvider: FC = ({ children }) => {
         return txn;
       } catch (ex) {
         debug('postMesage() -> error: %O', ex);
+
+        if (/^Account does not exist on chain/.test(ex.message)) {
+          dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+
+          throw new AppStateError(ex.message);
+        }
       }
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });

@@ -1,4 +1,4 @@
-import { Text, Stack, Heading, Image, AspectRatio, Box, IBoxProps } from 'native-base';
+import { Text, Stack, Heading, Image, AspectRatio, Box, IBoxProps, Link } from 'native-base';
 import React, { FC } from 'react';
 import { LinkPreview } from '../../../interfaces';
 
@@ -34,12 +34,20 @@ export const LinkPreviewCard: FC<LinkPreviewCardProps> = ({ preview }) => (
     </Box>
     <Stack p={3} space={3}>
       <Stack space={2}>
-        <Text color="gray.500" fontSize="xs" fontWeight="500">
-          {preview.url}
-        </Text>
-        <Heading _dark={{ color: 'white' }} _light={{ color: 'black' }} size="sm">
-          {preview.siteName || preview.url}
-        </Heading>
+        <Box>
+          <Link href={preview.url} isExternal>
+            <Text color="gray.500" fontSize="xs" fontWeight="500">
+              {preview.url}
+            </Text>
+          </Link>
+        </Box>
+        <Box>
+          <Link href={preview.url} isExternal>
+            <Heading _dark={{ color: 'white' }} _light={{ color: 'black' }} size="sm">
+              {preview.siteName || preview.url}
+            </Heading>
+          </Link>
+        </Box>
       </Stack>
     </Stack>
   </Box>
