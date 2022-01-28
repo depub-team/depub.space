@@ -222,9 +222,7 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
       try {
         const myProfile = await fetchDesmosProfile(walletAddress);
 
-        if (myProfile) {
-          setProfile(myProfile);
-        }
+        setProfile(myProfile);
       } catch (ex) {
         debug('useEffect() -> error: %O', ex);
       }
