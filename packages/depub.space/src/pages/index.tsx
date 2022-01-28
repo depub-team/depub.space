@@ -11,7 +11,6 @@ import {
   useToast,
   FormControl,
   Stack,
-  FlatList,
   HStack,
   TextArea,
   VStack,
@@ -19,19 +18,17 @@ import {
   Skeleton,
   Avatar,
 } from 'native-base';
-import { RefreshControl } from 'react-native';
 import { Message } from '../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
-import { MessageCard, Layout } from '../components';
+import { Layout, MessageList } from '../components';
 import { DesmosProfile } from '../utils';
-import { MAX_WIDTH, ROWS_PER_PAGE, MAX_CHAR_LIMIT, END_REACHED_THRESHOLD } from '../contants';
+import { MAX_WIDTH, MAX_CHAR_LIMIT } from '../contants';
 
 interface MessageFormType {
   message: string;
 }
 
 const debug = Debug('web:<IndexPage />');
-const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
 
 interface MessageInputSectionProps {
   isLoading?: boolean;
@@ -139,9 +136,6 @@ const ConnectSection: FC<ConnectSectionProps> = ({ onPress, isLoading }) => (
 
 export default function IndexPage() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [refreshing, setRefreshing] = React.useState(false);
-  const [offset, setOffset] = useState(ROWS_PER_PAGE);
-  const [messagesWithPaging, setMessagesWithPaging] = useState(messages.slice(0, ROWS_PER_PAGE));
   const {
     error: connectError,
     isLoading: isConnectLoading,
@@ -151,52 +145,15 @@ export default function IndexPage() {
   } = useSigningCosmWasmClient();
   const { isLoading, fetchMessages, postMessage } = useAppState();
   const toast = useToast();
-  const dummyItems = Array.from(new Array(ROWS_PER_PAGE)).map<Message>(() => ({
-    id: `id-${uid()}`,
-    message: '',
-    rawMessage: '',
-    from: '',
-    date: new Date(),
-  }));
 
   const fetchNewMessages = async () => {
+    debug('fetchNewMessages()');
+
     const res = await fetchMessages();
 
     if (res) {
       setMessages(res.messages);
     }
-  };
-
-  const handleOnEndReached = ({ distanceFromEnd }: { distanceFromEnd: number }) => {
-    debug(
-      'handleOnEndReached() -> distanceFromEnd: %d, offset: %d, ROWS_PER_PAGE: %d, messages.length: %d',
-      distanceFromEnd,
-      offset,
-      ROWS_PER_PAGE,
-      messages.length
-    );
-
-    if (distanceFromEnd < 0 || !messages.length) {
-      return;
-    }
-
-    const newOffset = Math.min(offset + ROWS_PER_PAGE, messages.length);
-    const paginatedMessages = messages.slice(0, newOffset);
-
-    setMessagesWithPaging(paginatedMessages);
-    setOffset(newOffset);
-  };
-
-  const handleOnRefresh = async () => {
-    setRefreshing(true);
-
-    try {
-      await fetchNewMessages();
-    } catch (ex) {
-      debug('handleOnRefresh() -> error: %O', ex);
-    }
-
-    setRefreshing(false);
   };
 
   const handleOnSubmit: SubmitHandler<MessageFormType> = async data => {
@@ -223,16 +180,15 @@ export default function IndexPage() {
   };
 
   useEffect(() => {
+    debug('useEffect()');
+
     void fetchNewMessages();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // get first batch of messages
   useEffect(() => {
-    setMessagesWithPaging(messages.slice(0, ROWS_PER_PAGE));
-  }, [messages]);
+    debug('useEffect() -> connectError: %s', connectError);
 
-  useEffect(() => {
     if (connectError) {
       toast.show({
         title: connectError,
@@ -265,18 +221,13 @@ export default function IndexPage() {
   ));
 
   return (
-    <Layout metadata={{ title: 'Home' }}>
-      <FlatList<Message>
-        data={refreshing || isLoading ? dummyItems : messagesWithPaging}
+    <Layout>
+      <MessageList
+        isLoading={isLoading}
         ItemSeparatorComponent={ListItemSeparatorComponent}
-        keyExtractor={item => item.id}
         ListHeaderComponent={ListHeaderComponent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleOnRefresh} />}
-        renderItem={ctx => (
-          <MessageCard isLoading={isLoading} maxW={MAX_WIDTH} message={ctx.item} mx="auto" />
-        )}
-        onEndReached={handleOnEndReached}
-        onEndReachedThreshold={END_REACHED_THRESHOLD}
+        messages={messages}
+        onFetchMessages={fetchNewMessages}
       />
     </Layout>
   );

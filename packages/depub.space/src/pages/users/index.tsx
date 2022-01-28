@@ -10,21 +10,18 @@ import {
   VStack,
   Text,
   Heading,
-  FlatList,
   Avatar,
 } from 'native-base';
-import { Platform, RefreshControl } from 'react-native';
+import { Platform } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
-import { MessageCard, Layout } from '../../components';
+import { Layout, MessageList } from '../../components';
 import { Message } from '../../interfaces';
 import { useAppState, useSigningCosmWasmClient } from '../../hooks';
 import { DesmosProfile, fetchDesmosProfile, getAbbrNickname } from '../../utils';
 import { getShortenAddress } from '../../utils/getShortenAddress';
-import { MAX_WIDTH, END_REACHED_THRESHOLD, ROWS_PER_PAGE } from '../../contants';
+import { MAX_WIDTH } from '../../contants';
 
 const debug = Debug('web:<UserPage />');
-
-const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
 
 export default function IndexPage() {
   const urlParams = new URLSearchParams(
@@ -34,9 +31,6 @@ export default function IndexPage() {
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
   const [messages, setMessages] = useState<Message[]>([]);
-  const [refreshing, setRefreshing] = React.useState(false);
-  const [offset, setOffset] = useState(ROWS_PER_PAGE);
-  const [messagesWithPaging, setMessagesWithPaging] = useState(messages.slice(0, ROWS_PER_PAGE));
   const { error: connectError, walletAddress } = useSigningCosmWasmClient();
   const { isLoading, fetchMessagesByOwner } = useAppState();
   const toast = useToast();
@@ -45,13 +39,6 @@ export default function IndexPage() {
   const abbrNickname = getAbbrNickname(nickname);
   const bio = profile?.bio;
   const dtag = profile?.dtag;
-  const dummyItems = Array.from(new Array(12)).map<Message>(() => ({
-    id: `id-${uid()}`,
-    message: '',
-    rawMessage: '',
-    from: '',
-    date: new Date(),
-  }));
 
   const fetchNewMessages = async () => {
     if (!account) {
@@ -63,37 +50,6 @@ export default function IndexPage() {
     if (res) {
       setMessages(res.messages);
     }
-  };
-
-  const handleOnEndReached = ({ distanceFromEnd }: { distanceFromEnd: number }) => {
-    debug(
-      'handleOnEndReached() -> distanceFromEnd: %d, offset: %d, ROWS_PER_PAGE: %d, messages.length: %d',
-      distanceFromEnd,
-      offset,
-      ROWS_PER_PAGE,
-      messages.length
-    );
-
-    if (distanceFromEnd < 0) {
-      return;
-    }
-
-    const newOffset = Math.min(offset + ROWS_PER_PAGE, messages.length);
-
-    setMessagesWithPaging(messages.slice(0, newOffset));
-    setOffset(newOffset);
-  };
-
-  const handleOnRefresh = async () => {
-    setRefreshing(true);
-
-    try {
-      await fetchNewMessages();
-    } catch (ex) {
-      debug('handleOnRefresh() -> error: %O', ex);
-    }
-
-    setRefreshing(false);
   };
 
   useEffect(() => {
@@ -122,6 +78,8 @@ export default function IndexPage() {
   }, [fetchMessagesByOwner, account]);
 
   useEffect(() => {
+    debug('useEffect() -> connectError: %s', connectError);
+
     if (connectError) {
       toast.show({
         title: connectError,
@@ -129,11 +87,6 @@ export default function IndexPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectError]);
-
-  // get first batch of messages
-  useEffect(() => {
-    setMessagesWithPaging(messages.slice(0, ROWS_PER_PAGE));
-  }, [messages]);
 
   const ListHeaderComponent = memo(() => (
     <VStack h="100%" maxW="640px" mx="auto" my={4} px={4} space={8} w="100%">
@@ -174,17 +127,12 @@ export default function IndexPage() {
 
   return account ? (
     <Layout metadata={{ title: walletAddress }}>
-      <FlatList<Message>
-        data={refreshing || isLoading ? dummyItems : messagesWithPaging}
+      <MessageList
+        isLoading={isLoading}
         ItemSeparatorComponent={ListItemSeparatorComponent}
-        keyExtractor={item => item.id}
         ListHeaderComponent={ListHeaderComponent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleOnRefresh} />}
-        renderItem={ctx => (
-          <MessageCard isLoading={isLoading} maxW={MAX_WIDTH} message={ctx.item} mx="auto" />
-        )}
-        onEndReached={handleOnEndReached}
-        onEndReachedThreshold={END_REACHED_THRESHOLD}
+        messages={messages}
+        onFetchMessages={fetchNewMessages}
       />
     </Layout>
   ) : null;
