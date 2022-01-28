@@ -24,8 +24,8 @@ export const theme = extendTheme({
     },
   },
   fonts: {
-    body: 'Inter',
-    heading: 'Inter_bold',
+    body: '"Inter", sans-serif',
+    heading: 'Inter_bold, sans-serif',
     monospace: 'Courier, Monaco, monospace',
   },
   components: {
