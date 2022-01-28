@@ -1,4 +1,4 @@
-![depub.SPACE](/packages/theme/assets/icons/logo-icon-text.svg)
+![depub.SPACE](/packages/theme/assets/icons/app-logo.png)
 
 # DePub
 
