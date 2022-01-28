@@ -3,7 +3,7 @@
   "version": "1.1.0",
   "private": true,
   "description": "Decentralized social media platform",
-  "license": "wtfpl",
+  "license": "gpl",
   "author": "0xNaN Team",
   "scripts": {
     "build": "next build && next export",
