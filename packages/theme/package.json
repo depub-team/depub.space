@@ -1,7 +1,7 @@
 {
   "name": "@depub/theme",
   "version": "1.1.0",
-  "license": "wtfpl",
+  "license": "gpl",
   "private": true,
   "description": "Theme based on Native base",
   "author": "0xNaN Team",

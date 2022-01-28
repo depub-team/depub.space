@@ -1,7 +1,7 @@
 {
   "name": "depub",
   "version": "1.1.0",
-  "license": "wtfpl",
+  "license": "gpl",
   "private": true,
   "description": "https://depub.space",
   "author": "0xNaN Team",
