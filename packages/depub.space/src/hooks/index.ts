@@ -1,2 +1,2 @@
 export * from './useAppState.hook';
-export * from './useSigningCosmWasmClient';
+export * from './useSigningCosmWasmClient.hook';

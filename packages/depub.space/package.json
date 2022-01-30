@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@cosmjs/cosmwasm-stargate": "0.27.0",
+    "@cosmjs/proto-signing": "0.27.1",
     "@cosmjs/stargate": "0.26.5",
     "@depub/theme": "*",
     "@expo/vector-icons": "12.0.5",
@@ -20,6 +21,9 @@
     "@likecoin/iscn-js": "0.0.7",
     "@react-native-async-storage/async-storage": "~1.15.0",
     "@sentry/nextjs": "6.17.2",
+    "@walletconnect/client": "1.7.1",
+    "@walletconnect/qrcode-modal": "1.7.1",
+    "@walletconnect/utils": "1.7.1",
     "axios": "0.25.0",
     "cosmjs-types": "0.4.1",
     "dayjs": "1.10.7",

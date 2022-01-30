@@ -1,4 +1,5 @@
-import React, { FC, memo, useEffect, useState } from 'react';
+import React, { ComponentProps, FC, memo, useEffect, useState } from 'react';
+import { Entypo } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Debug from 'debug';
 import * as Yup from 'yup';
@@ -10,13 +11,17 @@ import {
   Button,
   useToast,
   FormControl,
+  Icon,
   Stack,
   HStack,
   TextArea,
+  Image,
   VStack,
   WarningOutlineIcon,
   Skeleton,
   Avatar,
+  Modal,
+  Heading,
 } from 'native-base';
 import { Message } from '../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
@@ -70,7 +75,7 @@ const MessageInputSection: FC<MessageInputSectionProps> = ({
         md: 'row',
       }}
       flex={1}
-      mt={4}
+      my={4}
       space={4}
     >
       <Box alignItems="center" flex={{ base: 1, md: 'unset' }}>
@@ -120,27 +125,116 @@ const MessageInputSection: FC<MessageInputSectionProps> = ({
   );
 };
 
+interface ConnectModalProps extends ComponentProps<typeof Modal> {
+  onPressWalletConnect?: () => void;
+  onPressKeplr?: () => void;
+}
+
+interface ConnectButtonProps extends ComponentProps<typeof Button> {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+const ConnectButton: FC<ConnectButtonProps> = ({ icon, title, description, ...props }) => (
+  <Button
+    _dark={{
+      _hover: { bg: 'gray.800', borderColor: 'gray.300' },
+    }}
+    _light={{
+      _hover: { bg: 'gray.100', borderColor: 'gray.200' },
+    }}
+    _stack={{
+      alignItems: 'center',
+      space: 3,
+      direction: 'row',
+      w: '100%',
+    }}
+    borderColor="gray.200"
+    borderRadius="md"
+    borderWidth={1}
+    startIcon={<Image h={12} source={{ uri: icon }} w={12} />}
+    variant="unstyled"
+    {...props}
+  >
+    <Heading _dark={{ color: 'white' }} _light={{ color: 'black' }} mb={0} size="md">
+      {title}
+    </Heading>
+    <Text color="gray.500" fontSize="sm">
+      {description}
+    </Text>
+  </Button>
+);
+
+const ConnectModal: FC<ConnectModalProps> = ({ onPressWalletConnect, onPressKeplr, ...props }) => (
+  <Modal {...props}>
+    <Modal.Content maxWidth="400px">
+      <Modal.CloseButton />
+      <Modal.Header>Connect Wallet</Modal.Header>
+      <Modal.Body p={4}>
+        <VStack space={4}>
+          <ConnectButton
+            description=" Keplr Browser Extension"
+            icon="/images/keplr-icon.svg"
+            title="Keplr Wallet"
+            onPress={onPressKeplr}
+          />
+
+          <ConnectButton
+            description=" Liker Land APP"
+            icon="/images/walletconnect-icon.svg"
+            title="WalletConnect"
+            onPress={onPressWalletConnect}
+          />
+        </VStack>
+      </Modal.Body>
+    </Modal.Content>
+  </Modal>
+);
+
 interface ConnectSectionProps {
-  onPress?: () => void;
+  onPressWalletConnect?: () => void;
+  onPressKeplr?: () => void;
   isLoading?: boolean;
 }
 
-const ConnectSection: FC<ConnectSectionProps> = ({ onPress, isLoading }) => (
-  <VStack alignItems="center" flex={1} justifyContent="center" minHeight="180px" space={4}>
-    <Button isLoading={isLoading} onPress={onPress}>
-      Connect Keplr
-    </Button>
-    <Text fontSize="sm">depub.SPACE only supports Keplr wallet</Text>
-  </VStack>
-);
+const ConnectSection: FC<ConnectSectionProps> = ({
+  onPressKeplr,
+  onPressWalletConnect,
+  isLoading,
+}) => {
+  const [showModal, setShowModal] = useState(false);
+
+  return (
+    <>
+      <VStack alignItems="center" flex={1} justifyContent="center" py={8} space={4}>
+        <Button
+          isLoading={isLoading}
+          leftIcon={<Icon as={Entypo} name="wallet" size="sm" />}
+          onPress={() => setShowModal(true)}
+        >
+          Connect Wallet
+        </Button>
+      </VStack>
+      <ConnectModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onPressKeplr={onPressKeplr}
+        onPressWalletConnect={onPressWalletConnect}
+      />
+    </>
+  );
+};
 
 export default function IndexPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const {
     error: connectError,
     isLoading: isConnectLoading,
-    connectWallet,
+    connectKeplr,
+    connectWalletConnect,
     walletAddress,
+    offlineSigner,
     profile,
   } = useSigningCosmWasmClient();
   const { isLoading, fetchMessages, postMessage } = useAppState();
@@ -157,8 +251,18 @@ export default function IndexPage() {
   };
 
   const handleOnSubmit: SubmitHandler<MessageFormType> = async data => {
+    if (!offlineSigner) {
+      toast.show({
+        title: 'No valid signer, please connect wallet',
+        status: 'error',
+        placement: 'top',
+      });
+
+      return;
+    }
+
     try {
-      const txn = await postMessage(data.message);
+      const txn = await postMessage(offlineSigner, data.message);
 
       await fetchNewMessages();
 
@@ -200,7 +304,7 @@ export default function IndexPage() {
   }, [connectError]);
 
   const ListHeaderComponent = memo(() => (
-    <VStack maxW={MAX_WIDTH} mb={8} mx="auto" px={4} space={8} w="100%">
+    <VStack maxW={MAX_WIDTH} mb={8} mx="auto" px={4} w="100%">
       {walletAddress && !isConnectLoading ? (
         <MessageInputSection
           address={walletAddress}
@@ -209,7 +313,11 @@ export default function IndexPage() {
           onSubmit={handleOnSubmit}
         />
       ) : (
-        <ConnectSection isLoading={isLoading || isConnectLoading} onPress={connectWallet} />
+        <ConnectSection
+          isLoading={isLoading || isConnectLoading}
+          onPressKeplr={connectKeplr}
+          onPressWalletConnect={connectWalletConnect}
+        />
       )}
 
       <Divider />
