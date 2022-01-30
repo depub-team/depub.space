@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 26.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:url(#Rectangle_00000013906024040059538880000000006058886207312816_);}
+	
+		.st1{fill-rule:evenodd;clip-rule:evenodd;fill:url(#Rectangle-Copy-2_00000000197341307989663190000003993049570483409339_);fill-opacity:0.57;}
+	
+		.st2{fill-rule:evenodd;clip-rule:evenodd;fill:url(#Rectangle-Copy-3_00000002375038601033753080000001453169123519163802_);fill-opacity:0.68;}
+	
+		.st3{fill-rule:evenodd;clip-rule:evenodd;fill:url(#Rectangle-Copy_00000136379722138006478830000007128732230933860484_);fill-opacity:8.000000e-02;}
+	
+		.st4{fill-rule:evenodd;clip-rule:evenodd;fill:url(#Rectangle-Copy-4_00000029767070941748134110000016908317537294567313_);fill-opacity:3.000000e-02;}
+	.st5{fill:#FFFFFF;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="Artboard-Copy-6">
+	<g id="Group">
+		
+			<radialGradient id="Rectangle_00000125566038158670207750000017845586191013177258_" cx="-255.233" cy="771.2397" r="4.4032" gradientTransform="matrix(-153.5942 128.0969 154.5777 185.346 -157953.5625 -110195.5156)" gradientUnits="userSpaceOnUse">
+			<stop  offset="0" style="stop-color:#2F80F2"/>
+			<stop  offset="0.9997" style="stop-color:#A942B5"/>
+		</radialGradient>
+		
+			<path id="Rectangle" style="fill-rule:evenodd;clip-rule:evenodd;fill:url(#Rectangle_00000125566038158670207750000017845586191013177258_);" d="
+			M41,0H471c22.6,0,41,18.3,41,41V471c0,22.6-18.3,41-41,41H41c-22.6,0-41-18.3-41-41V41C0,18.3,18.3,0,41,0z"/>
+		
+			<radialGradient id="Rectangle-Copy-2_00000114075644146136611730000000424354992335658942_" cx="-253.1731" cy="768.9961" r="4.0732" gradientTransform="matrix(138.124 144.6436 151.5657 -144.734 -81584.1406 147930.7656)" gradientUnits="userSpaceOnUse">
+			<stop  offset="0" style="stop-color:#45F9DE"/>
+			<stop  offset="1" style="stop-color:#A942B5;stop-opacity:0"/>
+		</radialGradient>
+		
+			<path id="Rectangle-Copy-2" style="fill-rule:evenodd;clip-rule:evenodd;fill:url(#Rectangle-Copy-2_00000114075644146136611730000000424354992335658942_);fill-opacity:0.57;" d="
+			M41,0H471c22.6,0,41,18.3,41,41V471c0,22.6-18.3,41-41,41H41c-22.6,0-41-18.3-41-41V41C0,18.3,18.3,0,41,0z"/>
+		
+			<radialGradient id="Rectangle-Copy-3_00000013152447724521176430000011176452293768241846_" cx="-256.835" cy="773.5052" r="2.4587" gradientTransform="matrix(-200 0 0 102.9922 -50855 -79153.0156)" gradientUnits="userSpaceOnUse">
+			<stop  offset="0" style="stop-color:#E957C5"/>
+			<stop  offset="1" style="stop-color:#AC43B6;stop-opacity:4.370041e-02"/>
+			<stop  offset="1" style="stop-color:#A942B5;stop-opacity:0"/>
+		</radialGradient>
+		
+			<path id="Rectangle-Copy-3" style="fill-rule:evenodd;clip-rule:evenodd;fill:url(#Rectangle-Copy-3_00000013152447724521176430000011176452293768241846_);fill-opacity:0.68;" d="
+			M41,0H471c22.6,0,41,18.3,41,41V471c0,22.6-18.3,41-41,41H41c-22.6,0-41-18.3-41-41V41C0,18.3,18.3,0,41,0z"/>
+		
+			<radialGradient id="Rectangle-Copy_00000000190100607683833350000003235383770612566429_" cx="-253.7448" cy="770.3719" r="1.4759" gradientTransform="matrix(-99.812 173.3135 259.8304 149.6374 -225236.8125 -71043.0234)" gradientUnits="userSpaceOnUse">
+			<stop  offset="0" style="stop-color:#000000;stop-opacity:0.1849"/>
+			<stop  offset="1" style="stop-color:#101010"/>
+		</radialGradient>
+		
+			<path id="Rectangle-Copy" style="fill-rule:evenodd;clip-rule:evenodd;fill:url(#Rectangle-Copy_00000000190100607683833350000003235383770612566429_);fill-opacity:8.000000e-02;" d="
+			M41,0H471c22.6,0,41,18.3,41,41V471c0,22.6-18.3,41-41,41H41c-22.6,0-41-18.3-41-41V41C0,18.3,18.3,0,41,0z"/>
+		
+			<linearGradient id="Rectangle-Copy-4_00000129896050123989708690000011474998892067493768_" gradientUnits="userSpaceOnUse" x1="-251.5279" y1="765.8712" x2="-253.9404" y2="767.3807" gradientTransform="matrix(200 0 0 -200 50745 153545)">
+			<stop  offset="0" style="stop-color:#FFFFFF;stop-opacity:0.1849"/>
+			<stop  offset="1" style="stop-color:#FFFFFF"/>
+		</linearGradient>
+		
+			<path id="Rectangle-Copy-4" style="fill-rule:evenodd;clip-rule:evenodd;fill:url(#Rectangle-Copy-4_00000129896050123989708690000011474998892067493768_);fill-opacity:3.000000e-02;" d="
+			M41,0H471c22.6,0,41,18.3,41,41V471c0,22.6-18.3,41-41,41H41c-22.6,0-41-18.3-41-41V41C0,18.3,18.3,0,41,0z"/>
+	</g>
+	<polygon id="K" class="st5" points="180.2,435.2 180.2,276.5 330.2,435.2 413.7,435.2 413.7,431.1 241.2,250.4 400.4,78.8 
+		400.4,76.8 316.4,76.8 180.2,228.4 180.2,76.8 112.6,76.8 112.6,435.2 	"/>
+</g>
+</svg>

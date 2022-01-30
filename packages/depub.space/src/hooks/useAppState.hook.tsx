@@ -8,6 +8,7 @@ import React, {
   useReducer,
 } from 'react';
 import * as Crypto from 'expo-crypto';
+import { OfflineSigner } from '@cosmjs/proto-signing';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import { ISCNQueryClient, ISCNRecord, ISCNSigningClient } from '@likecoin/iscn-js';
@@ -17,7 +18,6 @@ import { replaceURLs } from '../utils';
 
 const debug = Debug('web:useAppState');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
-const PUBLIC_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID || '';
 
 export class AppStateError extends Error {}
 
@@ -50,7 +50,10 @@ export interface AppStateContextProps {
   error: string | null;
   fetchMessages: () => Promise<MessageQueryType | null>;
   fetchMessagesByOwner: (author: string) => Promise<MessageQueryType | null>;
-  postMessage: (message: string) => Promise<BroadcastTxSuccess | TxRaw | null>;
+  postMessage: (
+    offlineSigner: OfflineSigner,
+    message: string
+  ) => Promise<BroadcastTxSuccess | TxRaw | null>;
 }
 
 const initialState: AppStateContextProps = {
@@ -234,22 +237,16 @@ export const AppStateProvider: FC = ({ children }) => {
   }, []);
 
   const postMessage = useCallback(
-    async (message: string) => {
+    async (offlineSigner: OfflineSigner, message: string) => {
       debug('postMessage() -> message: %s', message);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
       try {
-        const signer = (window as any).getOfflineSigner(PUBLIC_CHAIN_ID);
-
-        if (!signer) {
-          throw new AppStateError('No valid signer, please connect wallet');
-        }
-
-        const [wallet] = await signer.getAccounts();
+        const [wallet] = await offlineSigner.getAccounts();
         const signingClient = new ISCNSigningClient();
 
-        await signingClient.connectWithSigner(PUBLIC_RPC_ENDPOINT, signer);
+        await signingClient.connectWithSigner(PUBLIC_RPC_ENDPOINT, offlineSigner);
 
         const recordTimestamp = new Date().toISOString();
         const datePublished = recordTimestamp.split('T')[0];
