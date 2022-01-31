@@ -20,7 +20,7 @@ import {
 } from 'native-base';
 import { Message } from '../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
-import { Layout, MessageList } from '../components';
+import { Layout, MessageList, ConnectWallet } from '../components';
 import { DesmosProfile } from '../utils';
 import { MAX_WIDTH, MAX_CHAR_LIMIT } from '../contants';
 
@@ -70,7 +70,7 @@ const MessageInputSection: FC<MessageInputSectionProps> = ({
         md: 'row',
       }}
       flex={1}
-      mt={4}
+      my={4}
       space={4}
     >
       <Box alignItems="center" flex={{ base: 1, md: 'unset' }}>
@@ -120,27 +120,15 @@ const MessageInputSection: FC<MessageInputSectionProps> = ({
   );
 };
 
-interface ConnectSectionProps {
-  onPress?: () => void;
-  isLoading?: boolean;
-}
-
-const ConnectSection: FC<ConnectSectionProps> = ({ onPress, isLoading }) => (
-  <VStack alignItems="center" flex={1} justifyContent="center" minHeight="180px" space={4}>
-    <Button isLoading={isLoading} onPress={onPress}>
-      Connect Keplr
-    </Button>
-    <Text fontSize="sm">depub.SPACE only supports Keplr wallet</Text>
-  </VStack>
-);
-
 export default function IndexPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const {
     error: connectError,
     isLoading: isConnectLoading,
-    connectWallet,
+    connectKeplr,
+    connectWalletConnect,
     walletAddress,
+    offlineSigner,
     profile,
   } = useSigningCosmWasmClient();
   const { isLoading, fetchMessages, postMessage } = useAppState();
@@ -157,8 +145,18 @@ export default function IndexPage() {
   };
 
   const handleOnSubmit: SubmitHandler<MessageFormType> = async data => {
+    if (!offlineSigner) {
+      toast.show({
+        title: 'No valid signer, please connect wallet',
+        status: 'error',
+        placement: 'top',
+      });
+
+      return;
+    }
+
     try {
-      const txn = await postMessage(data.message);
+      const txn = await postMessage(offlineSigner, data.message);
 
       await fetchNewMessages();
 
@@ -200,7 +198,7 @@ export default function IndexPage() {
   }, [connectError]);
 
   const ListHeaderComponent = memo(() => (
-    <VStack maxW={MAX_WIDTH} mb={8} mx="auto" px={4} space={8} w="100%">
+    <VStack maxW={MAX_WIDTH} mb={8} mx="auto" px={4} w="100%">
       {walletAddress && !isConnectLoading ? (
         <MessageInputSection
           address={walletAddress}
@@ -209,7 +207,11 @@ export default function IndexPage() {
           onSubmit={handleOnSubmit}
         />
       ) : (
-        <ConnectSection isLoading={isLoading || isConnectLoading} onPress={connectWallet} />
+        <ConnectWallet
+          isLoading={isLoading || isConnectLoading}
+          onPressKeplr={connectKeplr}
+          onPressWalletConnect={connectWalletConnect}
+        />
       )}
 
       <Divider />
