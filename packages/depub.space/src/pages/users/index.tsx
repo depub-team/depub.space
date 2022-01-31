@@ -126,7 +126,7 @@ export default function IndexPage() {
   ));
 
   return account ? (
-    <Layout metadata={{ title: walletAddress }}>
+    <Layout metadata={{ title: walletAddress || undefined }}>
       <MessageList
         isLoading={isLoading}
         ItemSeparatorComponent={ListItemSeparatorComponent}
