@@ -1,5 +1,4 @@
-import React, { ComponentProps, FC, memo, useEffect, useState } from 'react';
-import { Entypo } from '@expo/vector-icons';
+import React, { FC, memo, useEffect, useState } from 'react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Debug from 'debug';
 import * as Yup from 'yup';
@@ -11,21 +10,17 @@ import {
   Button,
   useToast,
   FormControl,
-  Icon,
   Stack,
   HStack,
   TextArea,
-  Image,
   VStack,
   WarningOutlineIcon,
   Skeleton,
   Avatar,
-  Modal,
-  Heading,
 } from 'native-base';
 import { Message } from '../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
-import { Layout, MessageList } from '../components';
+import { Layout, MessageList, ConnectWallet } from '../components';
 import { DesmosProfile } from '../utils';
 import { MAX_WIDTH, MAX_CHAR_LIMIT } from '../contants';
 
@@ -125,107 +120,6 @@ const MessageInputSection: FC<MessageInputSectionProps> = ({
   );
 };
 
-interface ConnectModalProps extends ComponentProps<typeof Modal> {
-  onPressWalletConnect?: () => void;
-  onPressKeplr?: () => void;
-}
-
-interface ConnectButtonProps extends ComponentProps<typeof Button> {
-  icon: string;
-  title: string;
-  description: string;
-}
-
-const ConnectButton: FC<ConnectButtonProps> = ({ icon, title, description, ...props }) => (
-  <Button
-    _dark={{
-      _hover: { bg: 'gray.800', borderColor: 'gray.300' },
-    }}
-    _light={{
-      _hover: { bg: 'gray.100', borderColor: 'gray.200' },
-    }}
-    _stack={{
-      alignItems: 'center',
-      space: 3,
-      direction: 'row',
-      w: '100%',
-    }}
-    borderColor="gray.200"
-    borderRadius="md"
-    borderWidth={1}
-    startIcon={<Image h={12} source={{ uri: icon }} w={12} />}
-    variant="unstyled"
-    {...props}
-  >
-    <Heading _dark={{ color: 'white' }} _light={{ color: 'black' }} mb={0} size="md">
-      {title}
-    </Heading>
-    <Text color="gray.500" fontSize="sm">
-      {description}
-    </Text>
-  </Button>
-);
-
-const ConnectModal: FC<ConnectModalProps> = ({ onPressWalletConnect, onPressKeplr, ...props }) => (
-  <Modal {...props}>
-    <Modal.Content maxWidth="400px">
-      <Modal.CloseButton />
-      <Modal.Header>Connect Wallet</Modal.Header>
-      <Modal.Body p={4}>
-        <VStack space={4}>
-          <ConnectButton
-            description=" Keplr Browser Extension"
-            icon="/images/keplr-icon.svg"
-            title="Keplr Wallet"
-            onPress={onPressKeplr}
-          />
-
-          <ConnectButton
-            description=" Liker Land APP"
-            icon="/images/walletconnect-icon.svg"
-            title="WalletConnect"
-            onPress={onPressWalletConnect}
-          />
-        </VStack>
-      </Modal.Body>
-    </Modal.Content>
-  </Modal>
-);
-
-interface ConnectSectionProps {
-  onPressWalletConnect?: () => void;
-  onPressKeplr?: () => void;
-  isLoading?: boolean;
-}
-
-const ConnectSection: FC<ConnectSectionProps> = ({
-  onPressKeplr,
-  onPressWalletConnect,
-  isLoading,
-}) => {
-  const [showModal, setShowModal] = useState(false);
-
-  return (
-    <>
-      <VStack alignItems="center" flex={1} justifyContent="center" py={8} space={4}>
-        <Button
-          isLoading={isLoading}
-          leftIcon={<Icon as={Entypo} name="wallet" size="sm" />}
-          onPress={() => setShowModal(true)}
-        >
-          Connect Wallet
-        </Button>
-      </VStack>
-      <ConnectModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onPressKeplr={onPressKeplr}
-        onPressWalletConnect={onPressWalletConnect}
-      />
-    </>
-  );
-};
-
 export default function IndexPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const {
@@ -313,7 +207,7 @@ export default function IndexPage() {
           onSubmit={handleOnSubmit}
         />
       ) : (
-        <ConnectSection
+        <ConnectWallet
           isLoading={isLoading || isConnectLoading}
           onPressKeplr={connectKeplr}
           onPressWalletConnect={connectWalletConnect}
