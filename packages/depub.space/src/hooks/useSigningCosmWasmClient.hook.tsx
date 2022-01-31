@@ -12,11 +12,12 @@ import { DesmosProfile, fetchDesmosProfile } from '../utils';
 const debug = Debug('web:useSigningCosmWasmClient');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
 const PUBLIC_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID || '';
-const KEY_WALLETCONNECT_STORAGE = 'walletconnect';
+const KEY_WALLET_CONNECT_ACCOUNT_PREFIX = 'KEY_WALLET_CONNECT_ACCOUNT_PREFIX';
+const KEY_WALLET_CONNECT = 'likerland_app';
 const KEY_CONNECTED_WALLET_TYPE = 'KEY_CONNECTED_WALLET_TYPE';
 const isTestnet = /testnet/.test(PUBLIC_CHAIN_ID);
 
-type ConnectedWalletType = 'keplr' | 'walletConnect';
+type ConnectedWalletType = 'keplr' | 'likerland_app';
 
 export interface ISigningCosmWasmClientContext {
   walletAddress: string | null;
@@ -167,8 +168,18 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
       signingClient.disconnect();
     }
 
-    await AsyncStorage.removeItem(KEY_WALLETCONNECT_STORAGE);
+    const keys = await AsyncStorage.getAllKeys();
+    const accountKeys = keys.filter(key =>
+      new RegExp(`^${KEY_WALLET_CONNECT_ACCOUNT_PREFIX}`).test(key)
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    accountKeys.forEach(async key => {
+      await AsyncStorage.removeItem(key);
+    });
+
     await AsyncStorage.removeItem(KEY_CONNECTED_WALLET_TYPE);
+    await AsyncStorage.removeItem(KEY_WALLET_CONNECT);
 
     if (connector.connected) {
       void connector.killSession();
@@ -212,7 +223,6 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
 
   const initWalletConnect = async () => {
     let account: any;
-    const serializedWalletConnectAccount = await AsyncStorage.getItem(KEY_WALLETCONNECT_STORAGE);
 
     connector.on('disconnect', () => {
       debug('initWalletConnect() -> connector.on("disconnect")');
@@ -220,11 +230,9 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
       void disconnect();
     });
 
-    if (serializedWalletConnectAccount) {
-      debug('initWalletConnect() -> load serialized account');
+    console.log(connector.peerId);
 
-      account = JSON.parse(serializedWalletConnectAccount);
-    } else if (!connector.connected) {
+    if (!connector.connected) {
       debug('initWalletConnect() -> not connected');
 
       await connector.connect();
@@ -238,7 +246,20 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
 
       debug('initWalletConnect() -> account: %O', account);
 
-      await AsyncStorage.setItem(KEY_WALLETCONNECT_STORAGE, JSON.stringify(account));
+      await AsyncStorage.setItem(
+        `${KEY_WALLET_CONNECT_ACCOUNT_PREFIX}_${connector.peerId}`,
+        JSON.stringify(account)
+      );
+    } else {
+      const serializedWalletConnectAccount = await AsyncStorage.getItem(
+        `${KEY_WALLET_CONNECT_ACCOUNT_PREFIX}_${connector.peerId}`
+      );
+
+      if (serializedWalletConnectAccount) {
+        debug('initWalletConnect() -> load serialized account');
+
+        account = JSON.parse(serializedWalletConnectAccount);
+      }
     }
 
     if (!account) return false;
@@ -270,7 +291,7 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
     setWalletAddress(address);
     setOfflineSigner(myOfflineSigner);
 
-    await AsyncStorage.setItem(KEY_CONNECTED_WALLET_TYPE, 'walletConnect');
+    await AsyncStorage.setItem(KEY_CONNECTED_WALLET_TYPE, 'likerland_app');
 
     return true;
   };
@@ -291,7 +312,7 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
     setIsLoading(true);
 
     try {
-      if (connectedWalletType === 'walletConnect') {
+      if (connectedWalletType === 'likerland_app') {
         connected = await initWalletConnect();
       } else if (connectedWalletType === 'keplr') {
         connected = await initKepr();

@@ -78,9 +78,9 @@ export default function IndexPage() {
   }, [fetchMessagesByOwner, account]);
 
   useEffect(() => {
-    debug('useEffect() -> connectError: %s', connectError);
-
     if (connectError) {
+      debug('useEffect() -> connectError: %s', connectError);
+
       toast.show({
         title: connectError,
       });
