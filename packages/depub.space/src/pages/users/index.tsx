@@ -99,20 +99,22 @@ export default function IndexPage() {
             }}
           />
         </Link>
-        <HStack flex={1} justifyContent="center" space={3}>
+        <VStack alignItems="center" flex={1} justifyContent="center" space={4}>
           <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
             {abbrNickname}
           </Avatar>
-          <VStack alignItems="center" justifyContent="center" space={1}>
-            <Heading fontSize="xl">{nickname}</Heading>
-            {dtag ? (
-              <Text color="gray.500" fontSize="sm">
-                @{dtag}
-              </Text>
-            ) : null}
+          <VStack alignItems="center" flex={1} justifyContent="center" space={1}>
+            <Box textAlign="center">
+              <Heading fontSize="xl">{nickname}</Heading>
+              {dtag ? (
+                <Text color="gray.500" fontSize="sm">
+                  @{dtag}
+                </Text>
+              ) : null}
+            </Box>
             {bio ? <Text fontSize="sm">{bio}</Text> : null}
           </VStack>
-        </HStack>
+        </VStack>
 
         <Box w="48px" />
       </HStack>
