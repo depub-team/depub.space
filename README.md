@@ -19,6 +19,10 @@ Common theme definition and components based on [Native Base](https://nativebase
 
 This monorepo used yarn workspace to manage dependencies and packages please do `yarn install` to initialize the package linking and install dependencies.
 
+### WalletConnect
+
+WalletConnect only works with SSL enabled URL, so use it with localhost would getting error, you could use a tunnel service(eg: ngrok) to running the website with https url.
+
 ### Environment Variables
 
 Please find the .env.sample under individual package.
