@@ -186,9 +186,9 @@ export default function IndexPage() {
   }, []);
 
   useEffect(() => {
-    debug('useEffect() -> connectError: %s', connectError);
-
     if (connectError) {
+      debug('useEffect() -> connectError: %s', connectError);
+
       toast.show({
         title: connectError,
         status: 'error',
