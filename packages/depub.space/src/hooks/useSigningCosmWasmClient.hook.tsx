@@ -139,6 +139,9 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
   const connector = new WalletConnect({
     bridge: 'https://bridge.walletconnect.org',
     qrcodeModal: QRCodeModal,
+    qrcodeModalOptions: {
+      desktopLinks: [],
+    },
   });
 
   const suggestChain = async () => {
