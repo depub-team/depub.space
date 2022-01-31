@@ -142,6 +142,7 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
     qrcodeModal: QRCodeModal,
     qrcodeModalOptions: {
       desktopLinks: [],
+      mobileLinks: [],
     },
   });
 

@@ -12,13 +12,17 @@ function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
     // eslint-disable-next-line func-names
     void (async function () {
+      /* eslint-disable global-require, @typescript-eslint/no-var-requires */
       void (await Font.loadAsync({
-        /* eslint-disable global-require, @typescript-eslint/no-var-requires */
         Inter: require('../../public/fonts/Inter-Regular.ttf').default,
-        Inter_bold: require('../../public/fonts/Inter-Bold.ttf').default,
-        Inter_medium: require('../../public/fonts/Inter-Medium.ttf').default,
-        /* eslint-enable global-require, @typescript-eslint/no-var-requires */
       }));
+      void (await Font.loadAsync({
+        Inter_bold: require('../../public/fonts/Inter-Bold.ttf').default,
+      }));
+      void (await Font.loadAsync({
+        Inter_medium: require('../../public/fonts/Inter-Medium.ttf').default,
+      }));
+      /* eslint-enable global-require, @typescript-eslint/no-var-requires */
 
       setIsLoading(false);
     })();
