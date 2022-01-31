@@ -21,7 +21,7 @@ import {
 import { Message } from '../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
 import { Layout, MessageList, ConnectWallet } from '../components';
-import { DesmosProfile } from '../utils';
+import { DesmosProfile, getAbbrNickname } from '../utils';
 import { MAX_WIDTH, MAX_CHAR_LIMIT } from '../contants';
 
 interface MessageFormType {
@@ -56,6 +56,7 @@ const MessageInputSection: FC<MessageInputSectionProps> = ({
   const [messageText] = watch(['message']);
   const displayName = profile ? profile.nickname || profile.address : address;
   const profilePic = profile?.profilePic;
+  const abbrNickname = getAbbrNickname(displayName);
 
   const handleOnSubmit = async () => {
     await handleSubmit(onSubmit)();
@@ -76,7 +77,7 @@ const MessageInputSection: FC<MessageInputSectionProps> = ({
       <Box alignItems="center" flex={{ base: 1, md: 'unset' }}>
         <Skeleton isLoaded={!isLoading} rounded="full" size="12">
           <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
-            {`${displayName[0]}${displayName[displayName.length - 1]}`}
+            {abbrNickname}
           </Avatar>
         </Skeleton>
       </Box>
