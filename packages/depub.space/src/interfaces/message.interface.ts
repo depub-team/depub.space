@@ -4,4 +4,5 @@ export interface Message {
   rawMessage: string;
   from: string;
   date: Date;
+  images: string[];
 }

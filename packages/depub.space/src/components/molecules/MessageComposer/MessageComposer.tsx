@@ -105,7 +105,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
         </Skeleton>
       </Box>
       <VStack flex={1} minHeight="180px" space={4}>
-        <VStack borderColor="gray.300" borderRadius="sm" borderWidth={1} space={4}>
+        <VStack space={4}>
           <FormControl isInvalid={Boolean(errors.message)} isRequired>
             <Stack>
               <Controller
@@ -113,7 +113,6 @@ export const MessageComposer: FC<MessageComposerProps> = ({
                 name="message"
                 render={({ field: { onChange, value } }) => (
                   <TextArea
-                    borderWidth={0}
                     defaultValue={value}
                     isReadOnly={isLoading}
                     maxLength={MAX_CHAR_LIMIT}
@@ -136,7 +135,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
           {image ? <ImagePreview image={image} onRemoveImage={() => setImage(null)} /> : null}
         </VStack>
 
-        <HStack alignItems="center" justifyContent="space-between" space={4}>
+        <HStack alignItems="center" justifyContent="space-between" mb={4} space={4}>
           <Tooltip label="Upload Image" openDelay={250}>
             <IconButton
               _icon={{ color: 'primary.500' }}

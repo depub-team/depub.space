@@ -36,6 +36,9 @@ const transformRecord = (records: ISCNRecord[]) => {
       rawMessage: data.contentMetadata.description,
       from,
       date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp),
+      images: data.contentFingerprints
+        .filter(c => /^ipfs/.test(c))
+        .map(c => `https://cloudflare-ipfs.com/ipfs/${c.split('ipfs://')[1]}`),
     } as Message;
   });
 
