@@ -11,13 +11,15 @@ import * as Crypto from 'expo-crypto';
 import { OfflineSigner } from '@cosmjs/proto-signing';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
-import { ISCNQueryClient, ISCNRecord, ISCNSigningClient } from '@likecoin/iscn-js';
 import Debug from 'debug';
+import { ISCNQueryClient, ISCNRecord, ISCNSigningClient } from '@likecoin/iscn-js';
 import { Message } from '../interfaces';
-import { replaceURLs } from '../utils';
+import { replaceURLs, submitToArweaveAndISCN } from '../utils';
 
 const debug = Debug('web:useAppState');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
+const queryClient = new ISCNQueryClient();
+const signingClient = new ISCNSigningClient();
 
 export class AppStateError extends Error {}
 
@@ -34,6 +36,9 @@ const transformRecord = (records: ISCNRecord[]) => {
       rawMessage: data.contentMetadata.description,
       from,
       date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp),
+      images: data.contentFingerprints
+        .filter(c => /^ipfs/.test(c))
+        .map(c => `https://cloudflare-ipfs.com/ipfs/${c.split('ipfs://')[1]}`),
     } as Message;
   });
 
@@ -52,7 +57,8 @@ export interface AppStateContextProps {
   fetchMessagesByOwner: (author: string) => Promise<MessageQueryType | null>;
   postMessage: (
     offlineSigner: OfflineSigner,
-    message: string
+    message: string,
+    files?: string | File[]
   ) => Promise<BroadcastTxSuccess | TxRaw | null>;
 }
 
@@ -114,12 +120,10 @@ export const AppStateProvider: FC = ({ children }) => {
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
       try {
-        const client = new ISCNQueryClient();
-
-        await client.connect(PUBLIC_RPC_ENDPOINT);
+        await queryClient.connect(PUBLIC_RPC_ENDPOINT);
 
         const makeFetchRequest = async (nextSeq: number) => {
-          const res = await client.queryRecordsByOwner(owner, nextSeq);
+          const res = await queryClient.queryRecordsByOwner(owner, nextSeq);
 
           debug('fetchMessagesByOwner(nextSeq: %d) -> records: %O', nextSeq, res);
 
@@ -182,12 +186,10 @@ export const AppStateProvider: FC = ({ children }) => {
     dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
     try {
-      const client = new ISCNQueryClient();
-
-      await client.connect(PUBLIC_RPC_ENDPOINT);
+      await queryClient.connect(PUBLIC_RPC_ENDPOINT);
 
       const makeFetchRequest = async (nextSeq: number) => {
-        const res = await client.queryRecordsByFingerprint(ISCN_FINGERPRINT, nextSeq);
+        const res = await queryClient.queryRecordsByFingerprint(ISCN_FINGERPRINT, nextSeq);
 
         debug('fetchMessages(nextSeq: %d) -> records: %O', nextSeq, res);
 
@@ -237,14 +239,13 @@ export const AppStateProvider: FC = ({ children }) => {
   }, []);
 
   const postMessage = useCallback(
-    async (offlineSigner: OfflineSigner, message: string) => {
-      debug('postMessage() -> message: %s', message);
+    async (offlineSigner: OfflineSigner, message: string, files?: string | File[]) => {
+      debug('postMessage() -> message: %s, files: %O', message, files);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
       try {
         const [wallet] = await offlineSigner.getAccounts();
-        const signingClient = new ISCNSigningClient();
 
         await signingClient.connectWithSigner(PUBLIC_RPC_ENDPOINT, offlineSigner);
 
@@ -287,7 +288,13 @@ export const AppStateProvider: FC = ({ children }) => {
 
         debug('postMessage() -> payload: %O', payload);
 
-        const txn = await signingClient.createISCNRecord(wallet.address, payload);
+        let txn: TxRaw | BroadcastTxSuccess;
+
+        if (files) {
+          txn = await submitToArweaveAndISCN(files, payload, offlineSigner, wallet.address);
+        } else {
+          txn = await signingClient.createISCNRecord(wallet.address, payload);
+        }
 
         dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 

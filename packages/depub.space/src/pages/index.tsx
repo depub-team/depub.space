@@ -1,125 +1,20 @@
-import React, { FC, memo, useEffect, useState } from 'react';
-import { yupResolver } from '@hookform/resolvers/yup';
+import React, { memo, useEffect, useState } from 'react';
+import * as ImagePicker from 'expo-image-picker';
 import Debug from 'debug';
-import * as Yup from 'yup';
-import { useForm, Controller, SubmitHandler } from 'react-hook-form';
-import {
-  Divider,
-  Text,
-  Box,
-  Button,
-  useToast,
-  FormControl,
-  Stack,
-  HStack,
-  TextArea,
-  VStack,
-  WarningOutlineIcon,
-  Skeleton,
-  Avatar,
-} from 'native-base';
+import { Divider, useToast, VStack } from 'native-base';
 import { Message } from '../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
-import { Layout, MessageList, ConnectWallet } from '../components';
-import { DesmosProfile, getAbbrNickname } from '../utils';
-import { MAX_WIDTH, MAX_CHAR_LIMIT } from '../contants';
-
-interface MessageFormType {
-  message: string;
-}
+import {
+  Layout,
+  MessageList,
+  MessageComposer,
+  MessageFormType,
+  ConnectWallet,
+} from '../components';
+import { MAX_WIDTH } from '../contants';
+import { dataUrlToFile } from '../utils';
 
 const debug = Debug('web:<IndexPage />');
-
-interface MessageInputSectionProps {
-  isLoading?: boolean;
-  address: string;
-  profile: DesmosProfile | null;
-  onSubmit: (data: MessageFormType) => void;
-}
-
-const MessageInputSection: FC<MessageInputSectionProps> = ({
-  address,
-  profile,
-  onSubmit,
-  isLoading,
-}) => {
-  const formSchema = Yup.object().shape({
-    message: Yup.string()
-      .required('Message is required')
-      .min(4, 'Message length should be at least 4 characters')
-      .max(MAX_CHAR_LIMIT, `Message must not exceed ${MAX_CHAR_LIMIT} characters`),
-  });
-  const validationOpt = { resolver: yupResolver(formSchema) };
-  const { reset, formState, control, handleSubmit, watch } =
-    useForm<MessageFormType>(validationOpt);
-  const { errors } = formState;
-  const [messageText] = watch(['message']);
-  const displayName = profile ? profile.nickname || profile.address : address;
-  const profilePic = profile?.profilePic;
-  const abbrNickname = getAbbrNickname(displayName);
-
-  const handleOnSubmit = async () => {
-    await handleSubmit(onSubmit)();
-
-    reset({ message: '' });
-  };
-
-  return (
-    <Stack
-      direction={{
-        base: 'column',
-        md: 'row',
-      }}
-      flex={1}
-      my={4}
-      space={4}
-    >
-      <Box alignItems="center" flex={{ base: 1, md: 'unset' }}>
-        <Skeleton isLoaded={!isLoading} rounded="full" size="12">
-          <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
-            {abbrNickname}
-          </Avatar>
-        </Skeleton>
-      </Box>
-      <VStack flex={1} minHeight="180px" space={4}>
-        <FormControl isInvalid={Boolean(errors.message)} isRequired>
-          <Stack>
-            <Controller
-              control={control}
-              name="message"
-              render={({ field: { onChange, value } }) => (
-                <TextArea
-                  defaultValue={value}
-                  isReadOnly={isLoading}
-                  maxLength={MAX_CHAR_LIMIT}
-                  placeholder="Not your key, not your tweet. Be web3 native."
-                  returnKeyType="done"
-                  value={value}
-                  onChangeText={onChange}
-                  onSubmitEditing={handleOnSubmit}
-                />
-              )}
-            />
-            {errors.message && (
-              <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
-                {errors.message.message}
-              </FormControl.ErrorMessage>
-            )}
-          </Stack>
-        </FormControl>
-
-        <HStack alignItems="center" justifyContent="space-between" space={4}>
-          <Text color="gray.500" fontSize="xs" ml="auto" textAlign="right">
-            {(messageText || '').length} / {MAX_CHAR_LIMIT}
-          </Text>
-          <Button isLoading={isLoading} onPress={handleOnSubmit}>
-            Submit
-          </Button>
-        </HStack>
-      </VStack>
-    </Stack>
-  );
-};
 
 export default function IndexPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -145,19 +40,25 @@ export default function IndexPage() {
     }
   };
 
-  const handleOnSubmit: SubmitHandler<MessageFormType> = async data => {
-    if (!offlineSigner) {
-      toast.show({
-        title: 'No valid signer, please connect wallet',
-        status: 'error',
-        placement: 'top',
-      });
-
-      return;
-    }
-
+  const handleOnSubmit = async (data: MessageFormType, image?: ImagePicker.ImageInfo | null) => {
     try {
-      const txn = await postMessage(offlineSigner, data.message);
+      let file: File | undefined;
+
+      if (image) {
+        file = await dataUrlToFile(image.uri, 'upload');
+      }
+
+      if (!offlineSigner) {
+        toast.show({
+          title: 'No valid signer, please connect wallet',
+          status: 'error',
+          placement: 'top',
+        });
+
+        return;
+      }
+
+      const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
       await fetchNewMessages();
 
@@ -201,7 +102,7 @@ export default function IndexPage() {
   const ListHeaderComponent = memo(() => (
     <VStack maxW={MAX_WIDTH} mb={8} mx="auto" px={4} w="100%">
       {walletAddress && !isConnectLoading ? (
-        <MessageInputSection
+        <MessageComposer
           address={walletAddress}
           isLoading={isLoading || isConnectLoading}
           profile={profile}

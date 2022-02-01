@@ -215,7 +215,7 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
     if (!address) return false;
 
     setWalletAddress(address);
-    setOfflineSigner(offlineSigner);
+    setOfflineSigner(myOfflineSigner);
 
     await AsyncStorage.setItem(KEY_CONNECTED_WALLET_TYPE, 'keplr');
 
