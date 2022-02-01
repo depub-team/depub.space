@@ -1,6 +1,16 @@
 import React, { ComponentProps, FC, memo, useEffect, useState } from 'react';
 import { getLinkPreview } from 'link-preview-js';
-import { Image, Link, Text, Skeleton, HStack, VStack, Avatar, AspectRatio } from 'native-base';
+import {
+  Image,
+  Link,
+  Text,
+  Skeleton,
+  HStack,
+  VStack,
+  Avatar,
+  AspectRatio,
+  Pressable,
+} from 'native-base';
 import dayjs from 'dayjs';
 import Debug from 'debug';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -13,6 +23,7 @@ import {
   getAbbrNickname,
   getShortenAddress,
 } from '../../../utils';
+import { ImageModal } from '../ImageModal';
 
 dayjs.extend(relativeTime);
 
@@ -36,6 +47,8 @@ const MessageCardComponent: FC<MessageCardProps> = ({
   const displayName = profile?.nickname || shortenAddress;
   const isMessageContainsUrl = /https?/.test(message);
   const abbrNickname = getAbbrNickname(displayName);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [acitveImageIndex, setAcitveImageIndex] = useState(-1);
 
   useEffect(() => {
     if (!isMessageContainsUrl) {
@@ -73,70 +86,93 @@ const MessageCardComponent: FC<MessageCardProps> = ({
   }, [from]);
 
   return (
-    <HStack flex={1} mb={{ base: 4, md: 6 }} minHeight="80px" px={4} space={4} w="100%" {...props}>
-      <Skeleton isLoaded={!isLoading} rounded="full" size="12">
-        <Avatar
-          bg="gray.200"
-          size="md"
-          source={profile?.profilePic ? { uri: profile.profilePic } : undefined}
-        >
-          {abbrNickname}
-        </Avatar>
-      </Skeleton>
+    <>
+      <HStack
+        flex={1}
+        mb={{ base: 4, md: 6 }}
+        minHeight="80px"
+        px={4}
+        space={4}
+        w="100%"
+        {...props}
+      >
+        <Skeleton isLoaded={!isLoading} rounded="full" size="12">
+          <Avatar
+            bg="gray.200"
+            size="md"
+            source={profile?.profilePic ? { uri: profile.profilePic } : undefined}
+          >
+            {abbrNickname}
+          </Avatar>
+        </Skeleton>
 
-      <VStack flex={1} space={3}>
-        <HStack alignItems="center" justifyContent="space-between">
-          <VStack>
-            <Skeleton.Text isLoaded={!isLoading} lines={1}>
-              <Link href={`/users/?account=${from}`}>
-                <Text color="primary.500" fontSize="md" fontWeight="bold">
-                  {displayName}
-                </Text>
-              </Link>
-            </Skeleton.Text>
-
-            {profile?.dtag ? (
+        <VStack flex={1} space={3}>
+          <HStack alignItems="center" justifyContent="space-between">
+            <VStack>
               <Skeleton.Text isLoaded={!isLoading} lines={1}>
-                <Text color="gray.500" fontSize="sm">
-                  @{profile.dtag}
-                </Text>
+                <Link href={`/users/?account=${from}`}>
+                  <Text color="primary.500" fontSize="md" fontWeight="bold">
+                    {displayName}
+                  </Text>
+                </Link>
               </Skeleton.Text>
-            ) : null}
-          </VStack>
 
-          <Skeleton.Text isLoaded={!isLoading} lines={1}>
-            <Text color="gray.500" fontSize="xs" ml={8}>
-              {dayFrom}
+              {profile?.dtag ? (
+                <Skeleton.Text isLoaded={!isLoading} lines={1}>
+                  <Text color="gray.500" fontSize="sm">
+                    @{profile.dtag}
+                  </Text>
+                </Skeleton.Text>
+              ) : null}
+            </VStack>
+
+            <Skeleton.Text isLoaded={!isLoading} lines={1}>
+              <Text color="gray.500" fontSize="xs" ml={8}>
+                {dayFrom}
+              </Text>
+            </Skeleton.Text>
+          </HStack>
+
+          <Skeleton.Text isLoaded={!isLoading} lines={2} space={2}>
+            <Text fontFamily="monospace" fontSize={{ base: 'md', md: 'lg' }} whiteSpace="pre-wrap">
+              {/* eslint-disable-next-line react/no-danger */}
+              {Platform.OS === 'web' ? <div dangerouslySetInnerHTML={{ __html: message }} /> : null}
             </Text>
           </Skeleton.Text>
-        </HStack>
 
-        <Skeleton.Text isLoaded={!isLoading} lines={2} space={2}>
-          <Text fontFamily="monospace" fontSize={{ base: 'md', md: 'lg' }} whiteSpace="pre-wrap">
-            {/* eslint-disable-next-line react/no-danger */}
-            {Platform.OS === 'web' ? <div dangerouslySetInnerHTML={{ __html: message }} /> : null}
-          </Text>
-        </Skeleton.Text>
+          {linkPreivew ? <LinkPreviewCard flex={1} preview={linkPreivew} /> : null}
 
-        {linkPreivew ? <LinkPreviewCard flex={1} preview={linkPreivew} /> : null}
-
-        <VStack space={2}>
-          {images.map((image, index) => (
-            <AspectRatio key={image} ratio={16 / 9}>
-              <Image
-                alt={`Image ${index}`}
-                borderColor="gray.200"
-                borderRadius="md"
-                borderWidth={1}
-                resizeMode="cover"
-                source={{ uri: image }}
-                textAlign="center"
-              />
-            </AspectRatio>
-          ))}
+          <VStack space={2}>
+            {images.map((image, index) => (
+              <Pressable
+                key={image}
+                onPress={() => {
+                  setIsModalOpen(true);
+                  setAcitveImageIndex(index);
+                }}
+              >
+                <AspectRatio ratio={16 / 9}>
+                  <Image
+                    alt={`Image ${index}`}
+                    borderColor="gray.200"
+                    borderRadius="md"
+                    borderWidth={1}
+                    resizeMode="cover"
+                    source={{ uri: image }}
+                    textAlign="center"
+                  />
+                </AspectRatio>
+              </Pressable>
+            ))}
+          </VStack>
         </VStack>
-      </VStack>
-    </HStack>
+      </HStack>
+      <ImageModal
+        isOpen={isModalOpen}
+        source={{ uri: images[acitveImageIndex] }}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
   );
 };
 
