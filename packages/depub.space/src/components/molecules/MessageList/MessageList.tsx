@@ -31,6 +31,7 @@ export const MessageList: FC<MessageListProps> = ({
     rawMessage: '',
     from: '',
     date: new Date(),
+    images: [],
   }));
 
   const handleOnEndReached = ({ distanceFromEnd }: { distanceFromEnd: number }) => {

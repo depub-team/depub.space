@@ -1,6 +1,6 @@
 import React, { ComponentProps, FC, memo, useEffect, useState } from 'react';
 import { getLinkPreview } from 'link-preview-js';
-import { Link, Text, Skeleton, HStack, VStack, Avatar } from 'native-base';
+import { Image, Link, Text, Skeleton, HStack, VStack, Avatar, AspectRatio } from 'native-base';
 import dayjs from 'dayjs';
 import Debug from 'debug';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -26,7 +26,7 @@ export interface MessageCardProps extends ComponentProps<typeof HStack> {
 
 const MessageCardComponent: FC<MessageCardProps> = ({
   isLoading,
-  message: { from, date, message, rawMessage },
+  message: { from, date, images, message, rawMessage },
   ...props
 }) => {
   const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
@@ -119,6 +119,22 @@ const MessageCardComponent: FC<MessageCardProps> = ({
         </Skeleton.Text>
 
         {linkPreivew ? <LinkPreviewCard flex={1} preview={linkPreivew} /> : null}
+
+        <VStack space={2}>
+          {images.map((image, index) => (
+            <AspectRatio key={image} ratio={16 / 9}>
+              <Image
+                alt={`Image ${index}`}
+                borderColor="gray.200"
+                borderRadius="md"
+                borderWidth={1}
+                resizeMode="cover"
+                source={{ uri: image }}
+                textAlign="center"
+              />
+            </AspectRatio>
+          ))}
+        </VStack>
       </VStack>
     </HStack>
   );
