@@ -13,7 +13,7 @@ const debug = Debug('web:useSigningCosmWasmClient');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
 const PUBLIC_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID || '';
 const KEY_WALLET_CONNECT_ACCOUNT_PREFIX = 'KEY_WALLET_CONNECT_ACCOUNT_PREFIX';
-const KEY_WALLET_CONNECT = 'likerland_app';
+const KEY_WALLET_CONNECT = 'walletconnect';
 const KEY_CONNECTED_WALLET_TYPE = 'KEY_CONNECTED_WALLET_TYPE';
 const isTestnet = /testnet/.test(PUBLIC_CHAIN_ID);
 
@@ -142,6 +142,7 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
     qrcodeModal: QRCodeModal,
     qrcodeModalOptions: {
       desktopLinks: [],
+      mobileLinks: [],
     },
   });
 
@@ -230,8 +231,6 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
       void disconnect();
     });
 
-    console.log(connector.peerId);
-
     if (!connector.connected) {
       debug('initWalletConnect() -> not connected');
 
@@ -254,11 +253,15 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
       const serializedWalletConnectAccount = await AsyncStorage.getItem(
         `${KEY_WALLET_CONNECT_ACCOUNT_PREFIX}_${connector.peerId}`
       );
+      const walletConnectConnectSession = await AsyncStorage.getItem(KEY_WALLET_CONNECT);
 
       if (serializedWalletConnectAccount) {
         debug('initWalletConnect() -> load serialized account');
 
         account = JSON.parse(serializedWalletConnectAccount);
+      } else if (walletConnectConnectSession) {
+        // remove orphan session
+        await AsyncStorage.removeItem(KEY_WALLET_CONNECT);
       }
     }
 
