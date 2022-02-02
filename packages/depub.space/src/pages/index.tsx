@@ -1,5 +1,4 @@
 import React, { memo, useEffect, useState } from 'react';
-import * as ImagePicker from 'expo-image-picker';
 import Debug from 'debug';
 import { Divider, useToast, VStack } from 'native-base';
 import { Message } from '../interfaces';
@@ -40,12 +39,12 @@ export default function IndexPage() {
     }
   };
 
-  const handleOnSubmit = async (data: MessageFormType, image?: ImagePicker.ImageInfo | null) => {
+  const handleOnSubmit = async (data: MessageFormType, image?: string | null) => {
     try {
       let file: File | undefined;
 
       if (image) {
-        file = await dataUrlToFile(image.uri, 'upload');
+        file = await dataUrlToFile(image, 'upload');
       }
 
       if (!offlineSigner) {
