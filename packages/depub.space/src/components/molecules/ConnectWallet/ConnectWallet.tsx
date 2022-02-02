@@ -26,8 +26,8 @@ const ConnectButton: FC<ConnectButtonProps> = ({ icon, title, description, ...pr
       w: '100%',
     }}
     borderColor="gray.200"
-    borderRadius="md"
     borderWidth={1}
+    rounded="lg"
     startIcon={<Image h={12} source={{ uri: icon }} w={12} />}
     variant="unstyled"
     {...props}

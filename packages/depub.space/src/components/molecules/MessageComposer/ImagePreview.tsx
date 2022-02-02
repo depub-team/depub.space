@@ -29,9 +29,9 @@ export const ImagePreview: FC<{ image: string; onRemoveImage: () => void }> = ({
           <Image
             alt="Upload image"
             borderColor="gray.200"
-            borderRadius="md"
             borderWidth={1}
             resizeMode="cover"
+            rounded="lg"
             source={{ uri: image }}
             textAlign="center"
           />
