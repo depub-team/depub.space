@@ -49,6 +49,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
   const abbrNickname = getAbbrNickname(displayName);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [acitveImageIndex, setAcitveImageIndex] = useState(-1);
+  const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>([]);
 
   useEffect(() => {
     if (!isMessageContainsUrl) {
@@ -84,6 +85,20 @@ const MessageCardComponent: FC<MessageCardProps> = ({
       }
     })();
   }, [from]);
+
+  useEffect(() => {
+    images.forEach((image, i) => {
+      (Image.getSize as any)(image, (w: number, h: number) => {
+        setImageSizes(imgSizes => {
+          const clone = [...imgSizes];
+
+          clone[i] = [w, h];
+
+          return clone;
+        });
+      });
+    });
+  }, [images]);
 
   return (
     <>
@@ -151,7 +166,9 @@ const MessageCardComponent: FC<MessageCardProps> = ({
                   setAcitveImageIndex(index);
                 }}
               >
-                <AspectRatio ratio={16 / 9}>
+                <AspectRatio
+                  ratio={imageSizes[index] ? imageSizes[index][0] / imageSizes[index][1] : 1}
+                >
                   <Image
                     alt={`Image ${index}`}
                     borderColor="gray.200"
@@ -168,6 +185,11 @@ const MessageCardComponent: FC<MessageCardProps> = ({
         </VStack>
       </HStack>
       <ImageModal
+        aspectRatio={
+          imageSizes[acitveImageIndex]
+            ? imageSizes[acitveImageIndex][0] / imageSizes[acitveImageIndex][1]
+            : 1
+        }
         isOpen={isModalOpen}
         source={{ uri: images[acitveImageIndex] }}
         onClose={() => setIsModalOpen(false)}
