@@ -1,7 +1,6 @@
 import React, { FC, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as ImagePicker from 'expo-image-picker';
 import * as Yup from 'yup';
 import { useForm, Controller } from 'react-hook-form';
 import {
@@ -21,7 +20,7 @@ import {
   Tooltip,
 } from 'native-base';
 import Debug from 'debug';
-import { DesmosProfile } from '../../../utils';
+import { DesmosProfile, pickImageFromDevice } from '../../../utils';
 import { MAX_CHAR_LIMIT } from '../../../contants';
 import { ImagePreview } from './ImagePreview';
 
@@ -35,7 +34,7 @@ interface MessageComposerProps {
   isLoading?: boolean;
   address: string;
   profile: DesmosProfile | null;
-  onSubmit: (data: MessageFormType, image?: ImagePicker.ImageInfo | null) => void;
+  onSubmit: (data: MessageFormType, image?: string | null) => void;
 }
 export const MessageComposer: FC<MessageComposerProps> = ({
   address,
@@ -43,7 +42,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   onSubmit,
   isLoading,
 }) => {
-  const [image, setImage] = useState<ImagePicker.ImageInfo | null>(null);
+  const [image, setImage] = useState<string | null>(null);
   const formSchema = Yup.object().shape({
     message: Yup.string()
       .required('Message is required')
@@ -62,19 +61,12 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     debug('pickImage()');
 
     try {
-      // No permissions request is necessary for launching the image library
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsMultipleSelection: false,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.9,
-      });
+      const result = await pickImageFromDevice();
 
       debug('pickImage() -> result: %O', result);
 
-      if (!result.cancelled) {
-        setImage(result); // maximum 3 images
+      if (result) {
+        setImage(result);
       }
     } catch (ex) {
       debug('pickImage() -> error: %O', ex);
