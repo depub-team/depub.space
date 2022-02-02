@@ -66,9 +66,9 @@ export const MessageComposer: FC<MessageComposerProps> = ({
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsMultipleSelection: false,
-        allowsEditing: false,
+        allowsEditing: true,
         aspect: [4, 3],
-        quality: 1,
+        quality: 0.9,
       });
 
       debug('pickImage() -> result: %O', result);
