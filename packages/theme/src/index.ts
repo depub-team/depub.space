@@ -1,4 +1,5 @@
 import { extendTheme } from 'native-base';
+import { Ionicons } from '@expo/vector-icons';
 import { globalStyles } from './globalStyles';
 
 export * from './components';
@@ -83,6 +84,30 @@ export const theme = extendTheme({
     Heading: {
       baseStyle: {
         color: 'primary.500',
+      },
+    },
+    ModalCloseButton: {
+      baseStyle: {
+        _icon: {
+          as: Ionicons,
+          borderRadius: 'full',
+          color: 'white',
+          name: 'close',
+          size: 'sm',
+        },
+        _hover: {
+          bg: 'gray.900:alpha.100',
+        },
+        _focusVisible: {
+          bg: 'gray.900:alpha.100',
+        },
+        _pressed: {
+          bg: 'gray.900:alpha.100',
+        },
+        bg: 'gray.900:alpha.50',
+        borderRadius: 'full',
+        p: 1,
+        variant: 'unstyled',
       },
     },
   },

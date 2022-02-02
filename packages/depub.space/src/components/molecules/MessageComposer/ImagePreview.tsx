@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from 'react';
 import { AspectRatio, Box, HStack, Image, Tooltip } from 'native-base';
 import { getSizeAsync } from '../../../utils';
-import { ModalCloseButton } from '../../atoms';
+import { CloseButton } from '../../atoms';
 
 export const ImagePreview: FC<{ image: string; onRemoveImage: () => void }> = ({
   image,
@@ -37,7 +37,7 @@ export const ImagePreview: FC<{ image: string; onRemoveImage: () => void }> = ({
           />
         </AspectRatio>
         <Tooltip label="Remove" openDelay={250}>
-          <ModalCloseButton onPress={onRemoveImage} />
+          <CloseButton onPress={onRemoveImage} />
         </Tooltip>
       </Box>
     </HStack>

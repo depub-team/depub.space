@@ -1,11 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Icon, IconButton } from 'native-base';
-import React, { ComponentProps, FC } from 'react';
+import { IIconButtonProps, Icon, IconButton } from 'native-base';
+import React, { forwardRef, memo } from 'react';
 
-export type ModalCloseButtonProps = ComponentProps<typeof IconButton>;
-
-export const ModalCloseButton: FC<ModalCloseButtonProps> = props => (
+const CloseButton = (props: IIconButtonProps, ref?: any) => (
   <IconButton
+    ref={ref}
     _hover={{
       bg: 'gray.900:alpha.100',
     }}
@@ -21,3 +20,5 @@ export const ModalCloseButton: FC<ModalCloseButtonProps> = props => (
     {...props}
   />
 );
+
+export default memo(forwardRef(CloseButton));

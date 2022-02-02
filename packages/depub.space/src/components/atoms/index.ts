@@ -1,2 +1,2 @@
 export * from './Meta';
-export * from './ModalCloseButton';
+export * from './CloseButton';
