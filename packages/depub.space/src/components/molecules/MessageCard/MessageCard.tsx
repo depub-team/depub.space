@@ -15,8 +15,8 @@ import dayjs from 'dayjs';
 import Debug from 'debug';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Platform } from 'react-native';
-import { LinkPreview, Message } from '../../../interfaces';
-import { LinkPreviewCard } from '../LinkPreviewCard';
+import { LinkPreviewItem, Message } from '../../../interfaces';
+import { LinkPreview } from '../LinkPreview';
 import {
   DesmosProfile,
   fetchDesmosProfile,
@@ -43,7 +43,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
   const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
   const dayFrom = dayjs(date).fromNow();
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
-  const [linkPreivew, setLinkPreview] = useState<LinkPreview | null>(null);
+  const [linkPreivew, setLinkPreview] = useState<LinkPreviewItem | null>(null);
   const displayName = profile?.nickname || shortenAddress;
   const isMessageContainsUrl = /https?/.test(message);
   const abbrNickname = getAbbrNickname(displayName);
@@ -62,7 +62,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
         const myLinkPreivew = (await getLinkPreview(rawMessage, {
           proxyUrl: `${PROXY_URL}/?`,
           timeout: 6000,
-        })) as LinkPreview;
+        })) as LinkPreviewItem;
 
         debug('useEffect() -> rawMessage: %s, myLinkPreivew: %O', rawMessage, myLinkPreivew);
 
@@ -155,7 +155,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
             </Text>
           </Skeleton.Text>
 
-          {linkPreivew ? <LinkPreviewCard flex={1} preview={linkPreivew} /> : null}
+          {linkPreivew ? <LinkPreview flex={1} preview={linkPreivew} /> : null}
 
           <VStack space={2}>
             {images.map((image, index) => (
@@ -172,9 +172,9 @@ const MessageCardComponent: FC<MessageCardProps> = ({
                   <Image
                     alt={`Image ${index}`}
                     borderColor="gray.200"
-                    borderRadius="md"
                     borderWidth={1}
                     resizeMode="cover"
+                    rounded="lg"
                     source={{ uri: image }}
                     textAlign="center"
                   />

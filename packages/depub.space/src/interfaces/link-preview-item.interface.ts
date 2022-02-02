@@ -1,4 +1,4 @@
-export interface LinkPreview {
+export interface LinkPreviewItem {
   url: string;
   title: string;
   siteName?: string;

@@ -1,12 +1,12 @@
 import { Text, Stack, Heading, Image, AspectRatio, Box, IBoxProps, Link } from 'native-base';
 import React, { FC } from 'react';
-import { LinkPreview } from '../../../interfaces';
+import { LinkPreviewItem } from '../../../interfaces';
 
-export interface LinkPreviewCardProps extends IBoxProps {
-  preview: LinkPreview;
+export interface LinkPreviewProps extends IBoxProps {
+  preview: LinkPreviewItem;
 }
 
-export const LinkPreviewCard: FC<LinkPreviewCardProps> = ({ preview }) => (
+export const LinkPreview: FC<LinkPreviewProps> = ({ preview }) => (
   <Box
     _dark={{
       borderColor: 'coolGray.600',

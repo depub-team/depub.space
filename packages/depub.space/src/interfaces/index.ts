@@ -1,2 +1,2 @@
-export * from './link-preview.interface';
+export * from './link-preview-item.interface';
 export * from './message.interface';
