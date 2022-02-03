@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useReducer,
 } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import * as Crypto from 'expo-crypto';
 import { OfflineSigner } from '@cosmjs/proto-signing';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
@@ -165,6 +166,8 @@ export const AppStateProvider: FC = ({ children }) => {
         return { messages, nextSequence: batchNextSequence.toNumber() };
       } catch (ex) {
         debug('fetchMessagesByOwner() -> error: %O', ex);
+
+        Sentry.captureException(ex);
       }
 
       dispatch({
@@ -228,6 +231,8 @@ export const AppStateProvider: FC = ({ children }) => {
       return { messages, nextSequence: batchNextSequence.toNumber() };
     } catch (ex) {
       debug('fetchMessages() -> error: %O', ex);
+
+      Sentry.captureException(ex);
     }
 
     dispatch({
@@ -307,6 +312,8 @@ export const AppStateProvider: FC = ({ children }) => {
 
           throw new AppStateError(ex.message);
         }
+
+        Sentry.captureException(ex);
       }
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
