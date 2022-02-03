@@ -10,6 +10,9 @@ import {
   Avatar,
   AspectRatio,
   Pressable,
+  Tooltip,
+  useClipboard,
+  useToast,
 } from 'native-base';
 import dayjs from 'dayjs';
 import Debug from 'debug';
@@ -47,6 +50,8 @@ const MessageCardComponent: FC<MessageCardProps> = ({
   const displayName = profile?.nickname || shortenAddress;
   const isMessageContainsUrl = /https?/.test(message);
   const abbrNickname = getAbbrNickname(displayName);
+  const { onCopy } = useClipboard();
+  const toast = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [acitveImageIndex, setAcitveImageIndex] = useState(-1);
   const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>([]);
@@ -132,13 +137,44 @@ const MessageCardComponent: FC<MessageCardProps> = ({
                 </Link>
               </Skeleton.Text>
 
-              {profile?.dtag ? (
-                <Skeleton.Text isLoaded={!isLoading} lines={1}>
+              <Skeleton.Text isLoaded={!isLoading} lines={1}>
+                <HStack space={1}>
+                  {profile?.dtag ? (
+                    <Text color="gray.500" fontSize="sm">
+                      <Tooltip label="Click to copy the nickname" openDelay={250}>
+                        <Pressable
+                          onPress={async () => {
+                            await onCopy(profile.dtag);
+                            toast.show({
+                              title: 'The nicname has been copied!',
+                              status: 'success',
+                              placement: 'top',
+                            });
+                          }}
+                        >
+                          @{profile.dtag}
+                        </Pressable>
+                      </Tooltip>
+                    </Text>
+                  ) : null}
                   <Text color="gray.500" fontSize="sm">
-                    @{profile.dtag}
+                    <Tooltip label="Click to copy the wallet address" openDelay={250}>
+                      <Pressable
+                        onPress={async () => {
+                          await onCopy(from);
+                          toast.show({
+                            title: 'The wallet address has been copied!',
+                            status: 'success',
+                            placement: 'top',
+                          });
+                        }}
+                      >
+                        {profile?.dtag ? `(${shortenAddress})` : shortenAddress}
+                      </Pressable>
+                    </Tooltip>
                   </Text>
-                </Skeleton.Text>
-              ) : null}
+                </HStack>
+              </Skeleton.Text>
             </VStack>
 
             <Skeleton.Text isLoaded={!isLoading} lines={1}>
