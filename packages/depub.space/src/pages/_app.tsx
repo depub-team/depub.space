@@ -19,9 +19,6 @@ function MyApp({ Component, pageProps }: AppProps) {
       void (await Font.loadAsync({
         Inter_bold: require('../../public/fonts/Inter-Bold.ttf').default,
       }));
-      void (await Font.loadAsync({
-        Inter_medium: require('../../public/fonts/Inter-Medium.ttf').default,
-      }));
       /* eslint-enable global-require, @typescript-eslint/no-var-requires */
 
       setIsLoading(false);
