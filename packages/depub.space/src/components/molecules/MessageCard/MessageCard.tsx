@@ -140,39 +140,39 @@ const MessageCardComponent: FC<MessageCardProps> = ({
               <Skeleton.Text isLoaded={!isLoading} lines={1}>
                 <HStack space={1}>
                   {profile?.dtag ? (
-                    <Text color="gray.500" fontSize="sm">
-                      <Tooltip label="Click to copy the nickname" openDelay={250}>
-                        <Pressable
-                          onPress={async () => {
-                            await onCopy(profile.dtag);
-                            toast.show({
-                              title: 'The nicname has been copied!',
-                              status: 'success',
-                              placement: 'top',
-                            });
-                          }}
-                        >
-                          @{profile.dtag}
-                        </Pressable>
-                      </Tooltip>
-                    </Text>
-                  ) : null}
-                  <Text color="gray.500" fontSize="sm">
-                    <Tooltip label="Click to copy the wallet address" openDelay={250}>
+                    <Tooltip label="Click to copy the nickname" openDelay={250}>
                       <Pressable
                         onPress={async () => {
-                          await onCopy(from);
+                          await onCopy(profile.dtag);
                           toast.show({
-                            title: 'The wallet address has been copied!',
+                            title: 'The nicname has been copied!',
                             status: 'success',
                             placement: 'top',
                           });
                         }}
                       >
-                        {profile?.dtag ? `(${shortenAddress})` : shortenAddress}
+                        <Text color="gray.500" fontSize="sm">
+                          @{profile.dtag}
+                        </Text>
                       </Pressable>
                     </Tooltip>
-                  </Text>
+                  ) : null}
+                  <Tooltip label="Click to copy the wallet address" openDelay={250}>
+                    <Pressable
+                      onPress={async () => {
+                        await onCopy(from);
+                        toast.show({
+                          title: 'The wallet address has been copied!',
+                          status: 'success',
+                          placement: 'top',
+                        });
+                      }}
+                    >
+                      <Text color="gray.500" fontSize="sm">
+                        {profile?.dtag ? `(${shortenAddress})` : shortenAddress}
+                      </Text>
+                    </Pressable>
+                  </Tooltip>
                 </HStack>
               </Skeleton.Text>
             </VStack>
