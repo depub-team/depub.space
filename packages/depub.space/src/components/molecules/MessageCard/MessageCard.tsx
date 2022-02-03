@@ -145,7 +145,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
                         onPress={async () => {
                           await onCopy(profile.dtag);
                           toast.show({
-                            title: 'The nicname has been copied!',
+                            title: 'The nickname has been copied!',
                             status: 'success',
                             placement: 'top',
                           });
