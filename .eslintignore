@@ -11,3 +11,4 @@ storybook/static
 static
 *.log
 **/models/index.d.ts
+**/generated_types.ts
