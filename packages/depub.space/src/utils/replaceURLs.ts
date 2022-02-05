@@ -2,7 +2,7 @@ function removeHtmlTags(html: string) {
   return html.replace(/<[^>]*>/g, '');
 }
 
-export function replaceURLs(content: string): string {
+export function replaceURLToAnchors(content: string): string {
   const urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g;
 
   return removeHtmlTags(content).replace(urlRegex, url => {

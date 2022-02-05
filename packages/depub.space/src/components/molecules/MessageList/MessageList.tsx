@@ -28,10 +28,8 @@ export const MessageList: FC<MessageListProps> = ({
   const dummyItems = Array.from(new Array(ROWS_PER_PAGE)).map<Message>(() => ({
     id: `id-${uid()}`,
     message: '',
-    rawMessage: '',
     from: '',
     date: new Date(),
-    images: [],
   }));
 
   const handleOnEndReached = ({ distanceFromEnd }: { distanceFromEnd: number }) => {
