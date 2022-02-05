@@ -25,6 +25,7 @@ import {
   fetchDesmosProfile,
   getAbbrNickname,
   getShortenAddress,
+  replaceURLToAnchors,
 } from '../../../utils';
 import { ImageModal } from '../ImageModal';
 
@@ -40,7 +41,7 @@ export interface MessageCardProps extends ComponentProps<typeof HStack> {
 
 const MessageCardComponent: FC<MessageCardProps> = ({
   isLoading,
-  message: { from, date, images, message, rawMessage },
+  message: { from, date, images = [], message = '' },
   ...props
 }) => {
   const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
@@ -64,12 +65,12 @@ const MessageCardComponent: FC<MessageCardProps> = ({
     // eslint-disable-next-line func-names
     void (async function () {
       try {
-        const myLinkPreivew = (await getLinkPreview(rawMessage, {
+        const myLinkPreivew = (await getLinkPreview(message, {
           proxyUrl: `${PROXY_URL}/?`,
           timeout: 6000,
         })) as LinkPreviewItem;
 
-        debug('useEffect() -> rawMessage: %s, myLinkPreivew: %O', rawMessage, myLinkPreivew);
+        debug('useEffect() -> message: %s, myLinkPreivew: %O', message, myLinkPreivew);
 
         if (myLinkPreivew) {
           setLinkPreview(myLinkPreivew);
@@ -78,7 +79,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
         debug('useEffect() -> error: %O', ex);
       }
     })();
-  }, [rawMessage, isMessageContainsUrl]);
+  }, [message, isMessageContainsUrl]);
 
   useEffect(() => {
     // eslint-disable-next-line func-names
@@ -186,8 +187,10 @@ const MessageCardComponent: FC<MessageCardProps> = ({
 
           <Skeleton.Text isLoaded={!isLoading} lines={2} space={2}>
             <Text fontFamily="monospace" fontSize={{ base: 'md', md: 'lg' }} whiteSpace="pre-wrap">
-              {/* eslint-disable-next-line react/no-danger */}
-              {Platform.OS === 'web' ? <div dangerouslySetInnerHTML={{ __html: message }} /> : null}
+              {Platform.OS === 'web' ? (
+                // eslint-disable-next-line react/no-danger
+                <div dangerouslySetInnerHTML={{ __html: replaceURLToAnchors(message) }} />
+              ) : null}
             </Text>
           </Skeleton.Text>
 

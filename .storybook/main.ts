@@ -1,6 +1,10 @@
 import path from 'path';
 
 const main = {
+  core: {
+    builder: 'webpack5',
+  },
+
   stories: ['../packages/**/*.stories.tsx'],
 
   addons: ['@storybook/addon-links', '@storybook/addon-essentials'],

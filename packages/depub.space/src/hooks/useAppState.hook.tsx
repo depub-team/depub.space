@@ -15,7 +15,7 @@ import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import Debug from 'debug';
 import { ISCNQueryClient, ISCNRecord, ISCNSigningClient } from '@likecoin/iscn-js';
 import { Message } from '../interfaces';
-import { replaceURLs, submitToArweaveAndISCN } from '../utils';
+import { submitToArweaveAndISCN } from '../utils';
 
 const debug = Debug('web:useAppState');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
@@ -33,8 +33,7 @@ const transformRecord = (records: ISCNRecord[]) => {
 
     return {
       id: data['@id'] as string,
-      message: replaceURLs(data.contentMetadata.description),
-      rawMessage: data.contentMetadata.description,
+      message: data.contentMetadata.description,
       from,
       date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp),
       images: data.contentFingerprints
