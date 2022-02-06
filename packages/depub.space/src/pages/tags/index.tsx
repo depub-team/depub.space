@@ -1,48 +1,27 @@
 import React, { memo, useEffect, useState } from 'react';
 import Debug from 'debug';
-import {
-  Link,
-  Box,
-  IconButton,
-  HStack,
-  useToast,
-  Divider,
-  VStack,
-  Text,
-  Heading,
-  Avatar,
-} from 'native-base';
+import { Link, Box, IconButton, HStack, useToast, Divider, VStack, Heading } from 'native-base';
 import { Platform } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
+import { useRouter } from 'next/router';
 import { Layout, MessageList } from '../../components';
-import { Message, DesmosProfile } from '../../interfaces';
+import { Message } from '../../interfaces';
 import { useAppState, useSigningCosmWasmClient } from '../../hooks';
-import { getAbbrNickname } from '../../utils';
-import { getShortenAddress } from '../../utils/getShortenAddress';
 import { MAX_WIDTH } from '../../contants';
 
 const debug = Debug('web:<UserPage />');
 
 export default function IndexPage() {
-  const urlParams = new URLSearchParams(
-    typeof window !== 'undefined' ? window.location.search : ''
-  );
-  const account = urlParams.get('account');
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [profile, setProfile] = useState<DesmosProfile | null>(null);
-  const shortenAccount = account ? getShortenAddress(account) : '';
+  const router = useRouter();
+  const tagName = router.query.name?.toString();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const { error: connectError, walletAddress } = useSigningCosmWasmClient();
-  const { isLoading, fetchMessagesByOwner } = useAppState();
+  const { isLoading, fetchMessagesByTag } = useAppState();
   const toast = useToast();
-  const profilePic = profile?.profilePic;
-  const nickname = profile?.nickname || shortenAccount;
-  const abbrNickname = getAbbrNickname(nickname);
-  const bio = profile?.bio;
-  const dtag = profile?.dtag;
 
   const fetchNewMessages = async (previousId?: string) => {
-    if (!account) {
+    if (!tagName) {
       return;
     }
 
@@ -52,16 +31,10 @@ export default function IndexPage() {
 
     setIsLoadingMore(true);
 
-    const res = await fetchMessagesByOwner(account, previousId);
+    const newMessages = await fetchMessagesByTag(tagName, previousId);
 
-    if (res) {
-      if (res.messages) {
-        setMessages(msgs => msgs.concat(res.messages));
-      }
-
-      if (res.profile) {
-        setProfile(res.profile);
-      }
+    if (newMessages) {
+      setMessages(msgs => msgs.concat(newMessages));
     }
 
     setIsLoadingMore(false);
@@ -70,7 +43,7 @@ export default function IndexPage() {
   useEffect(() => {
     // eslint-disable-next-line func-names
     void (async function () {
-      if (!account) {
+      if (!tagName) {
         if (Platform.OS === 'web') {
           window.location.href = '/';
         }
@@ -78,18 +51,13 @@ export default function IndexPage() {
         return;
       }
 
-      const res = await fetchMessagesByOwner(account);
+      const newMessages = await fetchMessagesByTag(tagName);
 
-      if (res) {
-        setMessages(res.messages);
-
-        if (res.profile) {
-          setProfile(res.profile);
-        }
+      if (newMessages) {
+        setMessages(newMessages);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchMessagesByOwner, account]);
+  }, [fetchMessagesByTag, tagName]);
 
   useEffect(() => {
     if (connectError) {
@@ -114,20 +82,7 @@ export default function IndexPage() {
           />
         </Link>
         <VStack alignItems="center" flex={1} justifyContent="center" space={4}>
-          <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
-            {abbrNickname}
-          </Avatar>
-          <VStack alignItems="center" flex={1} justifyContent="center" space={1}>
-            <Box textAlign="center">
-              <Heading fontSize="xl">{nickname}</Heading>
-              {dtag ? (
-                <Text color="gray.500" fontSize="sm">
-                  @{dtag}
-                </Text>
-              ) : null}
-            </Box>
-            {bio ? <Text fontSize="sm">{bio}</Text> : null}
-          </VStack>
+          <Heading fontSize="xl">#{tagName}</Heading>
         </VStack>
 
         <Box w="48px" />
@@ -141,7 +96,7 @@ export default function IndexPage() {
     <Divider maxW={MAX_WIDTH} mx="auto" my={4} w="100%" />
   ));
 
-  return account ? (
+  return tagName ? (
     <Layout metadata={{ title: walletAddress || undefined }}>
       <MessageList
         isLoading={isLoading}
