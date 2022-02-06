@@ -37,5 +37,5 @@ kv_namespaces = [
 LIKECOIN_RPC_ENDPOINT = "https://mainnet-node.like.co/rpc/"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
-CACHE_TTL = 3600000 # 1hour
+CACHE_TTL = 300000 # 5min
 ENVIRONMENT = "production"
