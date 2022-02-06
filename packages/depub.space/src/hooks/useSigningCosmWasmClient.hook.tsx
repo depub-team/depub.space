@@ -7,7 +7,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { payloadId } from '@walletconnect/utils';
 import { AccountData, OfflineSigner } from '@cosmjs/proto-signing';
 import { SignDoc } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
-import { DesmosProfile, fetchDesmosProfile } from '../utils';
 
 const debug = Debug('web:useSigningCosmWasmClient');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
@@ -21,7 +20,6 @@ type ConnectedWalletType = 'keplr' | 'likerland_app';
 
 export interface ISigningCosmWasmClientContext {
   walletAddress: string | null;
-  profile: DesmosProfile | null;
   signingClient: SigningCosmWasmClient | null;
   offlineSigner: OfflineSigner | null;
   isLoading: boolean;
@@ -132,7 +130,6 @@ export const getChainInfo = () => {
 
 export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const [offlineSigner, setOfflineSigner] = useState<OfflineSigner | null>(null);
   const [signingClient, setSigningClient] = useState<SigningCosmWasmClient | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -187,7 +184,6 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
     }
 
     setWalletAddress(null);
-    setProfile(null);
     setOfflineSigner(null);
     setSigningClient(null);
     setIsLoading(false);
@@ -394,31 +390,9 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    // eslint-disable-next-line func-names
-    void (async function () {
-      if (!walletAddress) {
-        return;
-      }
-
-      setIsLoading(true);
-
-      try {
-        const myProfile = await fetchDesmosProfile(walletAddress);
-
-        setProfile(myProfile);
-      } catch (ex) {
-        debug('useEffect() -> error: %O', ex);
-      }
-
-      setIsLoading(false);
-    })();
-  }, [walletAddress]);
-
   return {
     walletAddress,
     signingClient,
-    profile,
     isLoading,
     error,
     offlineSigner,

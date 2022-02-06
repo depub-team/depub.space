@@ -20,12 +20,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { Platform } from 'react-native';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
-import {
-  DesmosProfile,
-  fetchDesmosProfile,
-  getAbbrNickname,
-  getShortenAddress,
-} from '../../../utils';
+import { getAbbrNickname, getShortenAddress, messageSanitizer } from '../../../utils';
 import { ImageModal } from '../ImageModal';
 
 dayjs.extend(relativeTime);
@@ -40,12 +35,11 @@ export interface MessageCardProps extends ComponentProps<typeof HStack> {
 
 const MessageCardComponent: FC<MessageCardProps> = ({
   isLoading,
-  message: { from, date, images, message, rawMessage },
+  message: { from, date, profile, images = [], message = '' },
   ...props
 }) => {
   const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
   const dayFrom = dayjs(date).fromNow();
-  const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const [linkPreivew, setLinkPreview] = useState<LinkPreviewItem | null>(null);
   const displayName = profile?.nickname || shortenAddress;
   const isMessageContainsUrl = /https?/.test(message);
@@ -64,12 +58,12 @@ const MessageCardComponent: FC<MessageCardProps> = ({
     // eslint-disable-next-line func-names
     void (async function () {
       try {
-        const myLinkPreivew = (await getLinkPreview(rawMessage, {
+        const myLinkPreivew = (await getLinkPreview(message, {
           proxyUrl: `${PROXY_URL}/?`,
           timeout: 6000,
         })) as LinkPreviewItem;
 
-        debug('useEffect() -> rawMessage: %s, myLinkPreivew: %O', rawMessage, myLinkPreivew);
+        debug('useEffect() -> message: %s, myLinkPreivew: %O', message, myLinkPreivew);
 
         if (myLinkPreivew) {
           setLinkPreview(myLinkPreivew);
@@ -78,18 +72,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
         debug('useEffect() -> error: %O', ex);
       }
     })();
-  }, [rawMessage, isMessageContainsUrl]);
-
-  useEffect(() => {
-    // eslint-disable-next-line func-names
-    void (async function () {
-      const authorProfile = await fetchDesmosProfile(from);
-
-      if (authorProfile) {
-        setProfile(authorProfile);
-      }
-    })();
-  }, [from]);
+  }, [message, isMessageContainsUrl]);
 
   useEffect(() => {
     images.forEach((image, i) => {
@@ -186,8 +169,10 @@ const MessageCardComponent: FC<MessageCardProps> = ({
 
           <Skeleton.Text isLoaded={!isLoading} lines={2} space={2}>
             <Text fontFamily="monospace" fontSize={{ base: 'md', md: 'lg' }} whiteSpace="pre-wrap">
-              {/* eslint-disable-next-line react/no-danger */}
-              {Platform.OS === 'web' ? <div dangerouslySetInnerHTML={{ __html: message }} /> : null}
+              {Platform.OS === 'web' ? (
+                // eslint-disable-next-line react/no-danger
+                <div dangerouslySetInnerHTML={{ __html: messageSanitizer(message) }} />
+              ) : null}
             </Text>
           </Skeleton.Text>
 
