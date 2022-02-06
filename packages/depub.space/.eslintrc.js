@@ -10,5 +10,8 @@ module.exports = {
   extends: [
     'plugin:@next/next/recommended',
     '../../.eslintrc.base.json'
-  ]
+  ],
+  rules: {
+    '@next/next/no-html-link-for-pages': ['error', 'packages/depub.space/src/pages']
+  }
 }
