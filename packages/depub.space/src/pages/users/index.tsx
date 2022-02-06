@@ -14,6 +14,7 @@ import {
 } from 'native-base';
 import { Platform } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
+import { useRouter } from 'next/router';
 import { Layout, MessageList } from '../../components';
 import { Message, DesmosProfile } from '../../interfaces';
 import { useAppState, useSigningCosmWasmClient } from '../../hooks';
@@ -24,10 +25,8 @@ import { MAX_WIDTH } from '../../contants';
 const debug = Debug('web:<UserPage />');
 
 export default function IndexPage() {
-  const urlParams = new URLSearchParams(
-    typeof window !== 'undefined' ? window.location.search : ''
-  );
-  const account = urlParams.get('account');
+  const router = useRouter();
+  const account = router.query.account?.toString();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
