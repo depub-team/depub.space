@@ -1,8 +1,6 @@
 export default class KVCache {
   get(key: string): Promise<string> {
-    return WORKERS_GRAPHQL_CACHE.get(key, {
-      cacheTtl: CACHE_TTL,
-    });
+    return WORKERS_GRAPHQL_CACHE.get(key);
   }
 
   set(key: string, value: string, options?: any): Promise<void> {
