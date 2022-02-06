@@ -20,9 +20,10 @@ import {
   Tooltip,
 } from 'native-base';
 import Debug from 'debug';
-import { DesmosProfile, pickImageFromDevice } from '../../../utils';
+import { pickImageFromDevice } from '../../../utils';
 import { MAX_CHAR_LIMIT } from '../../../contants';
 import { ImagePreview } from './ImagePreview';
+import { DesmosProfile } from '../../../interfaces';
 
 const debug = Debug('web:<MessageComposer />');
 
