@@ -2,9 +2,9 @@ import { gql } from 'apollo-server-cloudflare';
 
 const typeDefs = gql`
   type Query {
-    me: User
-    messages(tag: String, offset: Int, limit: Int): [Message]
-    getUser(address: String!): User
+    messages(previousId: String, limit: Int): [Message]
+    messagesByTag(tag: String!, previousId: String, limit: Int): [Message]
+    getUser(address: String!, previousId: String, limit: Int): User
   }
 
   type Message {
@@ -13,13 +13,13 @@ const typeDefs = gql`
     from: String!
     date: String!
     images: [String]
-    profile: Profile!
+    profile: Profile
   }
 
   type User {
     id: ID! # wallet address
     profile: Profile
-    messages: [Message]
+    messages(previousId: String, limit: Int): [Message]
   }
 
   type Profile {

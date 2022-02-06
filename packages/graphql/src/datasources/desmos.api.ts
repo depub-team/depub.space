@@ -1,7 +1,4 @@
 import { DataSource } from 'apollo-datasource';
-import KVCache from '../kv-cache';
-
-const KEY_DESMOS_PROFILE_API = 'KEY_DESMOS_PROFILE_API';
 
 const FETCH_PROFILE_DOCUMENT = `query DesmosProfileLink($address: String) {
   profile(where: { chain_links: { external_address: { _eq: $address } } }) {
@@ -31,20 +28,11 @@ const FETCH_PROFILE_DOCUMENT = `query DesmosProfileLink($address: String) {
 }`;
 
 export class DesmosAPI extends DataSource {
-  private cache = new KVCache();
-
   constructor(private baseURL: string) {
     super();
   }
 
   public async getProfile(address: string) {
-    const cachingKey = `${KEY_DESMOS_PROFILE_API}_getProfile(${address})`;
-    const cachedRecords = await this.cache.get(cachingKey);
-
-    if (cachedRecords) {
-      return JSON.parse(cachedRecords);
-    }
-
     try {
       const response = await fetch(this.baseURL, {
         method: 'POST',
@@ -62,14 +50,6 @@ export class DesmosAPI extends DataSource {
       const profile = data.data.profile[0];
 
       if (profile) {
-        await this.cache.set(
-          cachingKey,
-          JSON.stringify({
-            id: profile.address,
-            ...profile,
-          })
-        );
-
         return {
           id: profile.address,
           ...profile,

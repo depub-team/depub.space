@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useState } from 'react';
 import Debug from 'debug';
 import { Divider, useToast, VStack } from 'native-base';
-import { Message } from '../interfaces';
+import { DesmosProfile, Message } from '../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
 import {
   Layout,
@@ -17,6 +17,8 @@ const debug = Debug('web:<IndexPage />');
 
 export default function IndexPage() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const {
     error: connectError,
     isLoading: isConnectLoading,
@@ -24,19 +26,30 @@ export default function IndexPage() {
     connectWalletConnect,
     walletAddress,
     offlineSigner,
-    profile,
   } = useSigningCosmWasmClient();
-  const { isLoading, fetchMessages, postMessage } = useAppState();
+  const { isLoading, fetchMessages, postMessage, fetchUser } = useAppState();
   const toast = useToast();
 
-  const fetchNewMessages = async () => {
+  const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
     debug('fetchNewMessages()');
 
-    const res = await fetchMessages();
-
-    if (res) {
-      setMessages(res.messages);
+    if (isLoadingMore) {
+      return;
     }
+
+    setIsLoadingMore(true);
+
+    const newMessages = await fetchMessages(previousId, refresh);
+
+    if (newMessages) {
+      if (!refresh) {
+        setMessages(msgs => msgs.concat(newMessages));
+      } else {
+        setMessages(newMessages);
+      }
+    }
+
+    setIsLoadingMore(false);
   };
 
   const handleOnSubmit = async (data: MessageFormType, image?: string | null) => {
@@ -59,7 +72,7 @@ export default function IndexPage() {
 
       const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
-      await fetchNewMessages();
+      await fetchNewMessages(undefined, true);
 
       if (txn) {
         toast.show({
@@ -84,6 +97,19 @@ export default function IndexPage() {
     void fetchNewMessages();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line func-names
+    void (async function () {
+      if (walletAddress) {
+        const user = await fetchUser(walletAddress);
+
+        if (user && user.profile) {
+          setProfile(user.profile);
+        }
+      }
+    })();
+  }, [walletAddress, fetchUser]);
 
   useEffect(() => {
     if (connectError) {
@@ -127,6 +153,7 @@ export default function IndexPage() {
     <Layout>
       <MessageList
         isLoading={isLoading}
+        isLoadingMore={isLoadingMore}
         ItemSeparatorComponent={ListItemSeparatorComponent}
         ListHeaderComponent={ListHeaderComponent}
         messages={messages}

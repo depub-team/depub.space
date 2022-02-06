@@ -22,7 +22,7 @@ export type Message = {
   id: Scalars['ID'];
   images?: Maybe<Array<Maybe<Scalars['String']>>>;
   message: Scalars['String'];
-  profile: Profile;
+  profile?: Maybe<Profile>;
 };
 
 export type Profile = {
@@ -40,20 +40,28 @@ export type Profile = {
 export type Query = {
   __typename?: 'Query';
   getUser?: Maybe<User>;
-  me?: Maybe<User>;
   messages?: Maybe<Array<Maybe<Message>>>;
+  messagesByTag?: Maybe<Array<Maybe<Message>>>;
 };
 
 
 export type QueryGetUserArgs = {
   address: Scalars['String'];
+  limit?: InputMaybe<Scalars['Int']>;
+  previousId?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryMessagesArgs = {
   limit?: InputMaybe<Scalars['Int']>;
-  offset?: InputMaybe<Scalars['Int']>;
-  tag?: InputMaybe<Scalars['String']>;
+  previousId?: InputMaybe<Scalars['String']>;
+};
+
+
+export type QueryMessagesByTagArgs = {
+  limit?: InputMaybe<Scalars['Int']>;
+  previousId?: InputMaybe<Scalars['String']>;
+  tag: Scalars['String'];
 };
 
 export type User = {
@@ -61,6 +69,12 @@ export type User = {
   id: Scalars['ID'];
   messages?: Maybe<Array<Maybe<Message>>>;
   profile?: Maybe<Profile>;
+};
+
+
+export type UserMessagesArgs = {
+  limit?: InputMaybe<Scalars['Int']>;
+  previousId?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -160,7 +174,7 @@ export type MessageResolvers<ContextType = Context, ParentType extends Resolvers
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   images?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  profile?: Resolver<ResolversTypes['Profile'], ParentType, ContextType>;
+  profile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -178,13 +192,13 @@ export type ProfileResolvers<ContextType = Context, ParentType extends Resolvers
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   getUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryGetUserArgs, 'address'>>;
-  me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<QueryMessagesArgs>>;
+  messagesByTag?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, RequireFields<QueryMessagesByTagArgs, 'tag'>>;
 };
 
 export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType>;
+  messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<UserMessagesArgs>>;
   profile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

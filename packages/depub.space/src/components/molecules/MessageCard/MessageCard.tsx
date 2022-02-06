@@ -20,13 +20,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { Platform } from 'react-native';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
-import {
-  DesmosProfile,
-  fetchDesmosProfile,
-  getAbbrNickname,
-  getShortenAddress,
-  replaceURLToAnchors,
-} from '../../../utils';
+import { getAbbrNickname, getShortenAddress, messageSanitizer } from '../../../utils';
 import { ImageModal } from '../ImageModal';
 
 dayjs.extend(relativeTime);
@@ -41,12 +35,11 @@ export interface MessageCardProps extends ComponentProps<typeof HStack> {
 
 const MessageCardComponent: FC<MessageCardProps> = ({
   isLoading,
-  message: { from, date, images = [], message = '' },
+  message: { from, date, profile, images = [], message = '' },
   ...props
 }) => {
   const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
   const dayFrom = dayjs(date).fromNow();
-  const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const [linkPreivew, setLinkPreview] = useState<LinkPreviewItem | null>(null);
   const displayName = profile?.nickname || shortenAddress;
   const isMessageContainsUrl = /https?/.test(message);
@@ -80,17 +73,6 @@ const MessageCardComponent: FC<MessageCardProps> = ({
       }
     })();
   }, [message, isMessageContainsUrl]);
-
-  useEffect(() => {
-    // eslint-disable-next-line func-names
-    void (async function () {
-      const authorProfile = await fetchDesmosProfile(from);
-
-      if (authorProfile) {
-        setProfile(authorProfile);
-      }
-    })();
-  }, [from]);
 
   useEffect(() => {
     images.forEach((image, i) => {
@@ -189,7 +171,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
             <Text fontFamily="monospace" fontSize={{ base: 'md', md: 'lg' }} whiteSpace="pre-wrap">
               {Platform.OS === 'web' ? (
                 // eslint-disable-next-line react/no-danger
-                <div dangerouslySetInnerHTML={{ __html: replaceURLToAnchors(message) }} />
+                <div dangerouslySetInnerHTML={{ __html: messageSanitizer(message) }} />
               ) : null}
             </Text>
           </Skeleton.Text>

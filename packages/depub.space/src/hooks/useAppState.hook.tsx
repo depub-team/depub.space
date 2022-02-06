@@ -13,48 +13,63 @@ import { OfflineSigner } from '@cosmjs/proto-signing';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import Debug from 'debug';
-import { ISCNQueryClient, ISCNRecord, ISCNSigningClient } from '@likecoin/iscn-js';
-import { Message } from '../interfaces';
+import { ISCNSigningClient } from '@likecoin/iscn-js';
+import axios from 'axios';
+import { Message, User } from '../interfaces';
 import { submitToArweaveAndISCN } from '../utils';
+import {
+  GRAPHQL_QUERY_GET_USER,
+  GRAPHQL_QUERY_MESSAGES,
+  GRAPHQL_QUERY_MESSAGES_BY_TAG,
+  GRAPHQL_QUERY_MESSAGES_BY_USER,
+  ROWS_PER_PAGE,
+} from '../contants';
 
 const debug = Debug('web:useAppState');
 const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
-const queryClient = new ISCNQueryClient();
+const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || '';
 const signingClient = new ISCNSigningClient();
 
 export class AppStateError extends Error {}
 
-const transformRecord = (records: ISCNRecord[]) => {
-  const messages = records.reverse().map(({ data }) => {
-    const author = data.stakeholders.find(
-      stakeholder => stakeholder.contributionType === 'http://schema.org/author'
-    );
-    const from = author.entity['@id'];
-
-    return {
-      id: data['@id'] as string,
-      message: data.contentMetadata.description,
-      from,
-      date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp),
-      images: data.contentFingerprints
-        .filter(c => /^ipfs/.test(c))
-        .map(c => `https://cloudflare-ipfs.com/ipfs/${c.split('ipfs://')[1]}`),
-    } as Message;
-  });
-
-  return messages;
-};
-
-export interface MessageQueryType {
+export interface MessagesQueryResponse {
   messages: Message[];
-  nextSequence: number;
+}
+
+export interface MessagesByTagQueryResponse {
+  messagesByTag: Message[];
+}
+
+export interface MessagesByOwnerResponse {
+  getUser: User & {
+    messages: Message[];
+  };
+}
+
+export interface GetUserResopnse {
+  getUser: User;
 }
 
 export interface AppStateContextProps {
   isLoading: boolean;
   error: string | null;
-  fetchMessages: () => Promise<MessageQueryType | null>;
-  fetchMessagesByOwner: (author: string) => Promise<MessageQueryType | null>;
+  fetchUser: (address: string, noCache?: boolean) => Promise<User | null>;
+  fetchMessages: (previousId?: string, noCache?: boolean) => Promise<Message[] | null>;
+  fetchMessagesByTag: (
+    tag: string,
+    previousId?: string,
+    noCache?: boolean
+  ) => Promise<Message[] | null>;
+  fetchMessagesByOwner: (
+    owner: string,
+    previousId?: string,
+    noCache?: boolean
+  ) => Promise<
+    | (User & {
+        messages: Message[];
+      })
+    | null
+  >;
   postMessage: (
     offlineSigner: OfflineSigner,
     message: string,
@@ -65,12 +80,19 @@ export interface AppStateContextProps {
 const initialState: AppStateContextProps = {
   error: null,
   isLoading: false,
+  fetchUser: null as never,
   fetchMessages: null as never,
+  fetchMessagesByTag: null as never,
   fetchMessagesByOwner: null as never,
   postMessage: null as never,
 };
 
 const ISCN_FINGERPRINT = process.env.NEXT_PUBLIC_ISCN_FINGERPRINT || '';
+
+const noCacheHeaders = {
+  'Cache-Control': 'no-cache',
+  Pragma: 'no-cache',
+};
 
 export const AppStateContext = createContext<AppStateContextProps>(initialState);
 
@@ -108,139 +130,193 @@ export const useAppState = () => useContext(AppStateContext);
 export const AppStateProvider: FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const fetchMessagesByOwner = useCallback(
-    async (
-      owner: string
-    ): Promise<{
-      messages: Message[];
-      nextSequence: number;
-    } | null> => {
-      debug('fetchMessages()');
+  const fetchUser = useCallback(
+    async (address: string, noCache?: boolean): Promise<User | null> => {
+      debug('fetchUser(address: %s)', address);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
       try {
-        await queryClient.connect(PUBLIC_RPC_ENDPOINT);
-
-        const makeFetchRequest = async (nextSeq: number) => {
-          const res = await queryClient.queryRecordsByOwner(owner, nextSeq);
-
-          debug('fetchMessagesByOwner(nextSeq: %d) -> records: %O', nextSeq, res);
-
-          if (res) {
-            const messages = transformRecord(
-              // only get those transactions with specific fingerprint
-              res.records.filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT))
-            );
-
-            return { messages, nextSequence: res.nextSequence };
+        const { data } = await axios.post<{ data: GetUserResopnse }>(
+          GRAPHQL_URL,
+          {
+            variables: {
+              address,
+            },
+            query: GRAPHQL_QUERY_GET_USER,
+          },
+          {
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              ...(noCache && noCacheHeaders),
+            },
           }
-
-          return null;
-        };
-
-        const firstBatchRes = await makeFetchRequest(0);
-
-        if (!firstBatchRes) {
-          return null;
-        }
-
-        let batchNextSequence = firstBatchRes.nextSequence;
-        let messages = [...firstBatchRes.messages];
-
-        while (!batchNextSequence.isZero()) {
-          // eslint-disable-next-line no-await-in-loop
-          const anotherBatchRes = await makeFetchRequest(batchNextSequence.toNumber());
-
-          if (anotherBatchRes) {
-            batchNextSequence = anotherBatchRes.nextSequence;
-            messages = [...anotherBatchRes.messages, ...messages];
-          } else {
-            break;
-          }
-        }
+        );
 
         dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-        return { messages, nextSequence: batchNextSequence.toNumber() };
+        if (data && data.data.getUser) {
+          return data.data.getUser;
+        }
       } catch (ex) {
         debug('fetchMessagesByOwner() -> error: %O', ex);
 
+        dispatch({
+          type: ActionType.SET_ERROR,
+          error: 'Fail to fetch messages, please try again later.',
+        });
+
         Sentry.captureException(ex);
       }
-
-      dispatch({
-        type: ActionType.SET_ERROR,
-        error: 'Fail to fetch messages, please try again later.',
-      });
 
       return null;
     },
     []
   );
 
-  const fetchMessages = useCallback(async (): Promise<{
-    messages: Message[];
-    nextSequence: number;
-  } | null> => {
-    debug('fetchMessages()');
+  const fetchMessagesByOwner = useCallback(
+    async (
+      owner: string,
+      previousId?: string
+    ): Promise<
+      | (User & {
+          messages: Message[];
+        })
+      | null
+    > => {
+      debug('fetchMessagesByOwner(owner: %s, previousId: %s)', owner, previousId);
 
-    dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
-    try {
-      await queryClient.connect(PUBLIC_RPC_ENDPOINT);
+      try {
+        const { data } = await axios.post<{ data: MessagesByOwnerResponse }>(
+          GRAPHQL_URL,
+          {
+            variables: {
+              address: owner,
+              previousId,
+              limit: ROWS_PER_PAGE,
+            },
+            query: GRAPHQL_QUERY_MESSAGES_BY_USER,
+          },
+          {
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+            },
+          }
+        );
 
-      const makeFetchRequest = async (nextSeq: number) => {
-        const res = await queryClient.queryRecordsByFingerprint(ISCN_FINGERPRINT, nextSeq);
+        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-        debug('fetchMessages(nextSeq: %d) -> records: %O', nextSeq, res);
-
-        if (res) {
-          const messages = transformRecord(res.records);
-
-          return { messages, nextSequence: res.nextSequence };
+        if (data && data.data.getUser) {
+          return data.data.getUser;
         }
+      } catch (ex) {
+        debug('fetchMessagesByOwner() -> error: %O', ex);
 
-        return null;
-      };
+        dispatch({
+          type: ActionType.SET_ERROR,
+          error: 'Fail to fetch messages, please try again later.',
+        });
 
-      const firstBatchRes = await makeFetchRequest(0);
-
-      if (!firstBatchRes) {
-        return null;
+        Sentry.captureException(ex);
       }
 
-      let batchNextSequence = firstBatchRes.nextSequence;
-      let messages = [...firstBatchRes.messages];
+      return null;
+    },
+    []
+  );
 
-      while (!batchNextSequence.isZero()) {
-        // eslint-disable-next-line no-await-in-loop
-        const anotherBatchRes = await makeFetchRequest(batchNextSequence.toNumber());
+  const fetchMessages = useCallback(
+    async (previousId?: string, noCache?: boolean): Promise<Message[] | null> => {
+      debug('fetchMessages(previousId: %s)', previousId);
 
-        if (anotherBatchRes) {
-          batchNextSequence = anotherBatchRes.nextSequence;
-          messages = [...anotherBatchRes.messages, ...messages];
-        } else {
-          break;
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
+
+      try {
+        const { data } = await axios.post<{ data: MessagesQueryResponse }>(
+          GRAPHQL_URL,
+          {
+            variables: {
+              previousId: previousId || null, // graphql not accepts undefined
+              limit: ROWS_PER_PAGE,
+            },
+            query: GRAPHQL_QUERY_MESSAGES,
+          },
+          {
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              ...(noCache && noCacheHeaders),
+            },
+          }
+        );
+
+        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+
+        if (data && data.data.messages) {
+          return data.data.messages;
         }
+      } catch (ex) {
+        debug('fetchMessages() -> error: %O', ex);
+
+        dispatch({
+          type: ActionType.SET_ERROR,
+          error: 'Fail to fetch messages, please try again later.',
+        });
+
+        Sentry.captureException(ex);
       }
 
-      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+      return null;
+    },
+    []
+  );
 
-      return { messages, nextSequence: batchNextSequence.toNumber() };
-    } catch (ex) {
-      debug('fetchMessages() -> error: %O', ex);
+  const fetchMessagesByTag = useCallback(
+    async (tag: string, previousId?: string, noCache?: boolean): Promise<Message[] | null> => {
+      debug('fetchMessagesByTag(tag: %s, previousId: %s)', tag, previousId);
 
-      Sentry.captureException(ex);
-    }
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
-    dispatch({
-      type: ActionType.SET_ERROR,
-      error: 'Fail to fetch messages, please try again later.',
-    });
+      try {
+        const { data } = await axios.post<{ data: MessagesByTagQueryResponse }>(
+          GRAPHQL_URL,
+          {
+            variables: {
+              tag,
+              previousId,
+              limit: ROWS_PER_PAGE,
+            },
+            query: GRAPHQL_QUERY_MESSAGES_BY_TAG,
+          },
+          {
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              ...(noCache && noCacheHeaders),
+            },
+          }
+        );
 
-    return null;
-  }, []);
+        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+
+        if (data && data.data.messagesByTag) {
+          return data.data.messagesByTag;
+        }
+      } catch (ex) {
+        debug('fetchMessagesByTag() -> error: %O', ex);
+
+        dispatch({
+          type: ActionType.SET_ERROR,
+          error: 'Fail to fetch messages, please try again later.',
+        });
+
+        Sentry.captureException(ex);
+      }
+
+      return null;
+    },
+    []
+  );
 
   const postMessage = useCallback(
     async (offlineSigner: OfflineSigner, message: string, files?: string | File[]) => {
@@ -327,10 +403,12 @@ export const AppStateProvider: FC = ({ children }) => {
     () => ({
       ...state,
       postMessage,
+      fetchUser,
       fetchMessages,
+      fetchMessagesByTag,
       fetchMessagesByOwner,
     }),
-    [state, postMessage, fetchMessages, fetchMessagesByOwner]
+    [state, fetchUser, postMessage, fetchMessagesByTag, fetchMessages, fetchMessagesByOwner]
   );
 
   return <AppStateContext.Provider value={memoValue}>{children}</AppStateContext.Provider>;
