@@ -43,7 +43,7 @@ const handleRequest = async (request: Request) => {
           if (IS_DEVEL && refererUrl.hostname === 'localhost') {
             allowOrigin = refererUrl.origin;
           } else if (refererUrl.hostname.endsWith('depub.space')) {
-            allowOrigin = `https://${url.hostname}`;
+            allowOrigin = refererUrl.origin;
           }
         }
 
