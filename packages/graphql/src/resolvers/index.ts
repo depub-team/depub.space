@@ -39,15 +39,6 @@ const transformRecord = (record: ISCNRecord, profile: Profile | null) => {
   } as Message;
 };
 
-const getUser = async (walletAddress: string, ctx: Context) => {
-  const profile = await ctx.dataSources.desmosAPI.getProfile(walletAddress);
-
-  return {
-    id: walletAddress,
-    profile,
-  };
-};
-
 interface GetMessagesByUserArgs {
   walletAddress: string;
   previousId?: InputMaybe<string>;
@@ -60,17 +51,58 @@ interface GetMessagesArgs {
   tag?: InputMaybe<string>;
 }
 
-const getMessagesByUser = async (args: GetMessagesByUserArgs, ctx: Context) => {
-  const cachingKey = `getMessagesByUser(walletAddress: ${args.walletAddress}, previousId: ${args.previousId}, limit: ${args.limit})`;
-  const cachedRecords = await cache.get(cachingKey);
+const getProfile = async (account: string, ctx: Context) => {
+  const cachingKey = `getProfile(account: ${account})`;
 
-  if (!ctx.noCache && cachedRecords) {
-    return JSON.parse(cachedRecords) as Message[];
+  try {
+    let profile: any = null;
+    const cachedRecords = await cache.get(cachingKey);
+
+    if (cachedRecords && !ctx.noCache) {
+      profile = JSON.parse(cachedRecords);
+    } else {
+      profile = await ctx.dataSources.desmosAPI.getProfile(account);
+
+      if (profile) {
+        await cache.set(cachingKey, JSON.stringify(profile));
+      }
+    }
+
+    return profile;
+  } catch (ex) {
+    // eslint-disable-next-line no-console
+    console.error(ex);
   }
+
+  return null;
+};
+
+const getUser = async (walletAddress: string, ctx: Context) => {
+  const profile = await getProfile(walletAddress, ctx);
+
+  return {
+    id: walletAddress,
+    profile,
+  };
+};
+
+const getMessagesByUser = async (args: GetMessagesByUserArgs, ctx: Context) => {
+  const cachingKey = `getMessagesByUser(walletAddress: ${args.walletAddress})`;
 
   try {
     if (args.walletAddress) {
-      const records = await ctx.dataSources.iscnQueryAPI.queryRecordsByOwner(args.walletAddress);
+      // get cached records
+      const cachedRecords = await cache.get(cachingKey);
+      let records: ISCNRecord[] = [];
+
+      if (cachedRecords && !ctx.noCache) {
+        records = JSON.parse(cachedRecords) as ISCNRecord[];
+      } else {
+        records = await ctx.dataSources.iscnQueryAPI.queryRecordsByOwner(args.walletAddress);
+
+        await cache.set(cachingKey, JSON.stringify(records));
+      }
+
       const filteredRecords = records
         .reverse()
         .filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT));
@@ -82,7 +114,7 @@ const getMessagesByUser = async (args: GetMessagesByUserArgs, ctx: Context) => {
         .slice(offset, end)
         .map(r => async () => {
           const authorAddress = getAuthorAddress(r);
-          const userProfile = await ctx.dataSources.desmosAPI.getProfile(authorAddress);
+          const userProfile = await getProfile(authorAddress, ctx);
           const message = transformRecord(r, userProfile);
 
           return message;
@@ -94,8 +126,6 @@ const getMessagesByUser = async (args: GetMessagesByUserArgs, ctx: Context) => {
           return list.concat(msgs);
         }, Promise.resolve([] as Message[]));
 
-      await cache.set(cachingKey, JSON.stringify(messages));
-
       return messages;
     }
   } catch (ex: any) {
@@ -106,15 +136,21 @@ const getMessagesByUser = async (args: GetMessagesByUserArgs, ctx: Context) => {
 };
 
 const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
-  const cachingKey = `getMessages(tag: ${args.tag}, previousId: ${args.previousId}, limit: ${args.limit})`;
-  const cachedRecords = await cache.get(cachingKey);
-
-  if (!ctx.noCache && cachedRecords) {
-    return JSON.parse(cachedRecords) as Message[];
-  }
+  const cachingKey = `getMessages(tag: ${args.tag})`;
 
   try {
-    const records = await ctx.dataSources.iscnQueryAPI.queryRecordsByFingerprint(ISCN_FINGERPRINT);
+    // get cached records
+    const cachedRecords = await cache.get(cachingKey);
+    let records: ISCNRecord[] = [];
+
+    if (cachedRecords && !ctx.noCache) {
+      records = JSON.parse(cachedRecords) as ISCNRecord[];
+    } else {
+      records = await ctx.dataSources.iscnQueryAPI.queryRecordsByFingerprint(ISCN_FINGERPRINT);
+
+      await cache.set(cachingKey, JSON.stringify(records));
+    }
+
     const tagRegExp = args.tag && new RegExp(`#${args.tag}`, 'gi');
     const filteredRecords = records
       .reverse()
@@ -128,7 +164,7 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
       .filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT)) // only published by depub.space
       .map(r => async () => {
         const authorAddress = getAuthorAddress(r);
-        const userProfile = await ctx.dataSources.desmosAPI.getProfile(authorAddress);
+        const userProfile = await getProfile(authorAddress, ctx);
         const message = transformRecord(r, userProfile);
 
         return message;
@@ -139,8 +175,6 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
 
         return list.concat(msgs);
       }, Promise.resolve([] as Message[]));
-
-    await cache.set(cachingKey, JSON.stringify(messages));
 
     return messages;
   } catch (ex: any) {

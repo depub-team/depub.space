@@ -17,4 +17,10 @@ export default class KVCache {
   delete(key: string): Promise<boolean | void> {
     return WORKERS_GRAPHQL_CACHE.delete(key);
   }
+
+  async clear(): Promise<void> {
+    const list = await WORKERS_GRAPHQL_CACHE.list();
+
+    (list.keys || []).map(({ name }: any) => WORKERS_GRAPHQL_CACHE.remove(name));
+  }
 }
