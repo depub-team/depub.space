@@ -1,4 +1,4 @@
-interface CorsConfig {
+export interface CorsConfig {
   allowCredentials: string;
   allowHeaders: string;
   allowMethods: string;

@@ -6,6 +6,7 @@ type ContextFunctionParams = {
 
 type Context = {
   walletAddress: string;
+  noCache: boolean;
   dataSources: {
     iscnQueryAPI: ISCNQueryAPI;
     desmosAPI: DesmosAPI;
@@ -40,8 +41,9 @@ type Profile = {
 const context = (params: ContextFunctionParams) => {
   const { request } = params;
   const walletAddress = request.headers.get('x-wallet-address');
+  const noCache = request.headers.get('cache-control') === 'no-cache';
 
-  return { walletAddress };
+  return { walletAddress, noCache };
 };
 
 export type { User, Context, ContextFunctionParams };

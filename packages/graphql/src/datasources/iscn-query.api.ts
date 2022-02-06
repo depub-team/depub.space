@@ -1,13 +1,8 @@
 import { DataSource } from 'apollo-datasource';
 import { ISCNQueryClient, ISCNRecord } from '@likecoin/iscn-js';
-import KVCache from '../kv-cache';
-
-const KEY_ISCN_QUERY_API = 'KEY_ISCN_QUERY_API';
 
 export class ISCNQueryAPI extends DataSource {
   private queryClient!: ISCNQueryClient;
-
-  private cache = new KVCache();
 
   constructor(protected rpc: string) {
     // eslint-disable-next-line no-console
@@ -31,13 +26,6 @@ export class ISCNQueryAPI extends DataSource {
   }
 
   public async queryRecordsByFingerprint(fingerprint: string, fromSequence?: number) {
-    const cachingKey = `${KEY_ISCN_QUERY_API}_queryRecordsByFingerprint(${fingerprint}, ${fromSequence})`;
-    const cachedRecords = await this.cache.get(cachingKey);
-
-    if (cachedRecords) {
-      return JSON.parse(cachedRecords) as ISCNRecord[];
-    }
-
     const res = await this.queryClient.queryRecordsByFingerprint(fingerprint, fromSequence);
     let records: ISCNRecord[] = [];
 
@@ -59,8 +47,6 @@ export class ISCNQueryAPI extends DataSource {
       }
     }
 
-    await this.cache.set(cachingKey, JSON.stringify(records));
-
     return records;
   }
 
@@ -69,13 +55,6 @@ export class ISCNQueryAPI extends DataSource {
   }
 
   public async queryRecordsByOwner(owner: string, fromSequence?: number): Promise<ISCNRecord[]> {
-    const cachingKey = `${KEY_ISCN_QUERY_API}_queryRecordsByOwner(${owner}, ${fromSequence})`;
-    const cachedRecords = await this.cache.get(cachingKey);
-
-    if (cachedRecords) {
-      return JSON.parse(cachedRecords) as ISCNRecord[];
-    }
-
     const res = await this.queryClient.queryRecordsByOwner(owner, fromSequence);
     let records: ISCNRecord[] = [];
 
@@ -93,8 +72,6 @@ export class ISCNQueryAPI extends DataSource {
         }
       }
     }
-
-    await this.cache.set(cachingKey, JSON.stringify(records));
 
     return records;
   }

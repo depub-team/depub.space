@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC } from 'react';
 import Debug from 'debug';
 import { FlatList } from 'native-base';
 import { RefreshControl } from 'react-native';
@@ -13,31 +13,30 @@ const debug = Debug('web:<MessageList />');
 export interface MessageListProps extends Omit<IFlatListProps<Message>, 'data' | 'renderItem'> {
   messages: Message[];
   isLoading?: boolean;
-  onFetchMessages?: () => Promise<void>;
+  isLoadingMore?: boolean;
+  onFetchMessages?: (previousId?: string) => Promise<void>;
 }
 
 export const MessageList: FC<MessageListProps> = ({
   onFetchMessages,
   isLoading,
+  isLoadingMore,
   messages,
   ...props
 }) => {
   const [refreshing, setRefreshing] = React.useState(false);
-  const [offset, setOffset] = useState(ROWS_PER_PAGE);
-  const [messagesWithPaging, setMessagesWithPaging] = useState(messages.slice(0, ROWS_PER_PAGE));
   const dummyItems = Array.from(new Array(ROWS_PER_PAGE)).map<Message>(() => ({
-    id: `id-${uid()}`,
+    id: `dummy-${uid()}`,
     message: '',
     from: '',
     date: new Date(),
   }));
-
-  const handleOnEndReached = ({ distanceFromEnd }: { distanceFromEnd: number }) => {
+  const showDummyItems = isLoading && refreshing;
+  const data = showDummyItems ? dummyItems : [...messages, ...(isLoadingMore ? dummyItems : [])];
+  const handleOnEndReached = async ({ distanceFromEnd }: { distanceFromEnd: number }) => {
     debug(
-      'handleOnEndReached() -> distanceFromEnd: %d, offset: %d, ROWS_PER_PAGE: %d, messages.length: %d',
+      'handleOnEndReached() -> distanceFromEnd: %d, messages.length: %d',
       distanceFromEnd,
-      offset,
-      ROWS_PER_PAGE,
       messages.length
     );
 
@@ -45,11 +44,9 @@ export const MessageList: FC<MessageListProps> = ({
       return;
     }
 
-    const newOffset = Math.min(offset + ROWS_PER_PAGE, messages.length);
-    const paginatedMessages = messages.slice(0, newOffset);
-
-    setMessagesWithPaging(paginatedMessages);
-    setOffset(newOffset);
+    if (messages.length > 0 && onFetchMessages) {
+      await onFetchMessages(messages[messages.length - 1].id);
+    }
   };
 
   const handleOnRefresh = async () => {
@@ -66,18 +63,18 @@ export const MessageList: FC<MessageListProps> = ({
     setRefreshing(false);
   };
 
-  // get first batch of messages
-  useEffect(() => {
-    setMessagesWithPaging(messages.slice(0, ROWS_PER_PAGE));
-  }, [messages]);
-
   return (
     <FlatList<Message>
-      data={refreshing || isLoading ? dummyItems : messagesWithPaging}
+      data={data}
       keyExtractor={item => item.id}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleOnRefresh} />}
       renderItem={ctx => (
-        <MessageCard isLoading={isLoading} maxW={MAX_WIDTH} message={ctx.item} mx="auto" />
+        <MessageCard
+          isLoading={/^dummy-/.test(ctx.item.id)}
+          maxW={MAX_WIDTH}
+          message={ctx.item}
+          mx="auto"
+        />
       )}
       onEndReached={handleOnEndReached}
       onEndReachedThreshold={END_REACHED_THRESHOLD}

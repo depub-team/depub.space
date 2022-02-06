@@ -1,9 +1,20 @@
 import CloudflareWorkerGlobalScope from 'types-cloudflare-worker';
 
 import { apollo, playground } from './handlers';
-import { setCorsHeaders as setCors } from './utils';
+import { CorsConfig, setCorsHeaders as setCors } from './utils';
 
-const graphQLOptions = {
+const IS_DEVEL = ENVIRONMENT !== 'production';
+
+interface GraphQLOptions {
+  baseEndpoint: string;
+  playgroundEndpoint: string;
+  cors: CorsConfig | boolean;
+  forwardUnmatchedRequestsToOrigin: boolean;
+  debug: boolean;
+  kvCache: boolean;
+}
+
+const graphQLOptions: GraphQLOptions = {
   baseEndpoint: '/',
   playgroundEndpoint: '/playground',
   cors: true,
@@ -14,6 +25,8 @@ const graphQLOptions = {
 
 const handleRequest = async (request: Request) => {
   const url = new URL(request.url);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const refererUrl = request.headers.has('referer') && new URL(request.headers.get('referer')!);
 
   try {
     if (url.pathname === graphQLOptions.baseEndpoint) {
@@ -23,7 +36,23 @@ const handleRequest = async (request: Request) => {
           : await apollo(request, graphQLOptions);
 
       if (graphQLOptions.cors) {
-        setCors(response, graphQLOptions.cors);
+        let allowOrigin = '*';
+
+        if (refererUrl) {
+          // development only
+          if (IS_DEVEL && refererUrl.hostname === 'localhost') {
+            allowOrigin = refererUrl.origin;
+          } else if (refererUrl.hostname.endsWith('depub.space')) {
+            allowOrigin = `https://${url.hostname}`;
+          }
+        }
+
+        setCors(response, {
+          allowOrigin,
+          allowCredentials: 'true',
+          allowHeaders: '*',
+          allowMethods: 'GET, POST',
+        });
       }
 
       return response;
