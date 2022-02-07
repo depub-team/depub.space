@@ -110,21 +110,15 @@ const getMessagesByUser = async (args: GetMessagesByUserArgs, ctx: Context) => {
         ? filteredRecords.findIndex(r => r.data['@id'] === args.previousId) + 1
         : 0;
       const end = offset + (args.limit || PAGING_LIMIT);
-      const messages = await filteredRecords
-        .slice(offset, end)
-        .map(r => async () => {
+      const messages = await Promise.all(
+        filteredRecords.slice(offset, end).map(async r => {
           const authorAddress = getAuthorAddress(r);
           const userProfile = await getProfile(authorAddress, ctx);
           const message = transformRecord(r, userProfile);
 
           return message;
         })
-        .reduce(async (p, op) => {
-          const list = await p;
-          const msgs = await op();
-
-          return list.concat(msgs);
-        }, Promise.resolve([] as Message[]));
+      );
 
       return messages;
     }
@@ -159,22 +153,18 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
       ? filteredRecords.findIndex(r => r.data['@id'] === args.previousId) + 1
       : 0;
     const end = offset + (args.limit || PAGING_LIMIT);
-    const messages = await filteredRecords
-      .slice(offset, end)
-      .filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT)) // only published by depub.space
-      .map(r => async () => {
-        const authorAddress = getAuthorAddress(r);
-        const userProfile = await getProfile(authorAddress, ctx);
-        const message = transformRecord(r, userProfile);
+    const messages = await Promise.all(
+      filteredRecords
+        .slice(offset, end)
+        .filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT)) // only published by depub.space
+        .map(async r => {
+          const authorAddress = getAuthorAddress(r);
+          const userProfile = await getProfile(authorAddress, ctx);
+          const message = transformRecord(r, userProfile);
 
-        return message;
-      })
-      .reduce(async (p, op) => {
-        const list = await p;
-        const msgs = await op();
-
-        return list.concat(msgs);
-      }, Promise.resolve([] as Message[]));
+          return message;
+        })
+    );
 
     return messages;
   } catch (ex: any) {
