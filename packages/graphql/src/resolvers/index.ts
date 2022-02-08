@@ -188,6 +188,13 @@ const resolvers: Resolvers = {
         ctx
       ),
   },
+  Mutation: {
+    clearCache: async () => {
+      await cache.clear();
+
+      return true;
+    },
+  },
 };
 
 export { resolvers };
