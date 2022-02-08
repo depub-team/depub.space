@@ -20,7 +20,7 @@ import {
   Tooltip,
 } from 'native-base';
 import Debug from 'debug';
-import { pickImageFromDevice } from '../../../utils';
+import { getAbbrNickname, pickImageFromDevice } from '../../../utils';
 import { MAX_CHAR_LIMIT } from '../../../contants';
 import { ImagePreview } from './ImagePreview';
 import { DesmosProfile } from '../../../interfaces';
@@ -56,6 +56,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   const { errors } = formState;
   const [messageText] = watch(['message']);
   const displayName = profile ? profile.nickname || profile.address : address;
+  const abbrNickname = getAbbrNickname(displayName);
   const profilePic = profile?.profilePic;
 
   const pickImage = async () => {
@@ -93,7 +94,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
       <Box alignItems="center" flex={{ base: '0 0 48px', md: 'unset' }}>
         <Skeleton isLoaded={!isLoading} rounded="full" size="12">
           <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
-            {`${displayName[0]}${displayName[displayName.length - 1]}`}
+            {abbrNickname}
           </Avatar>
         </Skeleton>
       </Box>
