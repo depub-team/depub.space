@@ -43,7 +43,7 @@ export default function IndexPage() {
   useEffect(() => {
     // eslint-disable-next-line func-names
     void (async function () {
-      if (!tagName) {
+      if (!tagName && router.isReady) {
         if (Platform.OS === 'web') {
           window.location.href = '/';
         }
@@ -51,13 +51,10 @@ export default function IndexPage() {
         return;
       }
 
-      const newMessages = await fetchMessagesByTag(tagName);
-
-      if (newMessages) {
-        setMessages(newMessages);
-      }
+      await fetchNewMessages();
     })();
-  }, [fetchMessagesByTag, tagName]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tagName, router.isReady]);
 
   useEffect(() => {
     if (connectError) {
