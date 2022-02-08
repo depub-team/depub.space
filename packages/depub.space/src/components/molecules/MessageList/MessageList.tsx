@@ -32,6 +32,7 @@ export const MessageList: FC<MessageListProps> = ({
     date: new Date(),
   }));
   const showDummyItems = isLoading && refreshing;
+
   const data = showDummyItems ? dummyItems : [...messages, ...(isLoadingMore ? dummyItems : [])];
   const handleOnEndReached = async ({ distanceFromEnd }: { distanceFromEnd: number }) => {
     debug(
