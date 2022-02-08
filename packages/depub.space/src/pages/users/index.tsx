@@ -41,6 +41,8 @@ export default function IndexPage() {
   const dtag = profile?.dtag;
 
   const fetchNewMessages = async (previousId?: string) => {
+    debug('fetchNewMessages()');
+
     if (!account) {
       return;
     }
@@ -69,7 +71,7 @@ export default function IndexPage() {
   useEffect(() => {
     // eslint-disable-next-line func-names
     void (async function () {
-      if (!account) {
+      if (router.isReady && !account) {
         if (Platform.OS === 'web') {
           window.location.href = '/';
         }
@@ -77,18 +79,10 @@ export default function IndexPage() {
         return;
       }
 
-      const res = await fetchMessagesByOwner(account);
-
-      if (res) {
-        setMessages(res.messages);
-
-        if (res.profile) {
-          setProfile(res.profile);
-        }
-      }
+      await fetchNewMessages();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchMessagesByOwner, account]);
+  }, [account, router.isReady]);
 
   useEffect(() => {
     if (connectError) {
