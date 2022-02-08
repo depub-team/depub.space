@@ -177,7 +177,8 @@ export const AppStateProvider: FC = ({ children }) => {
   const fetchMessagesByOwner = useCallback(
     async (
       owner: string,
-      previousId?: string
+      previousId?: string,
+      noCache?: boolean
     ): Promise<
       | (User & {
           messages: Message[];
@@ -202,6 +203,7 @@ export const AppStateProvider: FC = ({ children }) => {
           {
             headers: {
               'Access-Control-Allow-Origin': '*',
+              ...(noCache && noCacheHeaders),
             },
           }
         );

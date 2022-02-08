@@ -1,4 +1,3 @@
-import { ForbiddenError } from 'apollo-server-errors';
 import CloudflareWorkerGlobalScope from 'types-cloudflare-worker';
 
 import { apollo, playground } from './handlers';
@@ -26,13 +25,8 @@ const graphQLOptions: GraphQLOptions = {
 
 const handleRequest = async (request: Request) => {
   const url = new URL(request.url);
-
-  if (!request.headers.has('referer') || !request.headers.get('referer')) {
-    throw new ForbiddenError('No referer header!');
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const refererUrl = request.headers.has('referer') && new URL(request.headers.get('referer')!);
+  const referer = request.headers.get('referer');
+  const refererUrl = referer && new URL(referer);
 
   try {
     if (url.pathname === graphQLOptions.baseEndpoint) {

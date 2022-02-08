@@ -27,7 +27,7 @@ export default function IndexPage() {
     walletAddress,
     offlineSigner,
   } = useSigningCosmWasmClient();
-  const { isLoading, fetchMessages, postMessage, fetchUser } = useAppState();
+  const { isLoading, fetchMessages, fetchMessagesByOwner, postMessage, fetchUser } = useAppState();
   const toast = useToast();
 
   const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
@@ -70,9 +70,13 @@ export default function IndexPage() {
         return;
       }
 
+      const [account] = await offlineSigner.getAccounts();
       const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
       await fetchNewMessages(undefined, true);
+
+      // trigger clear cache in async without blocking the thread
+      void fetchMessagesByOwner(account.address, undefined, true);
 
       if (txn) {
         toast.show({
