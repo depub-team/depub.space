@@ -130,7 +130,7 @@ const getMessagesByUser = async (args: GetMessagesByUserArgs, ctx: Context) => {
 };
 
 const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
-  const cachingKey = `getMessages(tag: ${args.tag})`;
+  const cachingKey = 'getMessages';
 
   try {
     // get cached records
@@ -187,13 +187,6 @@ const resolvers: Resolvers = {
         },
         ctx
       ),
-  },
-  Mutation: {
-    clearCache: async () => {
-      await cache.clear();
-
-      return true;
-    },
   },
 };
 
