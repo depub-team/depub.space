@@ -23,7 +23,7 @@ format = "service-worker"
 LIKECOIN_RPC_ENDPOINT = "https://node.testnet.like.co/rpc/"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
-CACHE_TTL = 180000 # 3min
+CACHE_TTL = 60 # 1min
 ENVIRONMENT = "staging"
 
 # Override values for `--env production` usage
@@ -37,5 +37,5 @@ kv_namespaces = [
 LIKECOIN_RPC_ENDPOINT = "https://mainnet-node.like.co/rpc/"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
-CACHE_TTL = 300000 # 5min
+CACHE_TTL = 600 # 10min
 ENVIRONMENT = "production"
