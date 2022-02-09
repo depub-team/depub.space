@@ -27,9 +27,9 @@ const isDev = process.env.NODE_ENV !== 'production';
 
 export default function IndexPage() {
   const router = useRouter();
-  const account = isDev
-    ? router.query.account?.toString()
-    : ((window as any) || {}).rewriteRoute?.account; // rewriteRoute object is injecting by Cloudflare worker
+  const rewriteRouteObject =
+    typeof window !== 'undefined' ? ((window as any) || {}).rewriteRoute || {} : {};
+  const account = isDev ? router.query.account?.toString() : rewriteRouteObject.account; // rewriteRoute object is injecting by Cloudflare worker
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
