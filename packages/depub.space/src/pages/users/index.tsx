@@ -23,10 +23,13 @@ import { getShortenAddress } from '../../utils/getShortenAddress';
 import { MAX_WIDTH } from '../../contants';
 
 const debug = Debug('web:<UserPage />');
+const isDev = process.env.NODE_ENV !== 'production';
 
 export default function IndexPage() {
   const router = useRouter();
-  const account = router.query.account?.toString();
+  const account = isDev
+    ? router.query.account?.toString()
+    : ((window as any) || {}).rewriteRoute?.account; // rewriteRoute object is injecting by Cloudflare worker
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';

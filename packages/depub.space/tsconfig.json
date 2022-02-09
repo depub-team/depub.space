@@ -4,10 +4,6 @@
     "jsx": "preserve",
     "noEmit": false,
     "isolatedModules": true,
-    "typeRoots": [
-      "node_modules/@types",
-      "types"
-    ],
     "lib": [
       "dom",
       "dom.iterable",
@@ -19,12 +15,12 @@
     "incremental": true
   },
   "include": [
-    "./src/**/*",
-    "./types/**/*",
-    "./next.config.js",
-    "./.eslintrc.js",
-    "./babel.config.js",
-    "./sentry.*.js"
+    "src",
+    "types",
+    "next.config.js",
+    ".eslintrc.js",
+    "babel.config.js",
+    "sentry.*.js"
   ],
   "exclude": [
     "node_modules",
