@@ -4,10 +4,6 @@
     "jsx": "preserve",
     "noEmit": false,
     "isolatedModules": true,
-    "typeRoots": [
-      "node_modules/@types",
-      "types"
-    ],
     "lib": [
       "dom",
       "dom.iterable",

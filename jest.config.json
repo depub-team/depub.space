@@ -2,7 +2,7 @@
   "roots": [
     "<rootDir>/packages"
   ],
-  "testEnvironment": "jest-environment-jsdom-sixteen",
+  "testEnvironment": "jsdom",
   "moduleFileExtensions": [
     "ts",
     "tsx",
@@ -18,8 +18,7 @@
   "coverageDirectory": "coverage",
   "collectCoverageFrom": [
     "packages/**/src/**/*.ts",
-    "!packages/**/src/**/*.interface.ts",
-    "!packages/**/src/**/*.dto.ts"
+    "!packages/**/src/**/*.interface.ts"
   ],
   "testPathIgnorePatterns": [
     "<rootDir>/node_modules/"
@@ -42,7 +41,7 @@
   },
   "globals": {
     "ts-jest": {
-      "tsConfig": "tsconfig.spec.json",
+      "tsconfig": "tsconfig.spec.json",
       "diagnostics": false
     }
   }
