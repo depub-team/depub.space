@@ -3,6 +3,11 @@
   "compilerOptions": {
     "target": "ES2017",
     "module": "commonjs",
+    "isolatedModules": false,
     "jsx": "react"
-  }
+  },
+  "include": [
+    "**/*.spec.{ts|tsx}",
+    "**/*.d.ts"
+  ]
 }
