@@ -14,9 +14,9 @@ const isDev = process.env.NODE_ENV !== 'production';
 
 export default function IndexPage() {
   const router = useRouter();
-  const tagName = isDev
-    ? router.query.name?.toString()
-    : ((window as any) || {}).rewriteRoute?.name; // rewriteRoute object is injecting by Cloudflare worker
+  const rewriteRouteObject =
+    typeof window !== 'undefined' ? ((window as any) || {}).rewriteRoute || {} : {};
+  const tagName = isDev ? router.query.name?.toString() : rewriteRouteObject.name; // rewriteRoute object is injecting by Cloudflare worker
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const { error: connectError, walletAddress } = useSigningCosmWasmClient();
