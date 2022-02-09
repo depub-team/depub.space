@@ -10,10 +10,13 @@ import { useAppState, useSigningCosmWasmClient } from '../../hooks';
 import { MAX_WIDTH } from '../../contants';
 
 const debug = Debug('web:<UserPage />');
+const isDev = process.env.NODE_ENV !== 'production';
 
 export default function IndexPage() {
   const router = useRouter();
-  const tagName = router.query.name?.toString();
+  const tagName = isDev
+    ? router.query.name?.toString()
+    : ((window as any) || {}).rewriteRoute?.name; // rewriteRoute object is injecting by Cloudflare worker
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const { error: connectError, walletAddress } = useSigningCosmWasmClient();
