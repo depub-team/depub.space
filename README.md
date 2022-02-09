@@ -29,7 +29,7 @@ Upload file to Arweave with ISCN doesn't work in testnet.
 
 ### Cloudflare route rewrite
 
-Since this project used IPFS as a static file hosting, the NextJS dynamic route is not applicable without backend rendering, we've created a worker on Cloudflare to rewrite the URL request to achieve dynamic route:
+Since this project used IPFS as a static file hosting, the NextJS dynamic route is not applicable without backend rendering, we've created a worker on Cloudflare to rewrite the URL request in order to achieve dynamic route:
 
 - /[wallet address] -> /users?account=[wallet address]
 - /hashtag/[name] -> /tags?name=[name]
