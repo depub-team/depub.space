@@ -27,6 +27,7 @@ dayjs.extend(relativeTime);
 
 const debug = Debug('web:<MessageCard />');
 const PROXY_URL = process.env.NEXT_PUBLIC_PROXY_URL;
+const isDev = process.env.NODE_ENV !== 'production';
 
 export interface MessageCardProps extends ComponentProps<typeof HStack> {
   message: Message;
@@ -113,7 +114,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
           <HStack alignItems="center" justifyContent="space-between">
             <VStack>
               <Skeleton.Text isLoaded={!isLoading} lines={1}>
-                <Link href={`/users/?account=${from}`}>
+                <Link href={isDev ? `/users/?account=${from}` : `/${from}`}>
                   <Text color="primary.500" fontSize="md" fontWeight="bold">
                     {displayName}
                   </Text>
