@@ -73,10 +73,10 @@ export default function IndexPage() {
       const [account] = await offlineSigner.getAccounts();
       const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
-      await fetchNewMessages(undefined, true);
-
-      // trigger clear cache in async without blocking the thread
-      void fetchMessagesByOwner(account.address, undefined, true);
+      await Promise.all([
+        fetchNewMessages(undefined, true),
+        fetchMessagesByOwner(account.address, undefined, true), // trigger clear cache in async without blocking the thread
+      ]);
 
       if (txn) {
         toast.show({
