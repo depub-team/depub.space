@@ -33,12 +33,10 @@ export const replaceHandleToAnchor = (content: string): string => {
   const handleRegex = /@[\p{L}\d]+/giu;
 
   return content.replace(handleRegex, handleText => {
-    console.log(handleText);
-
     const handle = handleText.replace(/^@/, '');
     const hashLink = isDev ? `/users/?account=${handle}` : `/${handle}`;
 
-    return `<a href="${hashLink}">${handle}</a>`;
+    return `<a href="${hashLink}">${handleText}</a>`;
   });
 };
 
