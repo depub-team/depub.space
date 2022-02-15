@@ -20,8 +20,8 @@ export const GRAPHQL_TYPE_MESSAGE = `{
 }`;
 
 export const GRAPHQL_QUERY_MESSAGES_BY_USER = `
-  query GetUserWithMessages($address: String!, $previousId: String, $limit: Int) { 
-    getUser(address: $address) {
+  query GetUserWithMessages($dtagOrAddress: String!, $previousId: String, $limit: Int) { 
+    getUser(dtagOrAddress: $dtagOrAddress) {
       id,
       profile ${GRAPHQL_TYPE_PROFILE},
       messages(previousId: $previousId, limit: $limit) ${GRAPHQL_TYPE_MESSAGE}
@@ -30,8 +30,8 @@ export const GRAPHQL_QUERY_MESSAGES_BY_USER = `
 `;
 
 export const GRAPHQL_QUERY_GET_USER = `
-  query GetUser($address: String!) {
-    getUser(address: $address) {
+  query GetUser($dtagOrAddress: String!) {
+    getUser(dtagOrAddress: $dtagOrAddress) {
       id,
       profile ${GRAPHQL_TYPE_PROFILE},
     }
