@@ -85,11 +85,11 @@ const getProfile = async (dtagOrAddress: string, ctx: Context) => {
   return null;
 };
 
-const getUser = async (walletAddress: string, ctx: Context) => {
-  const profile = await getProfile(walletAddress, ctx);
+const getUser = async (account: string, ctx: Context) => {
+  const profile = await getProfile(account, ctx);
 
   return {
-    id: walletAddress,
+    id: account,
     profile,
   };
 };
@@ -188,20 +188,26 @@ const getUserProfile = async (args: GetUserProfileArgs, ctx: Context) => {
 
 const resolvers: Resolvers = {
   Query: {
-    getUser: (_parent, args, ctx) => getUser(args.address, ctx),
+    getUser: (_parent, args, ctx) => getUser(args.dtagOrAddress, ctx),
     messages: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByTag: async (_parent, args, ctx) => getMessages(args, ctx),
     getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
   },
   User: {
-    messages: async (parent, args, ctx) =>
-      getMessagesByUser(
+    messages: async (parent, args, ctx) => {
+      const profileChainLink = parent.profile?.chainLinks?.find(
+        cl => cl?.chainConfig?.name === 'likecoin'
+      );
+      const walletAddress = profileChainLink?.externalAddress || parent.id;
+
+      return getMessagesByUser(
         {
-          walletAddress: parent.id,
+          walletAddress,
           ...args,
         },
         ctx
-      ),
+      );
+    },
   },
 };
 
