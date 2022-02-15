@@ -10,8 +10,8 @@
   "module": "./dist/index.mjs",
   "scripts": {
     "build": "node build.js",
-    "deploy:stag": "npx wrangler publish",
-    "deploy:prod": "NODE_ENV=production wrangler publish --env prod",
+    "deploy:prod": "NODE_ENV=production npx @cloudflare/wrangler publish --env prod",
+    "deploy:stag": "npx @cloudflare/wrangler publish",
     "dev": "npx miniflare --watch --live-reload --debug --env .env",
     "gen-graphql-types": "graphql-codegen",
     "start": "npx miniflare --build-watch-path src"
