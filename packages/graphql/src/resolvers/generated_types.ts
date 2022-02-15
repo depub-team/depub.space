@@ -61,7 +61,7 @@ export type Query = {
 
 
 export type QueryGetUserArgs = {
-  address: Scalars['String'];
+  dtagOrAddress: Scalars['String'];
   limit?: InputMaybe<Scalars['Int']>;
   previousId?: InputMaybe<Scalars['String']>;
 };
@@ -229,7 +229,7 @@ export type ProfileResolvers<ContextType = Context, ParentType extends Resolvers
 };
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  getUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryGetUserArgs, 'address'>>;
+  getUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryGetUserArgs, 'dtagOrAddress'>>;
   getUserProfile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType, RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>>;
   messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<QueryMessagesArgs>>;
   messagesByTag?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, RequireFields<QueryMessagesByTagArgs, 'tag'>>;
