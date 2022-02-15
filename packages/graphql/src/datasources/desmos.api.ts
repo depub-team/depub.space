@@ -27,6 +27,33 @@ const FETCH_PROFILE_DOCUMENT = `query DesmosProfileLink($address: String) {
   }
 }`;
 
+const FETCH_PROFILE_DOCUMENT_BY_DTAG = `query DesmosProfileLink($dtag: String) {
+  profile(where: { dtag: { _eq: $dtag } }) {
+    address
+    bio
+    dtag
+    nickname
+    profilePic: profile_pic
+    coverPic: cover_pic
+    chainLinks: chain_links {
+      creationTime: creation_time
+      externalAddress: external_address
+      chainConfig: chain_config {
+        name
+        id
+      }
+    }
+    applicationLinks: application_links(
+      where: { state: { _eq: "APPLICATION_LINK_STATE_VERIFICATION_SUCCESS" } }
+    ) {
+      username
+      creationTime: creation_time
+      application
+    }
+    creationTime: creation_time
+  }
+}`;
+
 export class DesmosAPI extends DataSource {
   constructor(private baseURL: string) {
     super();
@@ -43,6 +70,37 @@ export class DesmosAPI extends DataSource {
           query: FETCH_PROFILE_DOCUMENT,
           variables: {
             address,
+          },
+        }),
+      });
+      const data = await response.json<any>();
+      const profile = data.data.profile[0];
+
+      if (profile) {
+        return {
+          id: profile.address,
+          ...profile,
+        };
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+
+    return null;
+  }
+
+  public async getProfileByDtag(dtag: string) {
+    try {
+      const response = await fetch(this.baseURL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: FETCH_PROFILE_DOCUMENT_BY_DTAG,
+          variables: {
+            dtag,
           },
         }),
       });

@@ -15,7 +15,7 @@ const createServer = (graphQLOptions: GqlHandlerOptions): ApolloServer =>
     introspection: true,
     resolvers,
     dataSources: () => ({
-      iscnQueryAPI: new ISCNQueryAPI(LIKECOIN_RPC_ENDPOINT),
+      iscnQueryAPI: new ISCNQueryAPI(`${NODE_URL}rpc/`),
       desmosAPI: new DesmosAPI(DESMOS_GRAPHQL_ENDPOINT),
     }),
     ...(graphQLOptions.kvCache ? kvCache : {}),
