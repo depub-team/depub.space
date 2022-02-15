@@ -29,5 +29,16 @@ export const replaceTagToAnchor = (content: string): string => {
   });
 };
 
+export const replaceHandleToAnchor = (content: string): string => {
+  const handleRegex = /@[\p{L}\d]+/giu;
+
+  return content.replace(handleRegex, handleText => {
+    const handle = handleText.replace(/^@/, '');
+    const hashLink = isDev ? `/users/?account=${handle}` : `/${handle}`;
+
+    return `<a href="${hashLink}">${handleText}</a>`;
+  });
+};
+
 export const messageSanitizer = (content: string): string =>
-  replaceTagToAnchor(replaceURLToAnchor(removeHtmlTags(content)));
+  replaceHandleToAnchor(replaceTagToAnchor(replaceURLToAnchor(removeHtmlTags(content))));

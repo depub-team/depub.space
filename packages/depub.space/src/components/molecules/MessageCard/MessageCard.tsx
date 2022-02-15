@@ -43,6 +43,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
   const dayFrom = dayjs(date).fromNow();
   const [linkPreivew, setLinkPreview] = useState<LinkPreviewItem | null>(null);
   const displayName = profile?.nickname || shortenAddress;
+  const handle = profile?.dtag || from;
   const isMessageContainsUrl = /https?/.test(message);
   const abbrNickname = getAbbrNickname(displayName);
   const { onCopy } = useClipboard();
@@ -114,7 +115,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
           <HStack alignItems="center" justifyContent="space-between">
             <VStack>
               <Skeleton.Text isLoaded={!isLoading} lines={1}>
-                <Link href={isDev ? `/users/?account=${from}` : `/${from}`}>
+                <Link href={isDev ? `/users/?account=${handle}` : `/${handle}`}>
                   <Text color="primary.500" fontSize="md" fontWeight="bold">
                     {displayName}
                   </Text>

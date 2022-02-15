@@ -53,7 +53,7 @@ export interface GetUserResopnse {
 export interface AppStateContextProps {
   isLoading: boolean;
   error: string | null;
-  fetchUser: (address: string, noCache?: boolean) => Promise<User | null>;
+  fetchUser: (dtagOrAddress: string, noCache?: boolean) => Promise<User | null>;
   fetchMessages: (previousId?: string, noCache?: boolean) => Promise<Message[] | null>;
   fetchMessagesByTag: (
     tag: string,
@@ -131,8 +131,8 @@ export const AppStateProvider: FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const fetchUser = useCallback(
-    async (address: string, noCache?: boolean): Promise<User | null> => {
-      debug('fetchUser(address: %s)', address);
+    async (dtagOrAddress: string, noCache?: boolean): Promise<User | null> => {
+      debug('fetchUser(dtagOrAddress: %s)', dtagOrAddress);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
@@ -141,7 +141,7 @@ export const AppStateProvider: FC = ({ children }) => {
           GRAPHQL_URL,
           {
             variables: {
-              address,
+              dtagOrAddress,
             },
             query: GRAPHQL_QUERY_GET_USER,
           },
@@ -194,7 +194,7 @@ export const AppStateProvider: FC = ({ children }) => {
           GRAPHQL_URL,
           {
             variables: {
-              address: owner,
+              dtagOrAddress: owner,
               previousId,
               limit: ROWS_PER_PAGE,
             },
