@@ -4,7 +4,8 @@ const typeDefs = gql`
   type Query {
     messages(previousId: String, limit: Int): [Message]
     messagesByTag(tag: String!, previousId: String, limit: Int): [Message]
-    getUser(address: String!, previousId: String, limit: Int): User
+    getUser(dtagOrAddress: String!, previousId: String, limit: Int): User
+    getUserProfile(dtagOrAddress: String!): Profile
   }
 
   type Message {
@@ -22,6 +23,17 @@ const typeDefs = gql`
     messages(previousId: String, limit: Int): [Message]
   }
 
+  type ChainConfig {
+    name: String!
+    id: ID!
+  }
+
+  type ChainLink {
+    creationTime: String!
+    externalAddress: String!
+    chainConfig: ChainConfig
+  }
+
   type Profile {
     id: ID! # Desmos address
     address: String!
@@ -31,6 +43,7 @@ const typeDefs = gql`
     dtag: String!
     nickname: String!
     profilePic: String
+    chainLinks: [ChainLink]
   }
 `;
 

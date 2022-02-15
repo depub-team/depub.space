@@ -1,6 +1,6 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import Debug from 'debug';
-import { FlatList } from 'native-base';
+import { Center, Text, FlatList } from 'native-base';
 import { RefreshControl } from 'react-native';
 import { IFlatListProps } from 'native-base/lib/typescript/components/basic/FlatList';
 import { Message } from '../../../interfaces';
@@ -17,6 +17,13 @@ export interface MessageListProps extends Omit<IFlatListProps<Message>, 'data' |
   onFetchMessages?: (previousId?: string) => Promise<void>;
 }
 
+const ListEmptyComponent: FC<{ isReady: boolean }> = ({ isReady }) =>
+  isReady ? (
+    <Center my={4}>
+      <Text color="gray.500">No Message</Text>
+    </Center>
+  ) : null;
+
 export const MessageList: FC<MessageListProps> = ({
   onFetchMessages,
   isLoading,
@@ -25,6 +32,7 @@ export const MessageList: FC<MessageListProps> = ({
   ...props
 }) => {
   const [refreshing, setRefreshing] = React.useState(false);
+  const [isReady, setIsReady] = React.useState(false);
   const dummyItems = Array.from(new Array(ROWS_PER_PAGE)).map<Message>(() => ({
     id: `dummy-${uid()}`,
     message: '',
@@ -64,10 +72,17 @@ export const MessageList: FC<MessageListProps> = ({
     setRefreshing(false);
   };
 
+  useEffect(() => {
+    setTimeout(() => {
+      setIsReady(true);
+    }, 100);
+  }, []);
+
   return (
     <FlatList<Message>
       data={data}
       keyExtractor={item => item.id}
+      ListEmptyComponent={<ListEmptyComponent isReady={isReady} />}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleOnRefresh} />}
       renderItem={ctx => (
         <MessageCard
