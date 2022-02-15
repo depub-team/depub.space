@@ -20,7 +20,7 @@ command = "yarn build"
 format = "service-worker"
 
 [vars]
-LIKECOIN_RPC_ENDPOINT = "https://node.testnet.like.co/rpc/"
+NODE_URL = "https://node.testnet.like.co/"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
 CACHE_TTL = 60 # 1min
@@ -34,7 +34,7 @@ kv_namespaces = [
 ]
 
 [env.prod.vars]
-LIKECOIN_RPC_ENDPOINT = "https://mainnet-node.like.co/rpc/"
+NODE_URL = "https://mainnet-node.like.co/"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
 CACHE_TTL = 600 # 10min

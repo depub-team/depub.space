@@ -51,8 +51,12 @@ interface GetMessagesArgs {
   tag?: InputMaybe<string>;
 }
 
-const getProfile = async (account: string, ctx: Context) => {
-  const cachingKey = `getProfile(account: ${account})`;
+interface GetUserProfileArgs {
+  dtagOrAddress: string;
+}
+
+const getProfile = async (dtagOrAddress: string, ctx: Context) => {
+  const cachingKey = `getProfile(account: ${dtagOrAddress})`;
 
   try {
     let profile: any = null;
@@ -61,7 +65,11 @@ const getProfile = async (account: string, ctx: Context) => {
     if (cachedRecords && !ctx.noCache) {
       profile = JSON.parse(cachedRecords);
     } else {
-      profile = await ctx.dataSources.desmosAPI.getProfile(account);
+      if (/^(cosmos1|like1)/.test(dtagOrAddress)) {
+        profile = await ctx.dataSources.desmosAPI.getProfile(dtagOrAddress);
+      } else {
+        profile = await ctx.dataSources.desmosAPI.getProfileByDtag(dtagOrAddress);
+      }
 
       if (profile) {
         await cache.set(cachingKey, JSON.stringify(profile));
@@ -172,11 +180,18 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
   }
 };
 
+const getUserProfile = async (args: GetUserProfileArgs, ctx: Context) => {
+  const profile = await getProfile(args.dtagOrAddress, ctx);
+
+  return profile;
+};
+
 const resolvers: Resolvers = {
   Query: {
     getUser: (_parent, args, ctx) => getUser(args.address, ctx),
     messages: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByTag: async (_parent, args, ctx) => getMessages(args, ctx),
+    getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
   },
   User: {
     messages: async (parent, args, ctx) =>
