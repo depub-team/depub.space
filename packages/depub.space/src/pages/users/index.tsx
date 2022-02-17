@@ -138,7 +138,7 @@ export default function IndexPage() {
   ));
 
   return account ? (
-    <Layout metadata={{ title: nickname || walletAddress || undefined }}>
+    <Layout metadata={{ title: `${nickname || walletAddress} on depub.SPACE` }}>
       <MessageList
         isLoading={isLoading}
         isLoadingMore={isLoadingMore}

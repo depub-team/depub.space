@@ -4,6 +4,7 @@ import React, { FC } from 'react';
 
 export interface MetaProps {
   title?: string;
+  image?: string;
   description?: string;
   canonical?: string;
   keywords?: string;
@@ -15,10 +16,13 @@ export const Meta: FC<MetaProps> = ({
   canonical,
   keywords,
   description,
+  image,
   lang = 'en-HK',
 }) => {
   const titleWithTagline = title ? `${title} | depub.SPACE` : 'depub.SPACE';
   const defaultDescription = 'Not your key, not your tweet. Be web3 native.';
+  const ogImage = image || '/app-logo.png';
+  const ogUrl = typeof window !== 'undefined' ? window.location.href : 'https://depub.space';
 
   return (
     <>
@@ -37,8 +41,8 @@ export const Meta: FC<MetaProps> = ({
         <meta content={titleWithTagline} property="og:title" />
         <meta content={description || defaultDescription} property="og:description" />
         <meta content="website" property="og:type" />
-        <meta content="https://depub.space" property="og:url" />
-        <meta content="/app-logo.png" property="og:image" />
+        <meta content={ogUrl} property="og:url" />
+        <meta content={ogImage} property="og:image" />
         <link href="/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180" />
         <link href="/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png" />
         <link href="/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png" />
