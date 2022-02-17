@@ -198,6 +198,7 @@ const resolvers: Resolvers = {
       const profileChainLink = parent.profile?.chainLinks?.find(
         cl => cl?.chainConfig?.name === 'likecoin'
       );
+
       const walletAddress = profileChainLink?.externalAddress || parent.id;
 
       return getMessagesByUser(
