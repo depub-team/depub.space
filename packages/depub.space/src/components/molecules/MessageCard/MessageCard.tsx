@@ -102,13 +102,15 @@ const MessageCardComponent: FC<MessageCardProps> = ({
         {...props}
       >
         <Skeleton isLoaded={!isLoading} rounded="full" size="12">
-          <Avatar
-            bg="gray.200"
-            size="md"
-            source={profile?.profilePic ? { uri: profile.profilePic } : undefined}
-          >
-            {abbrNickname}
-          </Avatar>
+          <Link href={isDev ? `/users/?account=${handle}` : `/${handle}`}>
+            <Avatar
+              bg="gray.200"
+              size="md"
+              source={profile?.profilePic ? { uri: profile.profilePic } : undefined}
+            >
+              {abbrNickname}
+            </Avatar>
+          </Link>
         </Skeleton>
 
         <VStack flex={1} space={3}>
