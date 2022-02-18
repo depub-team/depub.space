@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
@@ -35,7 +35,7 @@ interface MessageComposerProps {
   isLoading?: boolean;
   address: string;
   profile: DesmosProfile | null;
-  onSubmit: (data: MessageFormType, image?: string | null) => void;
+  onSubmit: (data: MessageFormType, image?: string | null) => Promise<void>;
 }
 export const MessageComposer: FC<MessageComposerProps> = ({
   address,
@@ -44,6 +44,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   isLoading,
 }) => {
   const [image, setImage] = useState<string | null>(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const formSchema = Yup.object().shape({
     message: Yup.string()
       .required('Message is required')
@@ -76,10 +77,22 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   };
 
   const handleOnSubmit = async () => {
-    await handleSubmit(data => onSubmit(data, image))();
+    await handleSubmit(async data => {
+      await onSubmit(data, image);
 
-    reset({ message: '' });
+      setIsSubmitted(true);
+    })();
   };
+
+  useEffect(() => {
+    // reset state
+    if (isSubmitted) {
+      reset({ message: '' });
+
+      setIsSubmitted(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSubmitted]);
 
   return (
     <Stack
@@ -100,7 +113,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
       </Box>
       <VStack flex={1} minHeight="180px" space={4}>
         <VStack space={4}>
-          <FormControl isInvalid={Boolean(errors.message)} isRequired>
+          <FormControl isInvalid={'message' in errors} isRequired>
             <Stack>
               <Controller
                 control={control}
@@ -118,11 +131,9 @@ export const MessageComposer: FC<MessageComposerProps> = ({
                   />
                 )}
               />
-              {errors.message && (
-                <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
-                  {errors.message.message}
-                </FormControl.ErrorMessage>
-              )}
+              <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
+                {errors.message?.message}
+              </FormControl.ErrorMessage>
             </Stack>
           </FormControl>
 

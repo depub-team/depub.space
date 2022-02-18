@@ -12,13 +12,14 @@
     "start": "next start"
   },
   "dependencies": {
-    "@cosmjs/cosmwasm-stargate": "0.27.0",
-    "@cosmjs/proto-signing": "0.27.1",
+    "@cosmjs/cosmwasm-stargate": "0.26.5",
+    "@cosmjs/proto-signing": "0.26.5",
     "@cosmjs/stargate": "0.26.5",
     "@depub/theme": "*",
     "@expo/vector-icons": "12.0.5",
     "@hookform/resolvers": "2.8.8",
     "@likecoin/iscn-js": "0.0.7",
+    "@likecoin/iscn-message-types": "0.0.2",
     "@react-native-async-storage/async-storage": "1.15.0",
     "@sentry/nextjs": "6.17.2",
     "@walletconnect/client": "1.7.1",
