@@ -71,6 +71,7 @@ export default function IndexPage() {
       }
 
       const [account] = await offlineSigner.getAccounts();
+
       const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
       await Promise.all([
