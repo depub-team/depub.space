@@ -52,8 +52,6 @@ interface GetUserProfileArgs {
 }
 
 const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile | null> => {
-  console.log('getProfile', dtagOrAddress);
-
   const kvStore = new KVStore(ctx.env.WORKERS_GRAPHQL_CACHE);
 
   try {
@@ -81,8 +79,6 @@ const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile 
         2 * 60
       ); // 2 mins
     }
-
-    console.log('getProfile() -> profile', profile);
 
     return profile as unknown as Profile;
   } catch (ex: any) {
@@ -215,9 +211,6 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
       transactions.map(async t => {
         const authorAddress = getAuthorAddress(t);
         const userProfile = await getProfile(authorAddress, ctx);
-
-        console.log('userProfile', userProfile);
-
         const message = transformRecord(t, userProfile);
 
         return message;
