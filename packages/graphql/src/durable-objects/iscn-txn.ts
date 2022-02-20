@@ -142,7 +142,7 @@ export class IscnTxn implements DurableObject {
   }
 
   public async getSequence(_request: Request) {
-    await this.state.storage.deleteAll();
+    // await this.state.storage.deleteAll(); // debug
 
     const nextSequence = (await this.state.storage.get<number>(NEXT_SEQUENCE_KEY)) || 0;
 
