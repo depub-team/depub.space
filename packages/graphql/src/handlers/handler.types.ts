@@ -5,4 +5,5 @@ export interface GqlHandlerOptions {
   debug: boolean;
   cors: boolean | object; // TODO: type this
   kvCache: boolean;
+  context?: () => any;
 }

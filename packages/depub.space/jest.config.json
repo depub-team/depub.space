@@ -2,10 +2,6 @@
   "roots": [
     "<rootDir>"
   ],
-  "projects": [
-    "<rootDir>/packages/depub.space/jest.config.json",
-    "<rootDir>/packages/graphql/jest.config.json"
-  ],
   "testEnvironment": "jsdom",
   "moduleFileExtensions": [
     "ts",
@@ -21,15 +17,23 @@
   ],
   "coverageDirectory": "coverage",
   "collectCoverageFrom": [
-    "packages/**/src/**/*.ts",
-    "!packages/**/src/**/*.interface.ts"
+    "src/**/*.ts",
+    "!src/**/*.interface.ts"
   ],
   "testPathIgnorePatterns": [
-    "<rootDir>/node_modules/"
+    "<rootDir>/node_modules/",
+    "node_modules"
   ],
   "transformIgnorePatterns": [
-    "<rootDir>/node_modules/"
+    "<rootDir>/node_modules/",
+    "node_modules"
   ],
+  "moduleNameMapper": {
+    "^react$": "<rootDir>/node_modules/react",
+    "^react-dom$": "<rootDir>/node_modules/react-dom",
+    "\\.(css|jpg|png)$": "<rootDir>/test/empty-module.js",
+    "\\.(svg)$": "<rootDir>/test/empty-component.js"
+  },
   "testMatch": [
     "**/*.(spec|test).ts?(x)",
     "**/*.(spec|test).js?(x)"

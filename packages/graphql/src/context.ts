@@ -1,3 +1,4 @@
+import { Bindings } from '../bindings';
 import { DesmosAPI, ISCNQueryAPI } from './datasources';
 
 type ContextFunctionParams = {
@@ -5,8 +6,7 @@ type ContextFunctionParams = {
 };
 
 type Context = {
-  walletAddress: string;
-  noCache: boolean;
+  env: Bindings;
   dataSources: {
     iscnQueryAPI: ISCNQueryAPI;
     desmosAPI: DesmosAPI;
@@ -38,13 +38,4 @@ type Profile = {
   profilePic?: string;
 };
 
-const context = (params: ContextFunctionParams) => {
-  const { request } = params;
-  const walletAddress = request.headers.get('x-wallet-address');
-  const noCache = request.headers.get('cache-control') === 'no-cache';
-
-  return { walletAddress, noCache };
-};
-
 export type { User, Context, ContextFunctionParams };
-export { context };
