@@ -36,9 +36,14 @@ export const replaceHandleToAnchor = (content: string): string => {
     const handle = handleText.replace(/^@/, '');
     const hashLink = isDev ? `/users/?account=${handle}` : `/${handle}`;
 
+    // XXX: some url contains @, would double wrapping <a />
+    if (content[content.indexOf(handleText) - 1] === '/') {
+      return handleText;
+    }
+
     return `<a href="${hashLink}">${handleText}</a>`;
   });
 };
 
 export const messageSanitizer = (content: string): string =>
-  replaceHandleToAnchor(replaceTagToAnchor(replaceURLToAnchor(removeHtmlTags(content))));
+  replaceURLToAnchor(replaceHandleToAnchor(replaceTagToAnchor(removeHtmlTags(content))));
