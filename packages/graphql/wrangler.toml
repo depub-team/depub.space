@@ -13,11 +13,20 @@ kv_namespaces = [
   { binding = "WORKERS_GRAPHQL_CACHE", id = "9cf0a6d5091e448c9411e8ee8c65acb6" }
 ]
 
+
 [build]
 command = "yarn build"
 
 [build.upload]
 format = "service-worker"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["IscnTxn"]
+
+[miniflare]
+durable_objects_persist = true
+
 
 [vars]
 NODE_URL = "https://node.testnet.like.co/"

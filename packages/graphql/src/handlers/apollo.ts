@@ -4,10 +4,7 @@ import { typeDefs } from '../schema';
 import { resolvers } from '../resolvers';
 import { DesmosAPI, ISCNQueryAPI } from '../datasources';
 import { context } from '../context';
-import KVCache from '../kv-cache';
 import { GqlHandlerOptions } from './handler.types';
-
-const kvCache = { cache: new KVCache() };
 
 const createServer = (graphQLOptions: GqlHandlerOptions): ApolloServer =>
   new ApolloServer({
@@ -18,7 +15,6 @@ const createServer = (graphQLOptions: GqlHandlerOptions): ApolloServer =>
       iscnQueryAPI: new ISCNQueryAPI(`${NODE_URL}rpc/`),
       desmosAPI: new DesmosAPI(DESMOS_GRAPHQL_ENDPOINT),
     }),
-    ...(graphQLOptions.kvCache ? kvCache : {}),
     context,
     ...graphQLOptions,
   });
