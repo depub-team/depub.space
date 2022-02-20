@@ -19,7 +19,7 @@ export class KVStore {
     metadata?: Record<string, any>,
     cacheTtl?: number
   ): Promise<void> {
-    return this.kv.put(key, JSON.stringify(value), {
+    return this.kv.put(key, value, {
       expirationTtl: cacheTtl,
       expiration: cacheTtl && Date.now() + cacheTtl * 1000,
       metadata,

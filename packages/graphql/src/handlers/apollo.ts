@@ -3,21 +3,23 @@ import { graphqlCloudflare } from 'apollo-server-cloudflare/dist/cloudflareApoll
 import { typeDefs } from '../schema';
 import { resolvers } from '../resolvers';
 import { DesmosAPI, ISCNQueryAPI } from '../datasources';
-import { context } from '../context';
 import { GqlHandlerOptions } from './handler.types';
 
-const createServer = (graphQLOptions: GqlHandlerOptions): ApolloServer =>
-  new ApolloServer({
+const createServer = (graphQLOptions: GqlHandlerOptions): ApolloServer => {
+  const context = graphQLOptions.context ? graphQLOptions.context() : {};
+  const { env } = context;
+
+  return new ApolloServer({
     typeDefs,
     introspection: true,
     resolvers,
     dataSources: () => ({
-      iscnQueryAPI: new ISCNQueryAPI(`${NODE_URL}rpc/`),
-      desmosAPI: new DesmosAPI(DESMOS_GRAPHQL_ENDPOINT),
+      iscnQueryAPI: new ISCNQueryAPI(`${env.NODE_URL}rpc/`),
+      desmosAPI: new DesmosAPI(env.DESMOS_GRAPHQL_ENDPOINT),
     }),
-    context,
     ...graphQLOptions,
   });
+};
 
 export const handler = async (request: Request, graphQLOptions: GqlHandlerOptions) => {
   const server = createServer(graphQLOptions);
