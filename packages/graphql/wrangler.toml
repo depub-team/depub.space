@@ -13,12 +13,17 @@ kv_namespaces = [
   { binding = "WORKERS_GRAPHQL_CACHE", id = "9cf0a6d5091e448c9411e8ee8c65acb6" }
 ]
 
+[durable_objects]
+bindings = [
+  { name = "ISCN_TXN", class_name = "IscnTxn" }
+]
 
 [build]
 command = "yarn build"
 
 [build.upload]
-format = "service-worker"
+format = "modules"
+main = "./index.mjs"
 
 [[migrations]]
 tag = "v1"
@@ -40,6 +45,11 @@ ENVIRONMENT = "staging"
 name = "depub-space-graphql"
 kv_namespaces = [
   { binding = "WORKERS_GRAPHQL_CACHE", id = "5acfb215b0d34d8fa20d921d1e40c699" }
+]
+
+[env.prod.durable_objects]
+bindings = [
+  { name = "ISCN_TXN", class_name = "IscnTxn" }
 ]
 
 [env.prod.vars]

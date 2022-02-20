@@ -4,15 +4,15 @@
   "private": true,
   "description": "Apollo GraphQL server",
   "license": "gpl",
-  "type": "module",
   "author": "0xNaN Team",
+  "type": "module",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
   "scripts": {
     "build": "node build.js",
     "deploy:prod": "NODE_ENV=production npx @cloudflare/wrangler publish --env prod",
     "deploy:stag": "npx @cloudflare/wrangler publish",
-    "dev": "npx miniflare --watch --live-reload --debug --env .env",
+    "dev": "DEBUG=api:* npx miniflare --watch --live-reload --debug --env .env",
     "gen-graphql-types": "graphql-codegen",
     "start": "npx miniflare --build-watch-path src",
     "test": "yarn build && node --experimental-vm-modules ../../node_modules/jest/bin/jest --config ./jest.config.json"
@@ -24,7 +24,6 @@
     "apollo-server-cloudflare": "3.6.2",
     "apollo-server-errors": "3.3.1",
     "graphql": "16.3.0",
-    "superkv": "1.9.1",
     "ulid-workers": "2.0.0"
   },
   "devDependencies": {
@@ -33,6 +32,7 @@
     "@graphql-codegen/cli": "2.5.0",
     "@graphql-codegen/typescript": "2.4.3",
     "@graphql-codegen/typescript-resolvers": "2.5.0",
+    "@types/long": "4.0.1",
     "@types/node": "17.0.18",
     "esbuild": "0.14.23",
     "jest-environment-miniflare": "2.3.0",
