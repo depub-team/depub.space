@@ -21,7 +21,6 @@ export class KVStore {
   ): Promise<void> {
     return this.kv.put(key, value, {
       expirationTtl: cacheTtl,
-      expiration: cacheTtl && Date.now() + cacheTtl * 1000,
       metadata,
     });
   }

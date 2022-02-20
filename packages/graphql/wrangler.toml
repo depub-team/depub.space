@@ -37,7 +37,6 @@ durable_objects_persist = true
 NODE_URL = "https://node.testnet.like.co/"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
-CACHE_TTL = 60 # 1min
 ENVIRONMENT = "staging"
 
 # Override values for `--env production` usage
@@ -56,5 +55,4 @@ bindings = [
 NODE_URL = "https://mainnet-node.like.co/"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
-CACHE_TTL = 600 # 10min
 ENVIRONMENT = "production"
