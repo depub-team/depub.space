@@ -16,16 +16,21 @@
     "hookform",
     "Ionicons",
     "ipfs",
+    "ipld",
     "ISCN",
     "keplr",
     "likecoin",
+    "Miniflare",
     "monospace",
     "nextjs",
     "stargate",
-    "stylelint"
+    "stylelint",
+    "superkv",
+    "ulid"
   ],
   "eslint.workingDirectories": [
     "./packages/depub.space",
     "./packages/theme"
-  ]
+  ],
+  "jestrunner.configPath": "jest.config.json"
 }
