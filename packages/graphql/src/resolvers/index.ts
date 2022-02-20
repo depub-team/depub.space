@@ -1,11 +1,11 @@
-import { ISCNRecord } from '@likecoin/iscn-js';
 import { ApolloError } from 'apollo-server-errors';
 import { Context } from '../context';
-import KVCache from '../kv-cache';
 import { InputMaybe, Message, Profile, Resolvers } from './generated_types';
+import { KVStore } from '../kv-store';
+import { DesmosProfileWithId, ISCNRecord } from '../interfaces';
 
 const PAGING_LIMIT = 12;
-const cache = new KVCache();
+const PROFILE_KEY = 'profile';
 
 export class ISCNError extends ApolloError {
   constructor(message: string) {
@@ -15,7 +15,7 @@ export class ISCNError extends ApolloError {
   }
 }
 
-const getAuthorAddress = ({ data }: ISCNRecord) => {
+const getAuthorAddress = ({ data }: ISCNRecord): string => {
   const author = data.stakeholders.find(
     stakeholder => stakeholder.contributionType === 'http://schema.org/author'
   );
@@ -39,47 +39,51 @@ const transformRecord = (record: ISCNRecord, profile: Profile | null) => {
   } as Message;
 };
 
-interface GetMessagesByUserArgs {
-  walletAddress: string;
-  previousId?: InputMaybe<string>;
-  limit?: InputMaybe<number>;
-}
-
 interface GetMessagesArgs {
   limit?: InputMaybe<number>;
   previousId?: InputMaybe<string>;
   tag?: InputMaybe<string>;
+  author?: InputMaybe<string>;
+  mentioned?: InputMaybe<string>;
 }
 
 interface GetUserProfileArgs {
   dtagOrAddress: string;
 }
 
-const getProfile = async (dtagOrAddress: string, ctx: Context) => {
-  const cachingKey = `getProfile(account: ${dtagOrAddress})`;
+const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile | null> => {
+  const kvStore = new KVStore(ctx.env.WORKERS_GRAPHQL_CACHE);
 
   try {
-    let profile: any = null;
-    const cachedRecords = await cache.get(cachingKey);
+    const cachedProfile = await kvStore.get(`${PROFILE_KEY}:${dtagOrAddress}`);
 
-    if (cachedRecords && !ctx.noCache) {
-      profile = JSON.parse(cachedRecords);
-    } else {
-      if (/^(cosmos1|like1)/.test(dtagOrAddress)) {
-        profile = await ctx.dataSources.desmosAPI.getProfile(dtagOrAddress);
-      } else {
-        profile = await ctx.dataSources.desmosAPI.getProfileByDtag(dtagOrAddress);
-      }
-
-      if (profile) {
-        await cache.set(cachingKey, JSON.stringify(profile));
-      }
+    if (cachedProfile) {
+      return JSON.parse(cachedProfile);
     }
 
-    return profile;
-  } catch (ex) {
+    let profile: DesmosProfileWithId | null = null;
+
+    if (/^(cosmos1|like1)/.test(dtagOrAddress)) {
+      profile = await ctx.dataSources.desmosAPI.getProfile(dtagOrAddress);
+    } else {
+      profile = await ctx.dataSources.desmosAPI.getProfileByDtag(dtagOrAddress);
+    }
+
+    if (profile) {
+      await kvStore.set(
+        `${PROFILE_KEY}:${dtagOrAddress}`,
+        JSON.stringify(profile),
+        {
+          dtagOrAddress,
+        },
+        2 * 60
+      ); // 2 mins
+    }
+
+    return profile as unknown as Profile;
+  } catch (ex: any) {
     // eslint-disable-next-line no-console
-    console.error(ex);
+    console.error('getProfile() -> ex: ', ex.message);
   }
 
   return null;
@@ -94,88 +98,130 @@ const getUser = async (account: string, ctx: Context) => {
   };
 };
 
-const getMessagesByUser = async (args: GetMessagesByUserArgs, ctx: Context) => {
-  const cachingKey = `getMessagesByUser(walletAddress: ${args.walletAddress})`;
+const getLatestSequence = async (stub: DurableObjectStub) => {
+  // get latest sequence
+  const latestSequenceRequest = new Request('http://iscn-txn/sequence');
+  const latestSequenceResponse = await stub.fetch(latestSequenceRequest);
+  const latestSequenceResponseBody = await latestSequenceResponse.json<{ nextSequence: number }>();
 
-  try {
-    if (args.walletAddress) {
-      // get cached records
-      const cachedRecords = await cache.get(cachingKey);
-      let records: ISCNRecord[] = [];
+  return latestSequenceResponseBody.nextSequence ? latestSequenceResponseBody.nextSequence : 0;
+};
 
-      if (cachedRecords && !ctx.noCache) {
-        records = JSON.parse(cachedRecords) as ISCNRecord[];
-      } else {
-        records = await ctx.dataSources.iscnQueryAPI.queryRecordsByOwner(args.walletAddress);
+const updateLatestSequence = async (nextSequence: number, stub: DurableObjectStub) => {
+  const updateSequenceRequest = new Request('http://iscn-txn/sequence', {
+    method: 'PUT',
+    body: JSON.stringify({
+      nextSequence,
+    }),
+  });
+  const updateSequenceResponse = await stub.fetch(updateSequenceRequest);
 
-        await cache.set(cachingKey, JSON.stringify(records));
-      }
+  if (updateSequenceResponse.status !== 201) {
+    throw new ISCNError('Failed to update next sequence');
+  }
+};
 
-      const filteredRecords = records
-        .reverse()
-        .filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT));
-      const offset = args.previousId
-        ? filteredRecords.findIndex(r => r.data['@id'] === args.previousId) + 1
-        : 0;
-      const end = offset + (args.limit || PAGING_LIMIT);
-      const messages = await Promise.all(
-        filteredRecords.slice(offset, end).map(async r => {
-          const authorAddress = getAuthorAddress(r);
-          const userProfile = await getProfile(authorAddress, ctx);
-          const message = transformRecord(r, userProfile);
+const addTransactions = async (records: ISCNRecord[], stub: DurableObjectStub) => {
+  const addTransactionRequest = new Request('http://iscn-txn/transactions', {
+    method: 'PUT',
+    body: JSON.stringify(records),
+  });
+  const addTransactionResponse = await stub.fetch(addTransactionRequest);
 
-          return message;
-        })
-      );
+  if (addTransactionResponse.status !== 201) {
+    throw new ISCNError('Failed to add transactions');
+  }
+};
 
-      return messages;
-    }
-  } catch (ex: any) {
-    throw new ISCNError(ex.message);
+interface GetTransactionsOptions {
+  limit?: number;
+  previousId?: string;
+  hashtag?: string;
+  mentioned?: string;
+  author?: string;
+}
+
+const getTransactions = async (
+  stub: DurableObjectStub,
+  { limit = PAGING_LIMIT, previousId, hashtag, mentioned, author }: GetTransactionsOptions
+) => {
+  const urlSearchParams = new URLSearchParams(`limit=${limit}&from=${previousId}`);
+
+  if (hashtag) {
+    urlSearchParams.append('hashtag', hashtag);
   }
 
-  return [];
+  if (mentioned) {
+    urlSearchParams.append('mentioned', mentioned);
+  }
+
+  if (author) {
+    urlSearchParams.append('author', author);
+  }
+
+  const getTransactionsRequest = new Request(
+    `http://iscn-txn/transactions?${urlSearchParams.toString()}`,
+    {
+      method: 'GET',
+    }
+  );
+  const getTransactionsResponse = await stub.fetch(getTransactionsRequest);
+  const { transactions } = await getTransactionsResponse.json<{ transactions: ISCNRecord[] }>();
+
+  return transactions || [];
 };
 
 const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
-  const cachingKey = 'getMessages';
-
   try {
-    // get cached records
-    const cachedRecords = await cache.get(cachingKey);
-    let records: ISCNRecord[] = [];
+    // initial durable object
+    const durableObjId = ctx.env.ISCN_TXN.idFromName('iscn-txn');
+    const stub = ctx.env.ISCN_TXN.get(durableObjId);
+    const limit = args.limit ? args.limit : PAGING_LIMIT;
+    const hashtag = args.tag ? args.tag : undefined;
+    const author = args.author ? args.author : undefined;
+    const mentioned = args.mentioned ? args.mentioned : undefined;
+    const previousId = args.previousId || undefined;
 
-    if (cachedRecords && !ctx.noCache) {
-      records = JSON.parse(cachedRecords) as ISCNRecord[];
-    } else {
-      records = await ctx.dataSources.iscnQueryAPI.queryRecordsByFingerprint(ISCN_FINGERPRINT);
+    // get latest sequence
+    const latestSequence = await getLatestSequence(stub);
 
-      await cache.set(cachingKey, JSON.stringify(records));
+    // check new records
+    const { records, nextSequence } = await ctx.dataSources.iscnQueryAPI.getRecords(
+      ctx.env.ISCN_FINGERPRINT,
+      latestSequence
+    );
+
+    if (nextSequence > latestSequence) {
+      await updateLatestSequence(nextSequence, stub);
     }
 
-    const tagRegExp = args.tag && new RegExp(`#${args.tag}`, 'gi');
-    const filteredRecords = records
-      .reverse()
-      .filter(r => (tagRegExp ? tagRegExp.test(r.data.contentMetadata.description) : true)); // filter by tags
-    const offset = args.previousId
-      ? filteredRecords.findIndex(r => r.data['@id'] === args.previousId) + 1
-      : 0;
-    const end = offset + (args.limit || PAGING_LIMIT);
-    const messages = await Promise.all(
-      filteredRecords
-        .slice(offset, end)
-        .filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT)) // only published by depub.space
-        .map(async r => {
-          const authorAddress = getAuthorAddress(r);
-          const userProfile = await getProfile(authorAddress, ctx);
-          const message = transformRecord(r, userProfile);
+    // add new transactions
+    if (records.length) {
+      await addTransactions(records, stub);
+    }
 
-          return message;
-        })
+    const transactions = await getTransactions(stub, {
+      limit,
+      previousId,
+      hashtag,
+      mentioned,
+      author,
+    });
+    const messages = await Promise.all(
+      transactions.map(async t => {
+        const authorAddress = getAuthorAddress(t);
+        const userProfile = await getProfile(authorAddress, ctx);
+        const message = transformRecord(t, userProfile);
+
+        return message;
+      })
     );
 
     return messages;
   } catch (ex: any) {
+    // eslint-disable-next-line no-console
+    console.error(ex);
+
     throw new ISCNError(ex.message);
   }
 };
@@ -191,19 +237,16 @@ const resolvers: Resolvers = {
     getUser: (_parent, args, ctx) => getUser(args.dtagOrAddress, ctx),
     messages: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByTag: async (_parent, args, ctx) => getMessages(args, ctx),
+    messagesByMentioned: async (_parent, args, ctx) => getMessages(args, ctx),
     getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
   },
   User: {
     messages: async (parent, args, ctx) => {
-      const profileChainLink = parent.profile?.chainLinks?.find(
-        cl => cl?.chainConfig?.name === 'likecoin'
-      );
+      const walletAddress = parent.profile?.id || parent.id;
 
-      const walletAddress = profileChainLink?.externalAddress || parent.id;
-
-      return getMessagesByUser(
+      return getMessages(
         {
-          walletAddress,
+          author: walletAddress,
           ...args,
         },
         ctx

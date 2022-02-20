@@ -39,7 +39,7 @@ export default function IndexPage() {
 
     setIsLoadingMore(true);
 
-    const newMessages = await fetchMessages(previousId, refresh);
+    const newMessages = await fetchMessages(previousId);
 
     if (newMessages) {
       if (!refresh) {
@@ -76,7 +76,7 @@ export default function IndexPage() {
 
       await Promise.all([
         fetchNewMessages(undefined, true),
-        fetchMessagesByOwner(account.address, undefined, true), // trigger clear cache in async without blocking the thread
+        fetchMessagesByOwner(account.address, undefined), // trigger clear cache in async without blocking the thread
       ]);
 
       if (txn) {
