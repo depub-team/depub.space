@@ -1,3 +1,4 @@
+import { Bindings } from '../bindings';
 import { DesmosAPI, ISCNQueryAPI } from './datasources';
 
 type ContextFunctionParams = {
@@ -5,7 +6,7 @@ type ContextFunctionParams = {
 };
 
 type Context = {
-  walletAddress: string;
+  env: Bindings;
   dataSources: {
     iscnQueryAPI: ISCNQueryAPI;
     desmosAPI: DesmosAPI;
@@ -37,12 +38,4 @@ type Profile = {
   profilePic?: string;
 };
 
-const context = (params: ContextFunctionParams) => {
-  const { request } = params;
-  const walletAddress = request.headers.get('x-wallet-address');
-
-  return { walletAddress };
-};
-
 export type { User, Context, ContextFunctionParams };
-export { context };

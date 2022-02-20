@@ -3,9 +3,9 @@ import { ApolloError } from 'apollo-server-errors';
 import { Context } from '../context';
 import { InputMaybe, Message, Profile, Resolvers } from './generated_types';
 import { KVStore } from '../kv-store';
+import { DesmosProfileWithId } from '../interfaces';
 
 const PAGING_LIMIT = 12;
-const kvStore = new KVStore(WORKERS_GRAPHQL_CACHE);
 
 export class ISCNError extends ApolloError {
   constructor(message: string) {
@@ -15,7 +15,7 @@ export class ISCNError extends ApolloError {
   }
 }
 
-const getAuthorAddress = ({ data }: ISCNRecord) => {
+const getAuthorAddress = ({ data }: ISCNRecord): string => {
   const author = data.stakeholders.find(
     stakeholder => stakeholder.contributionType === 'http://schema.org/author'
   );
@@ -39,31 +39,29 @@ const transformRecord = (record: ISCNRecord, profile: Profile | null) => {
   } as Message;
 };
 
-interface GetMessagesByUserArgs {
-  walletAddress: string;
-  previousId?: InputMaybe<string>;
-  limit?: InputMaybe<number>;
-}
-
 interface GetMessagesArgs {
   limit?: InputMaybe<number>;
   previousId?: InputMaybe<string>;
   tag?: InputMaybe<string>;
+  author?: InputMaybe<string>;
+  mentioned?: InputMaybe<string>;
 }
 
 interface GetUserProfileArgs {
   dtagOrAddress: string;
 }
 
-const getProfile = async (dtagOrAddress: string, ctx: Context) => {
-  try {
-    const storedProfile = await kvStore.get(dtagOrAddress);
+const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile | null> => {
+  const kvStore = new KVStore(ctx.env.WORKERS_GRAPHQL_CACHE);
 
-    if (storedProfile) {
-      return storedProfile;
+  try {
+    const cachedProfile = await kvStore.get(dtagOrAddress);
+
+    if (cachedProfile) {
+      return JSON.parse(cachedProfile);
     }
 
-    let profile: any = null;
+    let profile: DesmosProfileWithId | null = null;
 
     if (/^(cosmos1|like1)/.test(dtagOrAddress)) {
       profile = await ctx.dataSources.desmosAPI.getProfile(dtagOrAddress);
@@ -74,7 +72,7 @@ const getProfile = async (dtagOrAddress: string, ctx: Context) => {
     if (profile) {
       await kvStore.set(
         dtagOrAddress,
-        profile,
+        JSON.stringify(profile),
         {
           dtagOrAddress,
         },
@@ -82,7 +80,7 @@ const getProfile = async (dtagOrAddress: string, ctx: Context) => {
       ); // 2 mins
     }
 
-    return profile;
+    return profile as unknown as Profile;
   } catch (ex) {
     // eslint-disable-next-line no-console
     console.error(ex);
@@ -100,65 +98,130 @@ const getUser = async (account: string, ctx: Context) => {
   };
 };
 
-const getMessagesByUser = async (args: GetMessagesByUserArgs, ctx: Context) => {
-  try {
-    if (args.walletAddress) {
-      let records: ISCNRecord[] = [];
+const getLatestSequence = async (stub: DurableObjectStub) => {
+  // get latest sequence
+  const latestSequenceRequest = new Request('http://iscn-txn/sequence');
+  const latestSequenceResponse = await stub.fetch(latestSequenceRequest);
+  const latestSequenceResponseBody = await latestSequenceResponse.json<{ nextSequence: number }>();
 
-      records = await ctx.dataSources.iscnQueryAPI.queryRecordsByOwner(args.walletAddress);
+  return latestSequenceResponseBody.nextSequence ? latestSequenceResponseBody.nextSequence : 0;
+};
 
-      const filteredRecords = records
-        .reverse()
-        .filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT));
-      const offset = args.previousId
-        ? filteredRecords.findIndex(r => r.data['@id'] === args.previousId) + 1
-        : 0;
-      const end = offset + (args.limit || PAGING_LIMIT);
-      const messages = await Promise.all(
-        filteredRecords.slice(offset, end).map(async r => {
-          const authorAddress = getAuthorAddress(r);
-          const userProfile = await getProfile(authorAddress, ctx);
-          const message = transformRecord(r, userProfile);
+const updateLatestSequence = async (nextSequence: number, stub: DurableObjectStub) => {
+  const updateSequenceRequest = new Request('http://iscn-txn/sequence', {
+    method: 'PUT',
+    body: JSON.stringify({
+      nextSequence,
+    }),
+  });
+  const updateSequenceResponse = await stub.fetch(updateSequenceRequest);
 
-          return message;
-        })
-      );
+  if (updateSequenceResponse.status !== 201) {
+    throw new ISCNError('Failed to update next sequence');
+  }
+};
 
-      return messages;
-    }
-  } catch (ex: any) {
-    throw new ISCNError(ex.message);
+const addTransactions = async (records: ISCNRecord[], stub: DurableObjectStub) => {
+  const addTransactionRequest = new Request('http://iscn-txn/transactions', {
+    method: 'PUT',
+    body: JSON.stringify(records),
+  });
+  const addTransactionResponse = await stub.fetch(addTransactionRequest);
+
+  if (addTransactionResponse.status !== 201) {
+    throw new ISCNError('Failed to add transactions');
+  }
+};
+
+interface GetTransactionsOptions {
+  limit?: number;
+  previousId?: string;
+  hashtag?: string;
+  mentioned?: string;
+  author?: string;
+}
+
+const getTransactions = async (
+  stub: DurableObjectStub,
+  { limit = PAGING_LIMIT, previousId, hashtag, mentioned, author }: GetTransactionsOptions
+) => {
+  const urlSearchParams = new URLSearchParams(`limit=${limit}&from=${previousId}`);
+
+  if (hashtag) {
+    urlSearchParams.append('hashtag', hashtag);
   }
 
-  return [];
+  if (mentioned) {
+    urlSearchParams.append('mentioned', mentioned);
+  }
+
+  if (author) {
+    urlSearchParams.append('author', author);
+  }
+
+  const getTransactionsRequest = new Request(
+    `http://iscn-txn/transactions?${urlSearchParams.toString()}`,
+    {
+      method: 'GET',
+    }
+  );
+  const getTransactionsResponse = await stub.fetch(getTransactionsRequest);
+  const { transactions } = await getTransactionsResponse.json<{ transactions: ISCNRecord[] }>();
+
+  return transactions || [];
 };
 
 const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
   try {
-    const records = await ctx.dataSources.iscnQueryAPI.queryRecordsByFingerprint(ISCN_FINGERPRINT);
-    const tagRegExp = args.tag && new RegExp(`#${args.tag}`, 'gi');
-    const filteredRecords = records
-      .reverse()
-      .filter(r => (tagRegExp ? tagRegExp.test(r.data.contentMetadata.description) : true)); // filter by tags
-    const offset = args.previousId
-      ? filteredRecords.findIndex(r => r.data['@id'] === args.previousId) + 1
-      : 0;
-    const end = offset + (args.limit || PAGING_LIMIT);
-    const messages = await Promise.all(
-      filteredRecords
-        .slice(offset, end)
-        .filter(r => r.data.contentFingerprints.includes(ISCN_FINGERPRINT)) // only published by depub.space
-        .map(async r => {
-          const authorAddress = getAuthorAddress(r);
-          const userProfile = await getProfile(authorAddress, ctx);
-          const message = transformRecord(r, userProfile);
+    // initial durable object
+    const durableObjId = ctx.env.ISCN_TXN.idFromName('iscn-txn');
+    const stub = ctx.env.ISCN_TXN.get(durableObjId);
+    const limit = args.limit ? args.limit : PAGING_LIMIT;
+    const hashtag = args.tag ? args.tag : undefined;
+    const author = args.author ? args.author : undefined;
+    const mentioned = args.mentioned ? args.mentioned : undefined;
+    const previousId = args.previousId || undefined;
 
-          return message;
-        })
+    // get latest sequence
+    const latestSequence = await getLatestSequence(stub);
+
+    // check new records
+    const { records, nextSequence } = await ctx.dataSources.iscnQueryAPI.queryRecordsByFingerprint(
+      ctx.env.ISCN_FINGERPRINT,
+      latestSequence
+    );
+
+    if (nextSequence > latestSequence) {
+      await updateLatestSequence(nextSequence, stub);
+    }
+
+    // add new transactions
+    if (records.length) {
+      await addTransactions(records, stub);
+    }
+
+    const transactions = await getTransactions(stub, {
+      limit,
+      previousId,
+      hashtag,
+      mentioned,
+      author,
+    });
+    const messages = await Promise.all(
+      transactions.map(async t => {
+        const authorAddress = getAuthorAddress(t);
+        const userProfile = await getProfile(authorAddress, ctx);
+        const message = transformRecord(t, userProfile);
+
+        return message;
+      })
     );
 
     return messages;
   } catch (ex: any) {
+    // eslint-disable-next-line no-console
+    console.error(ex);
+
     throw new ISCNError(ex.message);
   }
 };
@@ -174,15 +237,16 @@ const resolvers: Resolvers = {
     getUser: (_parent, args, ctx) => getUser(args.dtagOrAddress, ctx),
     messages: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByTag: async (_parent, args, ctx) => getMessages(args, ctx),
+    messagesByMentioned: async (_parent, args, ctx) => getMessages(args, ctx),
     getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
   },
   User: {
     messages: async (parent, args, ctx) => {
       const walletAddress = parent.profile?.id || parent.id;
 
-      return getMessagesByUser(
+      return getMessages(
         {
-          walletAddress,
+          author: walletAddress,
           ...args,
         },
         ctx

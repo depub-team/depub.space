@@ -1,139 +1,189 @@
-import { ISCNQueryClient, ISCNRecord } from '@likecoin/iscn-js';
 import { ulidFactory } from 'ulid-workers';
-import { Bindings } from '../bindings';
-import { KVStore } from '../kv-store';
+import { ISCNRecord } from '@likecoin/iscn-js';
+import { Bindings } from '../../bindings';
 
 const ulid = ulidFactory({ monotonic: false });
+const NEXT_SEQUENCE_KEY = 'sequence';
+const TRANSACTION_KEY = 'transaction';
+const AUTHOR_KEY = 'author';
+const HASHTAG_KEY = 'hashtag';
+const MENTION_KEY = 'mention';
+const RECORD_KEY_KEY = 'record-key';
 
+interface RecordKeys {
+  transactionKey: string;
+  authorTransactionKey: string;
+  hashtagKeys: Map<string, string>;
+  mentionKeys: Map<string, string>;
+}
 export class IscnTxn implements DurableObject {
-  protected nextSequence: number;
+  constructor(private readonly state: DurableObjectState, private readonly env: Bindings) {}
 
-  private queryClient!: ISCNQueryClient;
+  public async addTransactions(request: Request) {
+    const records = await request.json<ISCNRecord[]>();
+    const hashTagRegex = /#[\p{L}\d]+/giu;
+    const mentionRegex = /@[\p{L}\d]+/giu;
 
-  protected kvStore: KVStore;
-
-  constructor(private readonly state: DurableObjectState, private readonly env: Bindings) {
-    this.queryClient = new ISCNQueryClient();
-    this.kvStore = new KVStore(this.env.WORKERS_GRAPHQL_CACHE);
-
-    this.state.blockConcurrencyWhile(async () => {
-      const nextSequence = (await this.state.storage.get<number>('last_sequence')) || 0;
-      // After initialization, future reads do not need to access storage.
-
-      this.nextSequence = nextSequence;
-    });
-  }
-
-  public async getStoredTransactions() {
-    let result = await this.kvStore.list({ prefix: 'messages:' });
-    let { keys } = result;
-
-    while (result.list_complete) {
-      // eslint-disable-next-line no-await-in-loop
-      result = await this.kvStore.list();
-      keys = keys.concat(result.keys);
+    if (!records || !Array.isArray(records)) {
+      return new Response('Invalid body', {
+        status: 403,
+      });
     }
 
-    return keys;
-  }
-
-  public async fetch(request: Request) {
-    const limit = (request as any).query?.limit || 12;
-    const from = (request as any).query?.from;
-    const author = (request as any).query?.author;
-    const mentioned = (request as any).query?.mentioned;
-    const hashtag = (request as any).query?.hashtag;
-    let storedKeys = await this.getStoredTransactions();
-    const newTransactions: ISCNRecord['data'][] = [];
-    let records: ISCNRecord[] = [];
-    const res = await this.queryClient.queryRecordsByFingerprint(
-      ISCN_FINGERPRINT,
-      this.nextSequence
-    );
-
-    if (res) {
-      records = res.records;
-      let { nextSequence } = res;
-
-      while (nextSequence.gt(0)) {
-        // eslint-disable-next-line no-await-in-loop
-        const res2 = await this.queryClient.queryRecordsByFingerprint(
-          ISCN_FINGERPRINT,
-          nextSequence.toNumber()
-        );
-
-        if (res2) {
-          nextSequence = res2.nextSequence;
-          records = [...records, ...res2.records];
-        }
-      }
-    }
-
-    // store transactions
-    await Promise.all(
-      records.map(async r => {
-        const { data } = r;
-        const id = data['@id'];
-        const isTxnStored = storedKeys.find(key => key.metadata?.id === id);
-        const key = `messages:${ulid(new Date(data.contentMetadata.recordTimestamp).getTime())}`;
-        const hashTagRegex = /#[\p{L}\d]+/giu;
-        const mentionRegex = /@[\p{L}\d]+/giu;
-        const hashtags = ((data.contentMetadata.description || '') as string).match(hashTagRegex);
-        const recordAuthor = data.stakeholders.find(
+    // put into persistence storage
+    await records
+      .map(record => async () => {
+        const { description } = record.data.contentMetadata;
+        const recordKey = await this.state.storage.get(`${RECORD_KEY_KEY}:${record.data['@id']}`);
+        const author = record.data.stakeholders.find(
           stakeholder => stakeholder.contributionType === 'http://schema.org/author'
         );
 
-        const mentions = ((data.contentMetadata.description || '') as string).match(mentionRegex);
+        if (!recordKey) {
+          const hashtags = ((description || '') as string).match(hashTagRegex);
+          const mentions = ((description || '') as string).match(mentionRegex);
+          const transactionKey = `${TRANSACTION_KEY}:${ulid()}`;
+          const authorTransactionKey = `${AUTHOR_KEY}:${author.entity['@id']}:${ulid()}`;
+          const hashtagKeys = hashtags
+            ? hashtags.map(tag => [tag, `${HASHTAG_KEY}:${tag.replace(/^#/, '')}:${ulid()}`])
+            : [];
+          const mentionKeys = mentions
+            ? mentions.map(mention => [
+                mention,
+                `${MENTION_KEY}:${mention.replace(/^@/, '')}:${ulid()}`,
+              ])
+            : [];
 
-        if (!isTxnStored) {
-          newTransactions.push(data);
+          await this.state.storage.put(transactionKey, record); // storing the message key
+          await this.state.storage.put(authorTransactionKey, transactionKey);
+          await this.state.storage.put(`${RECORD_KEY_KEY}:${record.data['@id']}`, {
+            transactionKey,
+            authorTransactionKey,
+            hashtagKeys,
+            mentionKeys,
+          }); // storing the record
 
-          await this.kvStore.set(key, JSON.stringify(data), {
-            id,
-            recordTimestamp: data.contentMetadata.recordTimestamp,
-            author: recordAuthor,
-            hashtags,
-            mentions,
-          });
+          await Promise.all(
+            hashtagKeys.map(async ([, key]) => {
+              await this.state.storage.put(key, transactionKey);
+            })
+          );
+
+          await Promise.all(
+            mentionKeys.map(async ([, key]) => {
+              await this.state.storage.put(key, transactionKey);
+            })
+          );
         }
       })
-    );
+      .reduce(async (p, op) => {
+        await p;
 
-    // get new stored keys
-    storedKeys = await this.getStoredTransactions();
-    const fromIndex = from ? storedKeys.findIndex(key => key === from) : storedKeys.length - 1;
+        return op();
+      }, Promise.resolve());
 
-    // apply filter
-    if (mentioned) {
-      storedKeys = storedKeys.filter(key => key.metadata?.mentions.includes(mentioned));
+    return new Response(null, { status: 201 });
+  }
+
+  public async getTransaction(request: Request) {
+    const url = new URL(request.url);
+    const limit = parseInt(url.searchParams.get('limit') || '12', 10);
+    const from = url.searchParams.get('from');
+    const author = url.searchParams.get('author');
+    const mentioned = url.searchParams.get('mentioned');
+    const hashtag = url.searchParams.get('hashtag');
+    const recordKeys = await this.state.storage.get<RecordKeys>(`${RECORD_KEY_KEY}:${from}`);
+    const prefix = TRANSACTION_KEY;
+    let transactionList: Map<string, ISCNRecord>;
+
+    if (author) {
+      const keyList = await this.state.storage.list<string>({
+        prefix: `${AUTHOR_KEY}:${author}`,
+        reverse: true,
+        limit,
+        end: recordKeys?.authorTransactionKey,
+      });
+
+      transactionList = await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()));
+    } else if (mentioned) {
+      const keyList = await this.state.storage.list<string>({
+        prefix: `${MENTION_KEY}:${mentioned}`,
+        reverse: true,
+        limit,
+        end: recordKeys?.mentionKeys.get(mentioned),
+      });
+
+      transactionList = await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()));
     } else if (hashtag) {
-      storedKeys = storedKeys.filter(key => key.metadata?.hashtags.includes(hashtag));
-    } else if (author) {
-      storedKeys = storedKeys.filter(key => key.metadata?.author === author);
+      const keyList = await this.state.storage.list<string>({
+        prefix: `${HASHTAG_KEY}:${hashtag}`,
+        reverse: true,
+        limit,
+        end: recordKeys?.mentionKeys.get(hashtag),
+      });
+
+      transactionList = await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()));
+    } else {
+      transactionList = await this.state.storage.list<ISCNRecord>({
+        prefix,
+        reverse: true,
+        limit,
+        end: recordKeys?.transactionKey,
+      });
     }
 
-    // apply pagination
-    const paginatedRecords = storedKeys.slice(fromIndex - limit, fromIndex);
+    const transactions = transactionList && Array.from(transactionList.values());
 
-    // get stored records from kv with
-    const storedRecords = await Promise.all(
-      paginatedRecords.map(async key => {
-        const record = await this.kvStore.get(key.name);
-
-        return record && JSON.parse(record);
+    return new Response(
+      JSON.stringify({
+        transactions,
       })
     );
+  }
 
-    // concatenate and sort new transactions
-    const sortedRecords = storedRecords
-      .concat(newTransactions)
-      .sort((a, b) =>
-        new Date(a.data.contentMetadata.recordTimestamp) >
-        new Date(b.data.contentMetadata.recordTimestamp)
-          ? -1
-          : 1
-      );
+  public async getSequence(_request: Request) {
+    const nextSequence = (await this.state.storage.get<number>(NEXT_SEQUENCE_KEY)) || 0;
 
-    return new Response(JSON.stringify(sortedRecords));
+    return new Response(
+      JSON.stringify({
+        nextSequence,
+      })
+    );
+  }
+
+  public async updateSequence(request: Request) {
+    const body = await request.json<{ nextSequence: number }>();
+
+    if (body.nextSequence) {
+      await this.state.storage.put(NEXT_SEQUENCE_KEY, body.nextSequence);
+    }
+
+    return new Response(null, { status: 201 });
+  }
+
+  public async fetch(request: Request) {
+    const url = new URL(request.url);
+
+    if (url.pathname === '/sequence') {
+      if (request.method === 'PUT') {
+        return this.updateSequence(request);
+      }
+
+      if (request.method === 'GET') {
+        return this.getSequence(request);
+      }
+    }
+
+    if (url.pathname === '/transactions') {
+      if (request.method === 'PUT') {
+        return this.addTransactions(request);
+      }
+
+      if (request.method === 'GET') {
+        return this.getTransaction(request);
+      }
+    }
+
+    return new Response(null, { status: 403 });
   }
 }
