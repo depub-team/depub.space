@@ -20,6 +20,7 @@
     "next.config.js",
     ".eslintrc.js",
     "babel.config.js",
+    "jest.config.js",
     "sentry.*.js"
   ],
   "exclude": [

@@ -1,20 +1,11 @@
-import CloudflareWorkerGlobalScope from 'types-cloudflare-worker';
-
+import { Bindings } from '../bindings';
 import { apollo, playground } from './handlers';
-import { CorsConfig, setCorsHeaders as setCors } from './utils';
+import { GqlHandlerOptions } from './handlers/handler.types';
+import { setCorsHeaders as setCors } from './utils';
 
-const IS_DEVEL = ENVIRONMENT !== 'production';
+export { IscnTxn } from './durable-objects';
 
-interface GraphQLOptions {
-  baseEndpoint: string;
-  playgroundEndpoint: string;
-  cors: CorsConfig | boolean;
-  forwardUnmatchedRequestsToOrigin: boolean;
-  debug: boolean;
-  kvCache: boolean;
-}
-
-const graphQLOptions: GraphQLOptions = {
+const graphQLOptions: GqlHandlerOptions = {
   baseEndpoint: '/',
   playgroundEndpoint: '/playground',
   cors: true,
@@ -23,8 +14,9 @@ const graphQLOptions: GraphQLOptions = {
   kvCache: false,
 };
 
-const handleRequest = async (request: Request) => {
+const handleRequest = async (request: Request, env: Bindings) => {
   const url = new URL(request.url);
+  const isDev = env.ENVIRONMENT !== 'production';
   const referer = request.headers.get('referer');
   const refererUrl = referer && new URL(referer);
 
@@ -33,14 +25,19 @@ const handleRequest = async (request: Request) => {
       const response =
         request.method === 'OPTIONS'
           ? new Response('', { status: 204 })
-          : await apollo(request, graphQLOptions);
+          : await apollo(request, {
+              ...graphQLOptions,
+              context: () => ({
+                env,
+              }),
+            });
 
       if (graphQLOptions.cors) {
         let allowOrigin = '*';
 
         if (refererUrl) {
           // development only
-          if (IS_DEVEL && refererUrl.hostname === 'localhost') {
+          if (isDev && refererUrl.hostname === 'localhost') {
             allowOrigin = refererUrl.origin;
           } else if (refererUrl.hostname.endsWith('depub.space')) {
             allowOrigin = refererUrl.origin;
@@ -77,8 +74,6 @@ const handleRequest = async (request: Request) => {
   }
 };
 
-declare let self: CloudflareWorkerGlobalScope;
-
-self.addEventListener('fetch', (event: { request: Request; respondWith: any }) => {
-  event.respondWith(handleRequest(event.request));
-});
+export default {
+  fetch: (request: Request, env: Bindings) => handleRequest(request, env),
+};

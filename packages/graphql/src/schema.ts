@@ -4,6 +4,7 @@ const typeDefs = gql`
   type Query {
     messages(previousId: String, limit: Int): [Message]
     messagesByTag(tag: String!, previousId: String, limit: Int): [Message]
+    messagesByMentioned(mentioned: String!, previousId: String, limit: Int): [Message]
     getUser(dtagOrAddress: String!, previousId: String, limit: Int): User
     getUserProfile(dtagOrAddress: String!): Profile
   }

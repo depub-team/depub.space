@@ -13,17 +13,30 @@ kv_namespaces = [
   { binding = "WORKERS_GRAPHQL_CACHE", id = "9cf0a6d5091e448c9411e8ee8c65acb6" }
 ]
 
+[durable_objects]
+bindings = [
+  { name = "ISCN_TXN", class_name = "IscnTxn" }
+]
+
 [build]
 command = "yarn build"
 
 [build.upload]
-format = "service-worker"
+format = "modules"
+main = "./index.mjs"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["IscnTxn"]
+
+[miniflare]
+durable_objects_persist = true
+
 
 [vars]
 NODE_URL = "https://node.testnet.like.co/"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
-CACHE_TTL = 60 # 1min
 ENVIRONMENT = "staging"
 
 # Override values for `--env production` usage
@@ -33,9 +46,13 @@ kv_namespaces = [
   { binding = "WORKERS_GRAPHQL_CACHE", id = "5acfb215b0d34d8fa20d921d1e40c699" }
 ]
 
+[env.prod.durable_objects]
+bindings = [
+  { name = "ISCN_TXN", class_name = "IscnTxn" }
+]
+
 [env.prod.vars]
 NODE_URL = "https://mainnet-node.like.co/"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
-CACHE_TTL = 600 # 10min
 ENVIRONMENT = "production"

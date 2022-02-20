@@ -53,17 +53,12 @@ export interface GetUserResopnse {
 export interface AppStateContextProps {
   isLoading: boolean;
   error: string | null;
-  fetchUser: (dtagOrAddress: string, noCache?: boolean) => Promise<User | null>;
-  fetchMessages: (previousId?: string, noCache?: boolean) => Promise<Message[] | null>;
-  fetchMessagesByTag: (
-    tag: string,
-    previousId?: string,
-    noCache?: boolean
-  ) => Promise<Message[] | null>;
+  fetchUser: (dtagOrAddress: string) => Promise<User | null>;
+  fetchMessages: (previousId?: string) => Promise<Message[] | null>;
+  fetchMessagesByTag: (tag: string, previousId?: string) => Promise<Message[] | null>;
   fetchMessagesByOwner: (
     owner: string,
-    previousId?: string,
-    noCache?: boolean
+    previousId?: string
   ) => Promise<
     | (User & {
         messages: Message[];
@@ -88,11 +83,6 @@ const initialState: AppStateContextProps = {
 };
 
 const ISCN_FINGERPRINT = process.env.NEXT_PUBLIC_ISCN_FINGERPRINT || '';
-
-const noCacheHeaders = {
-  'Cache-Control': 'no-cache',
-  Pragma: 'no-cache',
-};
 
 export const AppStateContext = createContext<AppStateContextProps>(initialState);
 
@@ -130,55 +120,50 @@ export const useAppState = () => useContext(AppStateContext);
 export const AppStateProvider: FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const fetchUser = useCallback(
-    async (dtagOrAddress: string, noCache?: boolean): Promise<User | null> => {
-      debug('fetchUser(dtagOrAddress: %s)', dtagOrAddress);
+  const fetchUser = useCallback(async (dtagOrAddress: string): Promise<User | null> => {
+    debug('fetchUser(dtagOrAddress: %s)', dtagOrAddress);
 
-      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
+    dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
-      try {
-        const { data } = await axios.post<{ data: GetUserResopnse }>(
-          GRAPHQL_URL,
-          {
-            variables: {
-              dtagOrAddress,
-            },
-            query: GRAPHQL_QUERY_GET_USER,
+    try {
+      const { data } = await axios.post<{ data: GetUserResopnse }>(
+        GRAPHQL_URL,
+        {
+          variables: {
+            dtagOrAddress,
           },
-          {
-            headers: {
-              'Access-Control-Allow-Origin': '*',
-              ...(noCache && noCacheHeaders),
-            },
-          }
-        );
-
-        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
-
-        if (data && data.data.getUser) {
-          return data.data.getUser;
+          query: GRAPHQL_QUERY_GET_USER,
+        },
+        {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+          },
         }
-      } catch (ex) {
-        debug('fetchMessagesByOwner() -> error: %O', ex);
+      );
 
-        dispatch({
-          type: ActionType.SET_ERROR,
-          error: 'Fail to fetch messages, please try again later.',
-        });
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-        Sentry.captureException(ex);
+      if (data && data.data.getUser) {
+        return data.data.getUser;
       }
+    } catch (ex) {
+      debug('fetchMessagesByOwner() -> error: %O', ex);
 
-      return null;
-    },
-    []
-  );
+      dispatch({
+        type: ActionType.SET_ERROR,
+        error: 'Fail to fetch messages, please try again later.',
+      });
+
+      Sentry.captureException(ex);
+    }
+
+    return null;
+  }, []);
 
   const fetchMessagesByOwner = useCallback(
     async (
       owner: string,
-      previousId?: string,
-      noCache?: boolean
+      previousId?: string
     ): Promise<
       | (User & {
           messages: Message[];
@@ -203,7 +188,6 @@ export const AppStateProvider: FC = ({ children }) => {
           {
             headers: {
               'Access-Control-Allow-Origin': '*',
-              ...(noCache && noCacheHeaders),
             },
           }
         );
@@ -229,53 +213,49 @@ export const AppStateProvider: FC = ({ children }) => {
     []
   );
 
-  const fetchMessages = useCallback(
-    async (previousId?: string, noCache?: boolean): Promise<Message[] | null> => {
-      debug('fetchMessages(previousId: %s)', previousId);
+  const fetchMessages = useCallback(async (previousId?: string): Promise<Message[] | null> => {
+    debug('fetchMessages(previousId: %s)', previousId);
 
-      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
+    dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
-      try {
-        const { data } = await axios.post<{ data: MessagesQueryResponse }>(
-          GRAPHQL_URL,
-          {
-            variables: {
-              previousId: previousId || null, // graphql not accepts undefined
-              limit: ROWS_PER_PAGE,
-            },
-            query: GRAPHQL_QUERY_MESSAGES,
+    try {
+      const { data } = await axios.post<{ data: MessagesQueryResponse }>(
+        GRAPHQL_URL,
+        {
+          variables: {
+            previousId: previousId || null, // graphql not accepts undefined
+            limit: ROWS_PER_PAGE,
           },
-          {
-            headers: {
-              'Access-Control-Allow-Origin': '*',
-              ...(noCache && noCacheHeaders),
-            },
-          }
-        );
-
-        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
-
-        if (data && data.data.messages) {
-          return data.data.messages;
+          query: GRAPHQL_QUERY_MESSAGES,
+        },
+        {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+          },
         }
-      } catch (ex) {
-        debug('fetchMessages() -> error: %O', ex);
+      );
 
-        dispatch({
-          type: ActionType.SET_ERROR,
-          error: 'Fail to fetch messages, please try again later.',
-        });
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-        Sentry.captureException(ex);
+      if (data && data.data.messages) {
+        return data.data.messages;
       }
+    } catch (ex) {
+      debug('fetchMessages() -> error: %O', ex);
 
-      return null;
-    },
-    []
-  );
+      dispatch({
+        type: ActionType.SET_ERROR,
+        error: 'Fail to fetch messages, please try again later.',
+      });
+
+      Sentry.captureException(ex);
+    }
+
+    return null;
+  }, []);
 
   const fetchMessagesByTag = useCallback(
-    async (tag: string, previousId?: string, noCache?: boolean): Promise<Message[] | null> => {
+    async (tag: string, previousId?: string): Promise<Message[] | null> => {
       debug('fetchMessagesByTag(tag: %s, previousId: %s)', tag, previousId);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
@@ -294,7 +274,6 @@ export const AppStateProvider: FC = ({ children }) => {
           {
             headers: {
               'Access-Control-Allow-Origin': '*',
-              ...(noCache && noCacheHeaders),
             },
           }
         );
