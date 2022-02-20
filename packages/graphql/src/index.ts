@@ -1,7 +1,7 @@
-import CloudflareWorkerGlobalScope from 'types-cloudflare-worker';
-
 import { apollo, playground } from './handlers';
 import { CorsConfig, setCorsHeaders as setCors } from './utils';
+
+// export { IscnTxn } from './durable-objects';
 
 const IS_DEVEL = ENVIRONMENT !== 'production';
 
@@ -77,8 +77,6 @@ const handleRequest = async (request: Request) => {
   }
 };
 
-declare let self: CloudflareWorkerGlobalScope;
-
-self.addEventListener('fetch', (event: { request: Request; respondWith: any }) => {
-  event.respondWith(handleRequest(event.request));
-});
+export default {
+  fetch: (request: Request) => handleRequest(request),
+};

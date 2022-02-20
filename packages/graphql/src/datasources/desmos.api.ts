@@ -1,4 +1,5 @@
 import { DataSource } from 'apollo-datasource';
+import { DesmosProfile, DesmosProfileWithId } from '../interfaces';
 
 const FETCH_PROFILE_DOCUMENT = `query DesmosProfileLink($address: String) {
   profile(where: { chain_links: { external_address: { _eq: $address } } }) {
@@ -54,6 +55,12 @@ const FETCH_PROFILE_DOCUMENT_BY_DTAG = `query DesmosProfileLink($dtag: String) {
   }
 }`;
 
+export const getLikecoinAddressByProfile = (profile: DesmosProfile) => {
+  const profileChainLink = profile.chainLinks?.find(cl => cl?.chainConfig?.name === 'likecoin');
+  const likecoinAddress = profileChainLink?.externalAddress;
+
+  return likecoinAddress;
+};
 export class DesmosAPI extends DataSource {
   constructor(private baseURL: string) {
     super();
@@ -74,13 +81,15 @@ export class DesmosAPI extends DataSource {
         }),
       });
       const data = await response.json<any>();
-      const profile = data.data.profile[0];
+      const profile = data.data.profile[0] as DesmosProfile;
 
       if (profile) {
-        return {
-          id: profile.address,
+        const profileWithId = {
+          id: address,
           ...profile,
-        };
+        } as DesmosProfileWithId;
+
+        return profileWithId;
       }
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -106,12 +115,15 @@ export class DesmosAPI extends DataSource {
       });
       const data = await response.json<any>();
       const profile = data.data.profile[0];
+      const likecoinAddress = getLikecoinAddressByProfile(profile);
 
       if (profile) {
-        return {
-          id: profile.address,
+        const profileWithId = {
+          id: likecoinAddress || profile.address,
           ...profile,
-        };
+        } as DesmosProfileWithId;
+
+        return profileWithId;
       }
     } catch (error) {
       // eslint-disable-next-line no-console

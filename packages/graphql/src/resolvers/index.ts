@@ -1,11 +1,11 @@
 import { ISCNRecord } from '@likecoin/iscn-js';
 import { ApolloError } from 'apollo-server-errors';
 import { Context } from '../context';
-import KVCache from '../kv-cache';
 import { InputMaybe, Message, Profile, Resolvers } from './generated_types';
+import { KVStore } from '../kv-store';
 
 const PAGING_LIMIT = 12;
-const cache = new KVCache();
+const kvStore = new KVStore(WORKERS_GRAPHQL_CACHE);
 
 export class ISCNError extends ApolloError {
   constructor(message: string) {
@@ -56,24 +56,30 @@ interface GetUserProfileArgs {
 }
 
 const getProfile = async (dtagOrAddress: string, ctx: Context) => {
-  const cachingKey = `getProfile(account: ${dtagOrAddress})`;
-
   try {
+    const storedProfile = await kvStore.get(dtagOrAddress);
+
+    if (storedProfile) {
+      return storedProfile;
+    }
+
     let profile: any = null;
-    const cachedRecords = await cache.get(cachingKey);
 
-    if (cachedRecords && !ctx.noCache) {
-      profile = JSON.parse(cachedRecords);
+    if (/^(cosmos1|like1)/.test(dtagOrAddress)) {
+      profile = await ctx.dataSources.desmosAPI.getProfile(dtagOrAddress);
     } else {
-      if (/^(cosmos1|like1)/.test(dtagOrAddress)) {
-        profile = await ctx.dataSources.desmosAPI.getProfile(dtagOrAddress);
-      } else {
-        profile = await ctx.dataSources.desmosAPI.getProfileByDtag(dtagOrAddress);
-      }
+      profile = await ctx.dataSources.desmosAPI.getProfileByDtag(dtagOrAddress);
+    }
 
-      if (profile) {
-        await cache.set(cachingKey, JSON.stringify(profile));
-      }
+    if (profile) {
+      await kvStore.set(
+        dtagOrAddress,
+        profile,
+        {
+          dtagOrAddress,
+        },
+        2 * 60
+      ); // 2 mins
     }
 
     return profile;
@@ -95,21 +101,11 @@ const getUser = async (account: string, ctx: Context) => {
 };
 
 const getMessagesByUser = async (args: GetMessagesByUserArgs, ctx: Context) => {
-  const cachingKey = `getMessagesByUser(walletAddress: ${args.walletAddress})`;
-
   try {
     if (args.walletAddress) {
-      // get cached records
-      const cachedRecords = await cache.get(cachingKey);
       let records: ISCNRecord[] = [];
 
-      if (cachedRecords && !ctx.noCache) {
-        records = JSON.parse(cachedRecords) as ISCNRecord[];
-      } else {
-        records = await ctx.dataSources.iscnQueryAPI.queryRecordsByOwner(args.walletAddress);
-
-        await cache.set(cachingKey, JSON.stringify(records));
-      }
+      records = await ctx.dataSources.iscnQueryAPI.queryRecordsByOwner(args.walletAddress);
 
       const filteredRecords = records
         .reverse()
@@ -138,21 +134,8 @@ const getMessagesByUser = async (args: GetMessagesByUserArgs, ctx: Context) => {
 };
 
 const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
-  const cachingKey = 'getMessages';
-
   try {
-    // get cached records
-    const cachedRecords = await cache.get(cachingKey);
-    let records: ISCNRecord[] = [];
-
-    if (cachedRecords && !ctx.noCache) {
-      records = JSON.parse(cachedRecords) as ISCNRecord[];
-    } else {
-      records = await ctx.dataSources.iscnQueryAPI.queryRecordsByFingerprint(ISCN_FINGERPRINT);
-
-      await cache.set(cachingKey, JSON.stringify(records));
-    }
-
+    const records = await ctx.dataSources.iscnQueryAPI.queryRecordsByFingerprint(ISCN_FINGERPRINT);
     const tagRegExp = args.tag && new RegExp(`#${args.tag}`, 'gi');
     const filteredRecords = records
       .reverse()
@@ -195,11 +178,7 @@ const resolvers: Resolvers = {
   },
   User: {
     messages: async (parent, args, ctx) => {
-      const profileChainLink = parent.profile?.chainLinks?.find(
-        cl => cl?.chainConfig?.name === 'likecoin'
-      );
-
-      const walletAddress = profileChainLink?.externalAddress || parent.id;
+      const walletAddress = parent.profile?.id || parent.id;
 
       return getMessagesByUser(
         {
