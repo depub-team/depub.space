@@ -18671,11 +18671,6 @@ sudo-prompt@^9.0.0:
   resolved "https://registry.npmjs.org/sudo-prompt/-/sudo-prompt-9.2.1.tgz"
   integrity sha512-Mu7R0g4ig9TUuGSxJavny5Rv0egCEtpZRNMrZaYS1vxkiIxGiGUwoezU3LazIQ+KE04hTrTfNPgxU5gzi7F5Pw==
 
-superkv@1.9.1:
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/superkv/-/superkv-1.9.1.tgz#0bd63816ce556e0ab1a81fc09365744b4aeec199"
-  integrity sha512-/lDQ5txn+0s9lBIuFG1XIoguOCvqI6fYxyfVR5/9EP4sEjaiGwd9tu6p0IWJ77hn1LuZAuYjqFq51M96WSubGg==
-
 supports-color@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/supports-color/-/supports-color-2.0.0.tgz"

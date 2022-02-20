@@ -1,11 +1,11 @@
-import { ISCNRecord } from '@likecoin/iscn-js';
 import { ApolloError } from 'apollo-server-errors';
 import { Context } from '../context';
 import { InputMaybe, Message, Profile, Resolvers } from './generated_types';
 import { KVStore } from '../kv-store';
-import { DesmosProfileWithId } from '../interfaces';
+import { DesmosProfileWithId, ISCNRecord } from '../interfaces';
 
 const PAGING_LIMIT = 12;
+const PROFILE_KEY = 'profile';
 
 export class ISCNError extends ApolloError {
   constructor(message: string) {
@@ -52,10 +52,12 @@ interface GetUserProfileArgs {
 }
 
 const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile | null> => {
+  console.log('getProfile', dtagOrAddress);
+
   const kvStore = new KVStore(ctx.env.WORKERS_GRAPHQL_CACHE);
 
   try {
-    const cachedProfile = await kvStore.get(dtagOrAddress);
+    const cachedProfile = await kvStore.get(`${PROFILE_KEY}:${dtagOrAddress}`);
 
     if (cachedProfile) {
       return JSON.parse(cachedProfile);
@@ -71,7 +73,7 @@ const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile 
 
     if (profile) {
       await kvStore.set(
-        dtagOrAddress,
+        `${PROFILE_KEY}:${dtagOrAddress}`,
         JSON.stringify(profile),
         {
           dtagOrAddress,
@@ -80,10 +82,12 @@ const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile 
       ); // 2 mins
     }
 
+    console.log('getProfile() -> profile', profile);
+
     return profile as unknown as Profile;
-  } catch (ex) {
+  } catch (ex: any) {
     // eslint-disable-next-line no-console
-    console.error(ex);
+    console.error('getProfile() -> ex: ', ex.message);
   }
 
   return null;
@@ -186,7 +190,7 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
     const latestSequence = await getLatestSequence(stub);
 
     // check new records
-    const { records, nextSequence } = await ctx.dataSources.iscnQueryAPI.queryRecordsByFingerprint(
+    const { records, nextSequence } = await ctx.dataSources.iscnQueryAPI.getRecords(
       ctx.env.ISCN_FINGERPRINT,
       latestSequence
     );
@@ -211,6 +215,9 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
       transactions.map(async t => {
         const authorAddress = getAuthorAddress(t);
         const userProfile = await getProfile(authorAddress, ctx);
+
+        console.log('userProfile', userProfile);
+
         const message = transformRecord(t, userProfile);
 
         return message;

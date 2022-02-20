@@ -1,5 +1,5 @@
 import { ulidFactory } from 'ulid-workers';
-import { ISCNRecord } from '@likecoin/iscn-js';
+import { ISCNRecord } from '../interfaces';
 import { Bindings } from '../../bindings';
 
 const ulid = ulidFactory({ monotonic: false });
@@ -142,6 +142,8 @@ export class IscnTxn implements DurableObject {
   }
 
   public async getSequence(_request: Request) {
+    await this.state.storage.deleteAll();
+
     const nextSequence = (await this.state.storage.get<number>(NEXT_SEQUENCE_KEY)) || 0;
 
     return new Response(

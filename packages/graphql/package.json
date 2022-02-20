@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@cloudflare/workers-types": "3.4.0",
-    "@likecoin/iscn-js": "0.0.7",
     "apollo-datasource": "3.3.1",
     "apollo-server-cloudflare": "3.6.2",
     "apollo-server-errors": "3.3.1",
