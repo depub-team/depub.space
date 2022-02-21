@@ -11,7 +11,7 @@ import {
   ConnectWallet,
 } from '../components';
 import { MAX_WIDTH } from '../contants';
-import { dataUrlToFile } from '../utils';
+import { waitAsync, dataUrlToFile } from '../utils';
 
 const debug = Debug('web:<IndexPage />');
 
@@ -27,7 +27,7 @@ export default function IndexPage() {
     walletAddress,
     offlineSigner,
   } = useSigningCosmWasmClient();
-  const { isLoading, fetchMessages, fetchMessagesByOwner, postMessage, fetchUser } = useAppState();
+  const { isLoading, fetchMessages, postMessage, fetchUser } = useAppState();
   const toast = useToast();
 
   const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
@@ -70,14 +70,11 @@ export default function IndexPage() {
         return;
       }
 
-      const [account] = await offlineSigner.getAccounts();
-
       const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
-      await Promise.all([
-        fetchNewMessages(undefined, true),
-        fetchMessagesByOwner(account.address, undefined), // trigger clear cache in async without blocking the thread
-      ]);
+      await waitAsync(500); // wait a bit
+
+      await fetchNewMessages(undefined, true); // then get new message
 
       if (txn) {
         toast.show({
