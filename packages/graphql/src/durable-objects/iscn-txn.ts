@@ -10,6 +10,16 @@ const HASHTAG_KEY = 'hashtag';
 const MENTION_KEY = 'mention';
 const RECORD_KEY_KEY = 'record-key';
 
+const sortByRecordTimestamp = (m: Map<string, ISCNRecord>) =>
+  new Map(
+    Array.from(m.entries()).sort((a, b) =>
+      new Date(a[1].data.recordTimestamp as string).getTime() >
+      new Date(b[1].data.recordTimestamp as string).getTime()
+        ? -1
+        : 1
+    )
+  );
+
 interface RecordKeys {
   transactionKey: string;
   authorTransactionKey: string;
@@ -104,7 +114,9 @@ export class IscnTxn implements DurableObject {
         end: recordKeys?.authorTransactionKey,
       });
 
-      transactionList = await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()));
+      transactionList = sortByRecordTimestamp(
+        await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()))
+      );
     } else if (mentioned) {
       const keyList = await this.state.storage.list<string>({
         prefix: `${MENTION_KEY}:${mentioned}`,
@@ -113,7 +125,9 @@ export class IscnTxn implements DurableObject {
         end: recordKeys?.mentionKeys.get(mentioned),
       });
 
-      transactionList = await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()));
+      transactionList = sortByRecordTimestamp(
+        await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()))
+      );
     } else if (hashtag) {
       const keyList = await this.state.storage.list<string>({
         prefix: `${HASHTAG_KEY}:${hashtag}`,
@@ -122,7 +136,9 @@ export class IscnTxn implements DurableObject {
         end: recordKeys?.mentionKeys.get(hashtag),
       });
 
-      transactionList = await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()));
+      transactionList = sortByRecordTimestamp(
+        await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()))
+      );
     } else {
       transactionList = await this.state.storage.list<ISCNRecord>({
         prefix,
@@ -132,7 +148,7 @@ export class IscnTxn implements DurableObject {
       });
     }
 
-    const transactions = transactionList && Array.from(transactionList.values());
+    const transactions = transactionList ? Array.from(transactionList.values()) : [];
 
     return new Response(
       JSON.stringify({
