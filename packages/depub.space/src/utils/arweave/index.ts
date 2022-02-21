@@ -1,12 +1,11 @@
-import { ISCNSigningClient, ISCNSignPayload } from '@likecoin/iscn-js';
-// eslint-disable-next-line import/no-extraneous-dependencies
+import { ISCNSignPayload } from '@likecoin/iscn-js';
 import { OfflineSigner } from '@cosmjs/proto-signing';
 import Debug from 'debug';
 import { estimateArweavePrice, uploadToArweave } from './api';
 import { sendLIKE } from '../sendLike';
+import { signISCN } from '../iscn';
 
 const debug = Debug('web:arweave');
-const signingClient = new ISCNSigningClient();
 
 export async function submitToArweaveAndISCN(
   files: string | File[],
@@ -43,10 +42,7 @@ export async function submitToArweaveAndISCN(
   debug('submitToArweaveAndISCN() -> contentFingerprints: %O', contentFingerprints);
 
   const iscnMetadataWithArweaveId = { ...iscnMetadata, contentFingerprints };
-
-  await signingClient.setSigner(signer);
-
-  const res = await signingClient.createISCNRecord(fromAddress, iscnMetadataWithArweaveId);
+  const res = await signISCN(iscnMetadataWithArweaveId, signer, address);
 
   return res;
 }

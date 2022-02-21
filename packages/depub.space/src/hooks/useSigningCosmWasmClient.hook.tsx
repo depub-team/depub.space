@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import WalletConnect from '@walletconnect/client';
 import QRCodeModal from '@walletconnect/qrcode-modal';
-import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import Debug from 'debug';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { payloadId } from '@walletconnect/utils';
@@ -9,7 +8,6 @@ import { AccountData, OfflineSigner } from '@cosmjs/proto-signing';
 import { SignDoc } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 
 const debug = Debug('web:useSigningCosmWasmClient');
-const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
 const PUBLIC_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID || '';
 const KEY_WALLET_CONNECT_ACCOUNT_PREFIX = 'KEY_WALLET_CONNECT_ACCOUNT_PREFIX';
 const KEY_WALLET_CONNECT = 'walletconnect';
@@ -20,7 +18,6 @@ type ConnectedWalletType = 'keplr' | 'likerland_app';
 
 export interface ISigningCosmWasmClientContext {
   walletAddress: string | null;
-  signingClient: SigningCosmWasmClient | null;
   offlineSigner: OfflineSigner | null;
   isLoading: boolean;
   error: string | null;
@@ -131,7 +128,6 @@ export const getChainInfo = () => {
 export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [offlineSigner, setOfflineSigner] = useState<OfflineSigner | null>(null);
-  const [signingClient, setSigningClient] = useState<SigningCosmWasmClient | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const connector = new WalletConnect({
@@ -162,10 +158,6 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
   const disconnect = async () => {
     debug('disconnect()');
 
-    if (signingClient) {
-      signingClient.disconnect();
-    }
-
     const keys = await AsyncStorage.getAllKeys();
     const accountKeys = keys.filter(key =>
       new RegExp(`^${KEY_WALLET_CONNECT_ACCOUNT_PREFIX}`).test(key)
@@ -185,7 +177,6 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
 
     setWalletAddress(null);
     setOfflineSigner(null);
-    setSigningClient(null);
     setIsLoading(false);
     setError(null);
   };
@@ -195,16 +186,8 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
     await (window as any).keplr.enable(PUBLIC_CHAIN_ID);
 
     // get offline signer for signing txs
-    // const myOfflineSigner = await (window as any).getOfflineSignerAuto(PUBLIC_CHAIN_ID);
-    const myOfflineSigner = await (window as any).getOfflineSigner(PUBLIC_CHAIN_ID);
-
-    // make client
-    const client = await SigningCosmWasmClient.connectWithSigner(
-      PUBLIC_RPC_ENDPOINT,
-      myOfflineSigner
-    );
-
-    setSigningClient(client);
+    // const myOfflineSigner = await (window as any).getOfflineSigner(PUBLIC_CHAIN_ID);
+    const myOfflineSigner = await (window as any).getOfflineSignerAuto(PUBLIC_CHAIN_ID);
 
     // get user address
     const [{ address }] = await myOfflineSigner.getAccounts();
@@ -393,7 +376,6 @@ export const useSigningCosmWasmClient = (): ISigningCosmWasmClientContext => {
 
   return {
     walletAddress,
-    signingClient,
     isLoading,
     error,
     offlineSigner,
