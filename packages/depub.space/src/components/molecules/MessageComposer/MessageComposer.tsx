@@ -13,7 +13,6 @@ import {
   TextArea,
   VStack,
   WarningOutlineIcon,
-  Skeleton,
   Avatar,
   IconButton,
   Icon,
@@ -105,11 +104,9 @@ export const MessageComposer: FC<MessageComposerProps> = ({
       space={4}
     >
       <Box alignItems="center" flex={{ base: '0 0 48px', md: 'unset' }}>
-        <Skeleton isLoaded={!isLoading} rounded="full" size="12">
-          <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
-            {abbrNickname}
-          </Avatar>
-        </Skeleton>
+        <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
+          {abbrNickname}
+        </Avatar>
       </Box>
       <VStack flex={1} minHeight="180px" space={4}>
         <VStack space={4}>
