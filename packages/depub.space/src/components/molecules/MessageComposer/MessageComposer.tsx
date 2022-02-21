@@ -32,6 +32,7 @@ export interface MessageFormType {
 
 interface MessageComposerProps {
   isLoading?: boolean;
+  defaultValue?: string;
   address: string;
   profile: DesmosProfile | null;
   onSubmit: (data: MessageFormType, image?: string | null) => Promise<void>;
@@ -40,6 +41,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   address,
   profile,
   onSubmit,
+  defaultValue,
   isLoading,
 }) => {
   const [image, setImage] = useState<string | null>(null);
@@ -114,6 +116,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
             <Stack>
               <Controller
                 control={control}
+                defaultValue={defaultValue}
                 name="message"
                 render={({ field: { onChange, value } }) => (
                   <TextArea
