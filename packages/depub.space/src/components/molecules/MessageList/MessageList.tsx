@@ -33,7 +33,6 @@ export const MessageList: FC<MessageListProps> = ({
 }) => {
   const [refreshing, setRefreshing] = React.useState(false);
   const [isReady, setIsReady] = React.useState(false);
-  const [isNoMore, setIsNoMore] = React.useState(false);
   const dummyItems = Array.from(new Array(ROWS_PER_PAGE)).map<Message>(() => ({
     id: `dummy-${uid()}`,
     message: '',
@@ -49,13 +48,7 @@ export const MessageList: FC<MessageListProps> = ({
       distanceFromEnd,
       messages.length
     );
-    if (isNoMore) {
-      return;
-    }
-
     if (distanceFromEnd < 0 || !messages.length) {
-      setIsNoMore(true);
-
       return;
     }
 
