@@ -13,7 +13,6 @@ import { OfflineSigner } from '@cosmjs/proto-signing';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import Debug from 'debug';
-import { ISCNSigningClient } from '@likecoin/iscn-js';
 import axios from 'axios';
 import { Message, User } from '../interfaces';
 import { submitToArweaveAndISCN } from '../utils';
@@ -24,11 +23,10 @@ import {
   GRAPHQL_QUERY_MESSAGES_BY_USER,
   ROWS_PER_PAGE,
 } from '../contants';
+import { signISCN } from '../utils/iscn';
 
 const debug = Debug('web:useAppState');
-const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
 const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || '';
-const signingClient = new ISCNSigningClient();
 
 export class AppStateError extends Error {}
 
@@ -307,9 +305,6 @@ export const AppStateProvider: FC = ({ children }) => {
 
       try {
         const [wallet] = await offlineSigner.getAccounts();
-
-        await signingClient.connectWithSigner(PUBLIC_RPC_ENDPOINT, offlineSigner);
-
         const recordTimestamp = new Date().toISOString();
         const datePublished = recordTimestamp.split('T')[0];
         const messageSha256Hash = await Crypto.digestStringAsync(
@@ -354,14 +349,14 @@ export const AppStateProvider: FC = ({ children }) => {
         if (files) {
           txn = await submitToArweaveAndISCN(files, payload, offlineSigner, wallet.address);
         } else {
-          txn = await signingClient.createISCNRecord(wallet.address, payload);
+          txn = await signISCN(payload, offlineSigner, wallet.address);
         }
 
         dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
         return txn;
       } catch (ex) {
-        debug('postMesage() -> error: %O', ex);
+        debug('postMessage() -> error: %O', ex);
 
         if (/^Account does not exist on chain/.test(ex.message)) {
           dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
