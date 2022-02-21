@@ -43,7 +43,7 @@ export default function IndexPage() {
 
     if (newMessages) {
       if (!refresh) {
-        setMessages(msgs => msgs.concat(newMessages));
+        setMessages(msgs => Array.from(new Set(msgs.concat(newMessages))));
       } else {
         setMessages(newMessages);
       }

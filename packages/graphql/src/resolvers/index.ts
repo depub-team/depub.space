@@ -182,22 +182,25 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
     const mentioned = args.mentioned ? args.mentioned : undefined;
     const previousId = args.previousId || undefined;
 
-    // get latest sequence
-    const latestSequence = await getLatestSequence(stub);
+    // only getting new transactions from RPC when not in paginated
+    if (!previousId) {
+      // get latest sequence
+      const latestSequence = await getLatestSequence(stub);
 
-    // check new records
-    const { records, nextSequence } = await ctx.dataSources.iscnQueryAPI.getRecords(
-      ctx.env.ISCN_FINGERPRINT,
-      latestSequence
-    );
+      // check new records
+      const { records, nextSequence } = await ctx.dataSources.iscnQueryAPI.getRecords(
+        ctx.env.ISCN_FINGERPRINT,
+        latestSequence
+      );
 
-    if (nextSequence > latestSequence) {
-      await updateLatestSequence(nextSequence, stub);
-    }
+      if (nextSequence > latestSequence) {
+        await updateLatestSequence(nextSequence, stub);
+      }
 
-    // add new transactions
-    if (records.length) {
-      await addTransactions(records, stub);
+      // add new transactions
+      if (records.length) {
+        await addTransactions(records, stub);
+      }
     }
 
     const transactions = await getTransactions(stub, {
