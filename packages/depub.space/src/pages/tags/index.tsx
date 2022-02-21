@@ -4,10 +4,17 @@ import { Link, Box, IconButton, HStack, useToast, Divider, VStack, Heading } fro
 import { Platform } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'next/router';
-import { Layout, MessageList } from '../../components';
-import { Message } from '../../interfaces';
-import { useAppState, useSigningCosmWasmClient } from '../../hooks';
+import {
+  ConnectWallet,
+  Layout,
+  MessageComposer,
+  MessageFormType,
+  MessageList,
+} from '../../components';
+import { DesmosProfile, Message } from '../../interfaces';
+import { AppStateError, useAppState, useSigningCosmWasmClient } from '../../hooks';
 import { MAX_WIDTH } from '../../contants';
+import { dataUrlToFile, waitAsync } from '../../utils';
 
 const debug = Debug('web:<UserPage />');
 const isDev = process.env.NODE_ENV !== 'production';
@@ -19,11 +26,19 @@ export default function IndexPage() {
   const tagName = isDev ? router.query.name?.toString() : rewriteRouteObject.name; // rewriteRoute object is injecting by Cloudflare worker
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const { error: connectError, walletAddress } = useSigningCosmWasmClient();
-  const { isLoading, fetchMessagesByTag } = useAppState();
+  const {
+    error: connectError,
+    isLoading: isConnectLoading,
+    connectKeplr,
+    connectWalletConnect,
+    walletAddress,
+    offlineSigner,
+  } = useSigningCosmWasmClient();
+  const [profile, setProfile] = useState<DesmosProfile | null>(null);
+  const { isLoading, postMessage, fetchMessagesByTag, fetchUser } = useAppState();
   const toast = useToast();
 
-  const fetchNewMessages = async (previousId?: string) => {
+  const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
     if (!tagName) {
       return;
     }
@@ -37,10 +52,55 @@ export default function IndexPage() {
     const newMessages = await fetchMessagesByTag(tagName, previousId);
 
     if (newMessages) {
-      setMessages(msgs => msgs.concat(newMessages));
+      if (!refresh) {
+        setMessages(msgs => Array.from(new Set(msgs.concat(newMessages))));
+      } else {
+        setMessages(newMessages);
+      }
     }
 
     setIsLoadingMore(false);
+  };
+
+  const handleOnSubmit = async (data: MessageFormType, image?: string | null) => {
+    try {
+      let file: File | undefined;
+
+      if (image) {
+        file = await dataUrlToFile(image, 'upload');
+      }
+
+      if (!offlineSigner) {
+        toast.show({
+          title: 'No valid signer, please connect wallet',
+          status: 'error',
+          placement: 'top',
+        });
+
+        return;
+      }
+
+      const txn = await postMessage(offlineSigner, data.message, file && [file]);
+
+      await waitAsync(500); // wait a bit
+
+      await fetchNewMessages(undefined, true);
+
+      if (txn) {
+        toast.show({
+          title: 'Post created successfully!',
+          status: 'success',
+          placement: 'top',
+        });
+      }
+    } catch (ex: any) {
+      toast.show({
+        title:
+          ex instanceof AppStateError ? ex.message : 'Something went wrong, please try again later',
+        status: 'error',
+        placement: 'top',
+      });
+    }
   };
 
   useEffect(() => {
@@ -60,6 +120,19 @@ export default function IndexPage() {
   }, [tagName, router.isReady]);
 
   useEffect(() => {
+    // eslint-disable-next-line func-names
+    void (async function () {
+      if (walletAddress) {
+        const user = await fetchUser(walletAddress);
+
+        if (user && user.profile) {
+          setProfile(user.profile);
+        }
+      }
+    })();
+  }, [walletAddress, fetchUser]);
+
+  useEffect(() => {
     if (connectError) {
       debug('useEffect() -> connectError: %s', connectError);
 
@@ -71,7 +144,7 @@ export default function IndexPage() {
   }, [connectError]);
 
   const ListHeaderComponent = memo(() => (
-    <VStack h="100%" maxW="640px" mx="auto" my={4} px={4} space={8} w="100%">
+    <VStack maxW={MAX_WIDTH} mb={8} mx="auto" pt={4} px={4} w="100%">
       <HStack alignItems="center" flex={1} justifyContent="center" space={2}>
         <Link href="/">
           <IconButton
@@ -82,11 +155,29 @@ export default function IndexPage() {
           />
         </Link>
         <VStack alignItems="center" flex={1} justifyContent="center" space={4}>
-          <Heading fontSize="xl">#{tagName}</Heading>
+          <Heading fontSize="2xl">#{tagName}</Heading>
         </VStack>
 
         <Box w="48px" />
       </HStack>
+
+      <Box mb={8}>
+        {walletAddress && !isConnectLoading ? (
+          <MessageComposer
+            address={walletAddress}
+            defaultValue={`#${tagName}`}
+            isLoading={isLoading || isConnectLoading}
+            profile={profile}
+            onSubmit={handleOnSubmit}
+          />
+        ) : (
+          <ConnectWallet
+            isLoading={isLoading || isConnectLoading}
+            onPressKeplr={connectKeplr}
+            onPressWalletConnect={connectWalletConnect}
+          />
+        )}
+      </Box>
 
       <Divider mb={8} />
     </VStack>
