@@ -28,8 +28,6 @@ export async function signISCN(tx: ISCNSignPayload, signer: OfflineSigner, addre
   if (!isSignDirectSigner) {
     const signingStargateClient: SigningStargateClient = (signingClient as any).signingClient;
 
-    console.log(tx);
-
     (signingStargateClient as any).aminoTypes = new AminoTypes({
       prefix: 'cosmos',
       additions: {
