@@ -5,7 +5,8 @@ export function removeHtmlTags(html: string) {
 }
 
 export const replaceURLToAnchor = (content: string): string => {
-  const urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g;
+  const urlRegex =
+    /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/g;
 
   return content.replace(urlRegex, url => {
     let hyperlink = url;

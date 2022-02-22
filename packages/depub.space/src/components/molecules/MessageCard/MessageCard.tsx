@@ -20,7 +20,12 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { Platform } from 'react-native';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
-import { getAbbrNickname, getShortenAddress, messageSanitizer } from '../../../utils';
+import {
+  getUrlFromContent,
+  getAbbrNickname,
+  getShortenAddress,
+  messageSanitizer,
+} from '../../../utils';
 import { ImageModal } from '../ImageModal';
 
 dayjs.extend(relativeTime);
@@ -60,9 +65,18 @@ const MessageCardComponent: FC<MessageCardProps> = ({
     // eslint-disable-next-line func-names
     void (async function () {
       try {
-        const myLinkPreivew = (await getLinkPreview(message, {
+        const url = getUrlFromContent(message);
+
+        if (!url) {
+          return;
+        }
+
+        const myLinkPreivew = (await getLinkPreview(url, {
           proxyUrl: `${PROXY_URL}/?`,
           timeout: 6000,
+          headers: {
+            'user-agent': 'googlebot',
+          },
         })) as LinkPreviewItem;
 
         debug('useEffect() -> message: %s, myLinkPreivew: %O', message, myLinkPreivew);
