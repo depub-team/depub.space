@@ -20,7 +20,7 @@ export const replaceURLToAnchor = (content: string): string => {
 };
 
 export const replaceTagToAnchor = (content: string): string => {
-  const hashTagRegex = /#[\p{L}\d]+/giu;
+  const hashTagRegex = /#[\p{L}\d_-]+/giu;
 
   return content.replace(hashTagRegex, hashTag => {
     const hashtag = hashTag.replace(/^#/, '');
@@ -31,7 +31,7 @@ export const replaceTagToAnchor = (content: string): string => {
 };
 
 export const replaceHandleToAnchor = (content: string): string => {
-  const handleRegex = /@[\p{L}\d]+/giu;
+  const handleRegex = /@[\p{L}\d_-]+/giu;
 
   return content.replace(handleRegex, handleText => {
     const handle = handleText.replace(/^@/, '');
