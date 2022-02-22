@@ -42,6 +42,9 @@ export default function IndexPage() {
   const abbrNickname = getAbbrNickname(nickname);
   const bio = profile?.bio;
   const dtag = profile?.dtag;
+
+  console.log(profile);
+
   const likecoinWalletAddress = profile && getLikecoinAddressByProfile(profile);
 
   const fetchNewMessages = async (previousId?: string) => {
