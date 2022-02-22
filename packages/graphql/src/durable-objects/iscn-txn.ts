@@ -122,7 +122,7 @@ export class IscnTxn implements DurableObject {
         prefix: `${MENTION_KEY}:${mentioned}`,
         reverse: true,
         limit,
-        end: recordKeys?.mentionKeys.get(mentioned),
+        end: new Map(recordKeys?.mentionKeys || []).get(`@${mentioned}`),
       });
 
       transactionList = sortByRecordTimestamp(
@@ -133,7 +133,7 @@ export class IscnTxn implements DurableObject {
         prefix: `${HASHTAG_KEY}:${hashtag}`,
         reverse: true,
         limit,
-        end: recordKeys?.mentionKeys.get(hashtag),
+        end: new Map(recordKeys?.hashtagKeys || []).get(`#${hashtag}`),
       });
 
       transactionList = sortByRecordTimestamp(
