@@ -1,4 +1,5 @@
 export * from './arweave';
+export * from './desmos';
 export * from './iscn';
 export * from './messageSanitizer';
 export * from './dataUrlToFile';
