@@ -18,7 +18,7 @@ import { useRouter } from 'next/router';
 import { Layout, MessageList } from '../../components';
 import { Message, DesmosProfile } from '../../interfaces';
 import { useAppState, useSigningCosmWasmClient } from '../../hooks';
-import { getAbbrNickname } from '../../utils';
+import { getAbbrNickname, getLikecoinAddressByProfile } from '../../utils';
 import { getShortenAddress } from '../../utils/getShortenAddress';
 import { MAX_WIDTH } from '../../contants';
 
@@ -42,6 +42,7 @@ export default function IndexPage() {
   const abbrNickname = getAbbrNickname(nickname);
   const bio = profile?.bio;
   const dtag = profile?.dtag;
+  const likecoinWalletAddress = profile && getLikecoinAddressByProfile(profile);
 
   const fetchNewMessages = async (previousId?: string) => {
     debug('fetchNewMessages()');
@@ -139,14 +140,29 @@ export default function IndexPage() {
 
   return account ? (
     <Layout metadata={{ title: `${nickname || walletAddress} on depub.SPACE` }}>
-      <MessageList
-        isLoading={isLoading}
-        isLoadingMore={isLoadingMore}
-        ItemSeparatorComponent={ListItemSeparatorComponent}
-        ListHeaderComponent={ListHeaderComponent}
-        messages={messages}
-        onFetchMessages={fetchNewMessages}
-      />
+      {likecoinWalletAddress ? (
+        <MessageList
+          isLoading={isLoading}
+          isLoadingMore={isLoadingMore}
+          ItemSeparatorComponent={ListItemSeparatorComponent}
+          ListHeaderComponent={ListHeaderComponent}
+          messages={messages}
+          onFetchMessages={fetchNewMessages}
+        />
+      ) : (
+        <VStack maxWidth={MAX_WIDTH} mx="auto" space={3}>
+          <ListHeaderComponent />
+          <Box>
+            <Text color="gray.500" textAlign="center">
+              This profile has not linked to Likecoin, if you are the profile owner, please go to{' '}
+              <Link href="https://x.forbole.com/" isExternal>
+                Forbole X
+              </Link>{' '}
+              to link your Likecoin wallet address
+            </Text>
+          </Box>
+        </VStack>
+      )}
     </Layout>
   ) : null;
 }
