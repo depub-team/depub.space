@@ -4,6 +4,7 @@ export * from './messageSanitizer';
 export * from './dataUrlToFile';
 export * from './getAbbrNickname';
 export * from './getShortenAddress';
+export * from './getUrlFromContent';
 export * from './image';
 export * from './sendLike';
 export * from './waitAsync';
