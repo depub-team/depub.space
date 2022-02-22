@@ -165,7 +165,6 @@ export default function IndexPage() {
         {walletAddress && !isConnectLoading ? (
           <MessageComposer
             address={walletAddress}
-            defaultValue={`#${tagName}`}
             isLoading={isLoading || isConnectLoading}
             profile={profile}
             onSubmit={handleOnSubmit}
