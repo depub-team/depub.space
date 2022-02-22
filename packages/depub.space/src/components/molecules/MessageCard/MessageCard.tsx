@@ -25,6 +25,7 @@ import {
   getAbbrNickname,
   getShortenAddress,
   messageSanitizer,
+  getLikecoinAddressByProfile,
 } from '../../../utils';
 import { ImageModal } from '../ImageModal';
 
@@ -48,7 +49,6 @@ const MessageCardComponent: FC<MessageCardProps> = ({
   const dayFrom = dayjs(date).fromNow();
   const [linkPreivew, setLinkPreview] = useState<LinkPreviewItem | null>(null);
   const displayName = profile?.nickname || shortenAddress;
-  const handle = profile?.dtag || from;
   const isMessageContainsUrl = /https?/.test(message);
   const abbrNickname = getAbbrNickname(displayName);
   const { onCopy } = useClipboard();
@@ -56,6 +56,8 @@ const MessageCardComponent: FC<MessageCardProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [acitveImageIndex, setAcitveImageIndex] = useState(-1);
   const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>([]);
+  const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
+  const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
 
   useEffect(() => {
     if (!isMessageContainsUrl) {
