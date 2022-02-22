@@ -26,6 +26,7 @@ const debug = Debug('web:<UserPage />');
 const isDev = process.env.NODE_ENV !== 'production';
 
 export default function IndexPage() {
+  const [isReady, setIsReady] = useState(false);
   const router = useRouter();
   const rewriteRouteObject =
     typeof window !== 'undefined' ? ((window as any) || {}).rewriteRoute || {} : {};
@@ -40,12 +41,11 @@ export default function IndexPage() {
   const profilePic = profile?.profilePic;
   const nickname = profile?.nickname || shortenAccount;
   const abbrNickname = getAbbrNickname(nickname);
+  const accountIsWalletAddress = /^(cosmos1|like1)/.test(account);
   const bio = profile?.bio;
   const dtag = profile?.dtag;
-
-  console.log(profile);
-
   const likecoinWalletAddress = profile && getLikecoinAddressByProfile(profile);
+  const showMessagesList = accountIsWalletAddress || likecoinWalletAddress || !isReady;
 
   const fetchNewMessages = async (previousId?: string) => {
     debug('fetchNewMessages()');
@@ -69,6 +69,7 @@ export default function IndexPage() {
 
       if (res.profile) {
         setProfile(res.profile);
+        setIsReady(true);
       }
     }
 
@@ -143,7 +144,7 @@ export default function IndexPage() {
 
   return account ? (
     <Layout metadata={{ title: `${nickname || walletAddress} on depub.SPACE` }}>
-      {likecoinWalletAddress ? (
+      {showMessagesList ? (
         <MessageList
           isLoading={isLoading}
           isLoadingMore={isLoadingMore}
