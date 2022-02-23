@@ -19,6 +19,7 @@ import { submitToArweaveAndISCN } from '../utils';
 import {
   GRAPHQL_QUERY_GET_USER,
   GRAPHQL_QUERY_MESSAGES,
+  GRAPHQL_QUERY_GET_MESSAGE,
   GRAPHQL_QUERY_MESSAGES_BY_TAG,
   GRAPHQL_QUERY_MESSAGES_BY_USER,
   ROWS_PER_PAGE,
@@ -52,6 +53,7 @@ export interface AppStateContextProps {
   isLoading: boolean;
   error: string | null;
   fetchUser: (dtagOrAddress: string) => Promise<User | null>;
+  fetchMessage: (iscnId: string) => Promise<Message | null>;
   fetchMessages: (previousId?: string) => Promise<Message[] | null>;
   fetchMessagesByTag: (tag: string, previousId?: string) => Promise<Message[] | null>;
   fetchMessagesByOwner: (
@@ -75,6 +77,7 @@ const initialState: AppStateContextProps = {
   isLoading: false,
   fetchUser: null as never,
   fetchMessages: null as never,
+  fetchMessage: null as never,
   fetchMessagesByTag: null as never,
   fetchMessagesByOwner: null as never,
   postMessage: null as never,
@@ -252,6 +255,46 @@ export const AppStateProvider: FC = ({ children }) => {
     return null;
   }, []);
 
+  const fetchMessage = useCallback(async (iscnId?: string): Promise<Message | null> => {
+    debug('fetchMessage(iscnId: %s)', iscnId);
+
+    dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
+
+    try {
+      const { data } = await axios.post<{ data: { getMessage: Message } }>(
+        GRAPHQL_URL,
+        {
+          variables: {
+            iscnId,
+          },
+          query: GRAPHQL_QUERY_GET_MESSAGE,
+        },
+        {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
+
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+
+      if (data && data.data.getMessage) {
+        return data.data.getMessage;
+      }
+    } catch (ex) {
+      debug('fetchMessage() -> error: %O', ex);
+
+      dispatch({
+        type: ActionType.SET_ERROR,
+        error: `Fail to fetch message(${iscnId}), please try again later.`,
+      });
+
+      Sentry.captureException(ex);
+    }
+
+    return null;
+  }, []);
+
   const fetchMessagesByTag = useCallback(
     async (tag: string, previousId?: string): Promise<Message[] | null> => {
       debug('fetchMessagesByTag(tag: %s, previousId: %s)', tag, previousId);
@@ -381,10 +424,19 @@ export const AppStateProvider: FC = ({ children }) => {
       postMessage,
       fetchUser,
       fetchMessages,
+      fetchMessage,
       fetchMessagesByTag,
       fetchMessagesByOwner,
     }),
-    [state, fetchUser, postMessage, fetchMessagesByTag, fetchMessages, fetchMessagesByOwner]
+    [
+      state,
+      fetchUser,
+      postMessage,
+      fetchMessage,
+      fetchMessagesByTag,
+      fetchMessages,
+      fetchMessagesByOwner,
+    ]
   );
 
   return <AppStateContext.Provider value={memoValue}>{children}</AppStateContext.Provider>;

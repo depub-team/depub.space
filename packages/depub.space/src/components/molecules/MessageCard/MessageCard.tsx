@@ -11,13 +11,17 @@ import {
   AspectRatio,
   Pressable,
   Tooltip,
+  Box,
   useClipboard,
   useToast,
+  Icon,
+  IconButton,
 } from 'native-base';
 import dayjs from 'dayjs';
 import Debug from 'debug';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
 import {
@@ -28,11 +32,14 @@ import {
   getLikecoinAddressByProfile,
 } from '../../../utils';
 import { ImageModal } from '../ImageModal';
+import { ShareModal } from '../ShareModal';
 
 dayjs.extend(relativeTime);
 
 const debug = Debug('web:<MessageCard />');
 const PROXY_URL = process.env.NEXT_PUBLIC_PROXY_URL;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
 const isDev = process.env.NODE_ENV !== 'production';
 
 export interface MessageCardProps extends ComponentProps<typeof HStack> {
@@ -42,9 +49,12 @@ export interface MessageCardProps extends ComponentProps<typeof HStack> {
 
 const MessageCardComponent: FC<MessageCardProps> = ({
   isLoading,
-  message: { from, date, profile, images = [], message = '' },
+  message: { id, from, date, profile, images = [], message = '' },
   ...props
 }) => {
+  const iscnId = id.replace(new RegExp(`^${ISCN_SCHEME}/`), '');
+  const shareableUrl = isDev ? `${APP_URL}/?id=${iscnId}` : `${APP_URL}/${iscnId}`;
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
   const dayFrom = dayjs(date).fromNow();
   const [linkPreivew, setLinkPreview] = useState<LinkPreviewItem | null>(null);
@@ -53,11 +63,15 @@ const MessageCardComponent: FC<MessageCardProps> = ({
   const abbrNickname = getAbbrNickname(displayName);
   const { onCopy } = useClipboard();
   const toast = useToast();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [acitveImageIndex, setAcitveImageIndex] = useState(-1);
   const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>([]);
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
+
+  const sharePost = () => {
+    setIsShareModalOpen(true);
+  };
 
   useEffect(() => {
     if (!isMessageContainsUrl) {
@@ -147,8 +161,9 @@ const MessageCardComponent: FC<MessageCardProps> = ({
                       <Pressable
                         onPress={async () => {
                           await onCopy(profile.dtag);
+
                           toast.show({
-                            title: 'The nickname has been copied!',
+                            title: 'The nickname has been copied to clipboard!',
                             status: 'success',
                             placement: 'top',
                           });
@@ -165,7 +180,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
                       onPress={async () => {
                         await onCopy(from);
                         toast.show({
-                          title: 'The wallet address has been copied!',
+                          title: 'The wallet address has been copied to clipboard!',
                           status: 'success',
                           placement: 'top',
                         });
@@ -203,7 +218,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
               <Pressable
                 key={image}
                 onPress={() => {
-                  setIsModalOpen(true);
+                  setIsImageModalOpen(true);
                   setAcitveImageIndex(index);
                 }}
               >
@@ -223,17 +238,37 @@ const MessageCardComponent: FC<MessageCardProps> = ({
               </Pressable>
             ))}
           </VStack>
+
+          <HStack justifyContent="space-between" space={4}>
+            <Box /> {/* empty box for spacing */}
+            <Skeleton isLoaded={!isLoading} size="8">
+              <Tooltip label="Share post" openDelay={250}>
+                <IconButton
+                  _icon={{ color: 'gray.500', size: 'sm' }}
+                  icon={<Icon as={Ionicons} name="share-social" />}
+                  onPress={sharePost}
+                />
+              </Tooltip>
+            </Skeleton>
+          </HStack>
         </VStack>
       </HStack>
+
       <ImageModal
         aspectRatio={
           imageSizes[acitveImageIndex]
             ? imageSizes[acitveImageIndex][0] / imageSizes[acitveImageIndex][1]
             : 1
         }
-        isOpen={isModalOpen}
+        isOpen={isImageModalOpen}
         source={{ uri: images[acitveImageIndex] }}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => setIsImageModalOpen(false)}
+      />
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        url={shareableUrl}
+        onClose={() => setIsShareModalOpen(false)}
       />
     </>
   );
