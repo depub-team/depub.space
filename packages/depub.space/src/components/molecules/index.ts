@@ -6,4 +6,3 @@ export * from './MessageComposer';
 export * from './MessageList';
 export * from './MessageModal';
 export * from './Navbar';
-export * from './ShareModal';

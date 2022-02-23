@@ -21,7 +21,7 @@ import dayjs from 'dayjs';
 import Debug from 'debug';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Fontisto, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
 import {
@@ -32,7 +32,6 @@ import {
   getLikecoinAddressByProfile,
 } from '../../../utils';
 import { ImageModal } from '../ImageModal';
-import { ShareModal } from '../ShareModal';
 
 dayjs.extend(relativeTime);
 
@@ -45,16 +44,18 @@ const isDev = process.env.NODE_ENV !== 'production';
 export interface MessageCardProps extends ComponentProps<typeof HStack> {
   message: Message;
   isLoading?: boolean;
+  onShare?: (message: Message) => void;
 }
 
 const MessageCardComponent: FC<MessageCardProps> = ({
   isLoading,
-  message: { id, from, date, profile, images = [], message = '' },
+  onShare,
+  message: messageItem,
   ...props
 }) => {
+  const { id, from, date, profile, images = [], message = '' } = messageItem;
   const iscnId = id.replace(new RegExp(`^${ISCN_SCHEME}/`), '');
   const shareableUrl = isDev ? `${APP_URL}/?id=${iscnId}` : `${APP_URL}/${iscnId}`;
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
   const dayFrom = dayjs(date).fromNow();
   const [linkPreivew, setLinkPreview] = useState<LinkPreviewItem | null>(null);
@@ -69,8 +70,14 @@ const MessageCardComponent: FC<MessageCardProps> = ({
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
 
-  const sharePost = () => {
-    setIsShareModalOpen(true);
+  const copyUrl = async () => {
+    await onCopy(shareableUrl);
+
+    toast.show({
+      title: 'The URL has been copied to clipboard!',
+      status: 'success',
+      placement: 'top',
+    });
   };
 
   useEffect(() => {
@@ -241,15 +248,38 @@ const MessageCardComponent: FC<MessageCardProps> = ({
 
           <HStack justifyContent="space-between" space={4}>
             <Box /> {/* empty box for spacing */}
-            <Skeleton isLoaded={!isLoading} size="8">
-              <Tooltip label="Share post" openDelay={250}>
-                <IconButton
-                  _icon={{ color: 'gray.500', size: 'sm' }}
-                  icon={<Icon as={Ionicons} name="share-social" />}
-                  onPress={sharePost}
-                />
-              </Tooltip>
-            </Skeleton>
+            <HStack space={2}>
+              <Skeleton isLoaded={!isLoading} size="8">
+                <Tooltip label="Copy URL" openDelay={250}>
+                  <IconButton
+                    _icon={{ color: 'gray.500', size: 'sm' }}
+                    icon={<Icon as={Fontisto} name="link" />}
+                    onPress={copyUrl}
+                  />
+                </Tooltip>
+              </Skeleton>
+              <Skeleton isLoaded={!isLoading} size="8">
+                <Tooltip label="Check ISCN record" openDelay={250}>
+                  <Link href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
+                    <IconButton
+                      _icon={{ color: 'gray.500', size: 'sm' }}
+                      icon={<Icon as={MaterialIcons} name="verified" />}
+                    />
+                  </Link>
+                </Tooltip>
+              </Skeleton>
+              {onShare ? (
+                <Skeleton isLoaded={!isLoading} size="8">
+                  <Tooltip label="Share post" openDelay={250}>
+                    <IconButton
+                      _icon={{ color: 'gray.500', size: 'sm' }}
+                      icon={<Icon as={Ionicons} name="share-social" />}
+                      onPress={() => onShare(messageItem)}
+                    />
+                  </Tooltip>
+                </Skeleton>
+              ) : null}
+            </HStack>
           </HStack>
         </VStack>
       </HStack>
@@ -263,12 +293,6 @@ const MessageCardComponent: FC<MessageCardProps> = ({
         isOpen={isImageModalOpen}
         source={{ uri: images[acitveImageIndex] }}
         onClose={() => setIsImageModalOpen(false)}
-      />
-
-      <ShareModal
-        isOpen={isShareModalOpen}
-        url={shareableUrl}
-        onClose={() => setIsShareModalOpen(false)}
       />
     </>
   );

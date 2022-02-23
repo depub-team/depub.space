@@ -10,6 +10,7 @@ import {
   MessageComposer,
   MessageFormType,
   MessageList,
+  MessageModal,
 } from '../../components';
 import { DesmosProfile, Message } from '../../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../../hooks';
@@ -18,9 +19,12 @@ import { dataUrlToFile, waitAsync } from '../../utils';
 
 const debug = Debug('web:<UserPage />');
 const isDev = process.env.NODE_ENV !== 'production';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
 
 export default function IndexPage() {
   const router = useRouter();
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const rewriteRouteObject =
     typeof window !== 'undefined' ? ((window as any) || {}).rewriteRoute || {} : {};
   const tagName = isDev ? router.query.name?.toString() : rewriteRouteObject.name; // rewriteRoute object is injecting by Cloudflare worker
@@ -37,6 +41,12 @@ export default function IndexPage() {
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const { isLoading, postMessage, fetchMessagesByTag, fetchUser } = useAppState();
   const toast = useToast();
+
+  const handleOnCloseModal = () => {
+    setSelectedMessage(null);
+
+    router.back();
+  };
 
   const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
     if (!tagName) {
@@ -60,6 +70,15 @@ export default function IndexPage() {
     }
 
     setIsLoadingMore(false);
+  };
+
+  const handleOnShare = async (message: Message) => {
+    const messageIscnId = message.id.replace(new RegExp(`^${ISCN_SCHEME}/`), '');
+    const shareableUrl = isDev ? `${APP_URL}/?id=${messageIscnId}` : `${APP_URL}/${messageIscnId}`;
+
+    await router.push(shareableUrl, undefined, { shallow: true });
+
+    setSelectedMessage(message);
   };
 
   const handleOnSubmit = async (data: MessageFormType, image?: string | null) => {
@@ -187,15 +206,22 @@ export default function IndexPage() {
   ));
 
   return tagName ? (
-    <Layout metadata={{ title: walletAddress || undefined }}>
-      <MessageList
-        isLoading={isLoading}
-        isLoadingMore={isLoadingMore}
-        ItemSeparatorComponent={ListItemSeparatorComponent}
-        ListHeaderComponent={ListHeaderComponent}
-        messages={messages}
-        onFetchMessages={fetchNewMessages}
-      />
-    </Layout>
+    <>
+      <Layout metadata={{ title: walletAddress || undefined }}>
+        <MessageList
+          isLoading={isLoading}
+          isLoadingMore={isLoadingMore}
+          ItemSeparatorComponent={ListItemSeparatorComponent}
+          ListHeaderComponent={ListHeaderComponent}
+          messages={messages}
+          onFetchMessages={fetchNewMessages}
+          onShare={handleOnShare}
+        />
+      </Layout>
+
+      {selectedMessage && (
+        <MessageModal isOpen message={selectedMessage} onClose={handleOnCloseModal} />
+      )}
+    </>
   ) : null;
 }
