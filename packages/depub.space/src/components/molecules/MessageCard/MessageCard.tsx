@@ -1,4 +1,4 @@
-import React, { ComponentProps, FC, memo, useEffect, useState } from 'react';
+import React, { ComponentProps, FC, useEffect, useState } from 'react';
 import { getLinkPreview } from 'link-preview-js';
 import {
   Image,
@@ -46,7 +46,7 @@ export interface MessageCardProps extends ComponentProps<typeof HStack> {
   onShare?: (message: Message) => void;
 }
 
-const MessageCardComponent: FC<MessageCardProps> = ({
+export const MessageCard: FC<MessageCardProps> = ({
   isLoading,
   onShare,
   message: messageItem,
@@ -128,15 +128,7 @@ const MessageCardComponent: FC<MessageCardProps> = ({
 
   return (
     <>
-      <HStack
-        flex={1}
-        mb={{ base: 4, md: 6 }}
-        minHeight="80px"
-        px={4}
-        space={4}
-        w="100%"
-        {...props}
-      >
+      <HStack flex={1} minHeight="80px" my={2} px={4} space={4} w="100%" {...props}>
         <Skeleton isLoaded={!isLoading} rounded="full" size="12">
           <Link href={isDev ? `/users/?account=${handle}` : `/${handle}`}>
             <Tooltip
@@ -250,43 +242,39 @@ const MessageCardComponent: FC<MessageCardProps> = ({
             ))}
           </VStack>
 
-          <HStack justifyContent="space-between" space={4}>
+          <HStack alignItems="center" justifyContent="space-between" space={4}>
             <Skeleton.Text isLoaded={!isLoading} lines={1}>
               <Text color="gray.500" fontSize="xs">
                 {dayFrom}
               </Text>
             </Skeleton.Text>
 
-            <HStack space={2}>
-              <Skeleton isLoaded={!isLoading} size="8">
-                <Tooltip label="Copy URL" openDelay={250}>
+            <HStack>
+              <Tooltip label="Copy URL" openDelay={250}>
+                <IconButton
+                  _icon={{ color: 'gray.500', size: 'sm' }}
+                  icon={<Icon as={Fontisto} name="link" />}
+                  onPress={copyUrl}
+                />
+              </Tooltip>
+
+              <Tooltip label="Check ISCN record" openDelay={250}>
+                <Link href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
                   <IconButton
                     _icon={{ color: 'gray.500', size: 'sm' }}
-                    icon={<Icon as={Fontisto} name="link" />}
-                    onPress={copyUrl}
+                    icon={<Icon as={MaterialIcons} name="verified" />}
+                  />
+                </Link>
+              </Tooltip>
+
+              {onShare ? (
+                <Tooltip label="Share post" openDelay={250}>
+                  <IconButton
+                    _icon={{ color: 'gray.500', size: 'sm' }}
+                    icon={<Icon as={Ionicons} name="share-social" />}
+                    onPress={() => onShare(messageItem)}
                   />
                 </Tooltip>
-              </Skeleton>
-              <Skeleton isLoaded={!isLoading} size="8">
-                <Tooltip label="Check ISCN record" openDelay={250}>
-                  <Link href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
-                    <IconButton
-                      _icon={{ color: 'gray.500', size: 'sm' }}
-                      icon={<Icon as={MaterialIcons} name="verified" />}
-                    />
-                  </Link>
-                </Tooltip>
-              </Skeleton>
-              {onShare ? (
-                <Skeleton isLoaded={!isLoading} size="8">
-                  <Tooltip label="Share post" openDelay={250}>
-                    <IconButton
-                      _icon={{ color: 'gray.500', size: 'sm' }}
-                      icon={<Icon as={Ionicons} name="share-social" />}
-                      onPress={() => onShare(messageItem)}
-                    />
-                  </Tooltip>
-                </Skeleton>
               ) : null}
             </HStack>
           </HStack>
@@ -306,5 +294,3 @@ const MessageCardComponent: FC<MessageCardProps> = ({
     </>
   );
 };
-
-export const MessageCard = memo(MessageCardComponent);
