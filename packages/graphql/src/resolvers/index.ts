@@ -47,6 +47,10 @@ interface GetMessagesArgs {
   mentioned?: InputMaybe<string>;
 }
 
+interface GetMessageArgs {
+  iscnId: string;
+}
+
 interface GetUserProfileArgs {
   dtagOrAddress: string;
 }
@@ -141,6 +145,24 @@ interface GetTransactionsOptions {
   author?: string;
 }
 
+const getTransaction = async (stub: DurableObjectStub, iscnId: string) => {
+  const getTransactionRequest = new Request(
+    `http://iscn-txn/transactions/${encodeURIComponent(iscnId)}`,
+    {
+      method: 'GET',
+    }
+  );
+  const getTransactionResponse = await stub.fetch(getTransactionRequest);
+
+  if (getTransactionResponse.status === 200) {
+    const transaction = await getTransactionResponse.json<ISCNRecord>();
+
+    return transaction || null;
+  }
+
+  return null;
+};
+
 const getTransactions = async (
   stub: DurableObjectStub,
   { limit = PAGING_LIMIT, previousId, hashtag, mentioned, author }: GetTransactionsOptions
@@ -169,6 +191,29 @@ const getTransactions = async (
   const { transactions } = await getTransactionsResponse.json<{ transactions: ISCNRecord[] }>();
 
   return transactions || [];
+};
+
+const getMessage = async (args: GetMessageArgs, ctx: Context) => {
+  try {
+    const durableObjId = ctx.env.ISCN_TXN.idFromName('iscn-txn');
+    const stub = ctx.env.ISCN_TXN.get(durableObjId);
+    const transaction = await getTransaction(stub, args.iscnId);
+
+    if (!transaction) {
+      throw new ISCNError('Not found');
+    }
+
+    const authorAddress = getAuthorAddress(transaction);
+    const userProfile = await getProfile(authorAddress, ctx);
+    const message = transformRecord(transaction, userProfile);
+
+    return message;
+  } catch (ex: any) {
+    // eslint-disable-next-line no-console
+    console.error(ex);
+
+    throw new ISCNError(ex.message);
+  }
 };
 
 const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
@@ -242,6 +287,7 @@ const resolvers: Resolvers = {
     messagesByTag: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByMentioned: async (_parent, args, ctx) => getMessages(args, ctx),
     getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
+    getMessage: (_parent, args, ctx) => getMessage(args, ctx),
   },
   User: {
     messages: async (parent, args, ctx) => {

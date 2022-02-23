@@ -50,6 +50,12 @@ export const GRAPHQL_QUERY_MESSAGES = `
   }
 `;
 
+export const GRAPHQL_QUERY_GET_MESSAGE = `
+  query GetMessage($iscnId: String!) {
+    getMessage(iscnId: $iscnId) ${GRAPHQL_TYPE_MESSAGE}
+  }
+`;
+
 export const GRAPHQL_QUERY_MESSAGES_BY_TAG = `
   query MessagesByTag($tag: String!, $previousId: String, $limit: Int) {
     messagesByTag(tag: $tag, previousId: $previousId, limit: $limit) ${GRAPHQL_TYPE_MESSAGE}
