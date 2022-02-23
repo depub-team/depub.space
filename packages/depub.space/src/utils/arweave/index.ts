@@ -42,7 +42,7 @@ export async function submitToArweaveAndISCN(
   debug('submitToArweaveAndISCN() -> contentFingerprints: %O', contentFingerprints);
 
   const iscnMetadataWithArweaveId = { ...iscnMetadata, contentFingerprints };
-  const res = await signISCN(iscnMetadataWithArweaveId, signer, address);
+  const res = await signISCN(iscnMetadataWithArweaveId, signer, fromAddress);
 
   return res;
 }
