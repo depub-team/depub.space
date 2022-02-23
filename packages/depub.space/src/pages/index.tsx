@@ -16,7 +16,6 @@ import { MAX_WIDTH } from '../contants';
 import { waitAsync, dataUrlToFile } from '../utils';
 
 const debug = Debug('web:<IndexPage />');
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -40,17 +39,18 @@ export default function IndexPage() {
   const { isLoading, fetchMessage, fetchMessages, postMessage, fetchUser } = useAppState();
   const toast = useToast();
 
-  const handleOnCloseModal = () => {
+  const handleOnCloseModal = async () => {
     setSelectedMessage(null);
 
-    router.back();
+    await router.push('/', undefined, { shallow: true });
   };
 
   const handleOnShare = async (message: Message) => {
     const messageIscnId = message.id.replace(new RegExp(`^${ISCN_SCHEME}/`), '');
-    const shareableUrl = isDev ? `${APP_URL}/?id=${messageIscnId}` : `${APP_URL}/${messageIscnId}`;
+    const actuallyUrl = `/?id=${messageIscnId}`;
+    const shareableUrl = isDev ? actuallyUrl : `/${messageIscnId}`;
 
-    await router.push(shareableUrl, undefined, { shallow: true });
+    await router.push(actuallyUrl, shareableUrl, { shallow: true });
 
     setSelectedMessage(message);
   };

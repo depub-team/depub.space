@@ -19,7 +19,6 @@ import { dataUrlToFile, waitAsync } from '../../utils';
 
 const debug = Debug('web:<UserPage />');
 const isDev = process.env.NODE_ENV !== 'production';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
 
 export default function IndexPage() {
@@ -41,12 +40,6 @@ export default function IndexPage() {
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const { isLoading, postMessage, fetchMessagesByTag, fetchUser } = useAppState();
   const toast = useToast();
-
-  const handleOnCloseModal = () => {
-    setSelectedMessage(null);
-
-    router.back();
-  };
 
   const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
     if (!tagName) {
@@ -74,11 +67,19 @@ export default function IndexPage() {
 
   const handleOnShare = async (message: Message) => {
     const messageIscnId = message.id.replace(new RegExp(`^${ISCN_SCHEME}/`), '');
-    const shareableUrl = isDev ? `${APP_URL}/?id=${messageIscnId}` : `${APP_URL}/${messageIscnId}`;
+    const shareableUrl = isDev ? `/?id=${messageIscnId}` : `/${messageIscnId}`;
 
-    await router.push(shareableUrl, undefined, { shallow: true });
+    await router.push(`/tags?name=${tagName}`, shareableUrl, { shallow: true });
 
     setSelectedMessage(message);
+  };
+
+  const handleOnCloseModal = async () => {
+    const currentUrl = isDev ? `/tags?name=${tagName}` : `/${tagName}`;
+
+    setSelectedMessage(null);
+
+    await router.push(`/tags?name=${tagName}`, currentUrl, { shallow: true });
   };
 
   const handleOnSubmit = async (data: MessageFormType, image?: string | null) => {

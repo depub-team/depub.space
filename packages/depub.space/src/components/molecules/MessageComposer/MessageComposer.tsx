@@ -19,7 +19,7 @@ import {
   Tooltip,
 } from 'native-base';
 import Debug from 'debug';
-import { getAbbrNickname, pickImageFromDevice } from '../../../utils';
+import { getAbbrNickname, getLikecoinAddressByProfile, pickImageFromDevice } from '../../../utils';
 import { MAX_CHAR_LIMIT } from '../../../contants';
 import { ImagePreview } from './ImagePreview';
 import { DesmosProfile } from '../../../interfaces';
@@ -60,6 +60,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   const displayName = profile ? profile.nickname || profile.address : address;
   const abbrNickname = getAbbrNickname(displayName);
   const profilePic = profile?.profilePic;
+  const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
 
   const pickImage = async () => {
     debug('pickImage()');
@@ -106,9 +107,24 @@ export const MessageComposer: FC<MessageComposerProps> = ({
       space={4}
     >
       <Box alignItems="center" flex={{ base: '0 0 48px', md: 'unset' }}>
-        <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
-          {abbrNickname}
-        </Avatar>
+        <Tooltip
+          label={
+            likecoinAddress
+              ? 'This profile has linked to Likecoin'
+              : 'This profile has not linked to Likecoin'
+          }
+          openDelay={250}
+        >
+          <Avatar
+            bg="gray.200"
+            borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
+            borderWidth={2}
+            size="md"
+            source={profilePic ? { uri: profilePic } : undefined}
+          >
+            {abbrNickname}
+          </Avatar>
+        </Tooltip>
       </Box>
       <VStack flex={1} minHeight="180px" space={4}>
         <VStack space={4}>
