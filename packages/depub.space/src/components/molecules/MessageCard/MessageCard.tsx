@@ -2,6 +2,7 @@ import React, { ComponentProps, FC, useEffect, useState } from 'react';
 import { getLinkPreview } from 'link-preview-js';
 import {
   Image,
+  Box,
   Link,
   Text,
   Skeleton,
@@ -20,7 +21,7 @@ import dayjs from 'dayjs';
 import Debug from 'debug';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Platform } from 'react-native';
-import { Fontisto, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
 import {
@@ -54,6 +55,7 @@ export const MessageCard: FC<MessageCardProps> = ({
 }) => {
   const { id, from, date, profile, images = [], message = '' } = messageItem;
   const iscnId = id.replace(new RegExp(`^${ISCN_SCHEME}/`), '');
+  const [copyIconState, setCopyIconState] = useState<'copied' | 'normal'>('normal');
   const shareableUrl = isDev ? `${APP_URL}/?id=${iscnId}` : `${APP_URL}/${iscnId}`;
   const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
   const dayFrom = dayjs(date).fromNow();
@@ -68,9 +70,16 @@ export const MessageCard: FC<MessageCardProps> = ({
   const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>([]);
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
+  const isCopied = copyIconState === 'copied';
 
   const copyUrl = async () => {
     await onCopy(shareableUrl);
+
+    setCopyIconState('copied');
+
+    setTimeout(() => {
+      setCopyIconState('normal');
+    }, 2000);
 
     toast.show({
       title: 'The URL has been copied to clipboard!',
@@ -243,38 +252,59 @@ export const MessageCard: FC<MessageCardProps> = ({
           </VStack>
 
           <HStack alignItems="center" justifyContent="space-between" space={4}>
-            <Skeleton.Text isLoaded={!isLoading} lines={1}>
-              <Text color="gray.500" fontSize="xs">
-                {dayFrom}
-              </Text>
-            </Skeleton.Text>
+            <Box>
+              <Skeleton.Text isLoaded={!isLoading} lines={1}>
+                <Text color="gray.400" fontSize="xs">
+                  {dayFrom}
+                </Text>
+              </Skeleton.Text>
+            </Box>
 
             <HStack>
-              <Tooltip label="Copy URL" openDelay={250}>
-                <IconButton
-                  _icon={{ color: 'gray.500', size: 'sm' }}
-                  icon={<Icon as={Fontisto} name="link" />}
-                  onPress={copyUrl}
-                />
-              </Tooltip>
-
-              <Tooltip label="Check ISCN record" openDelay={250}>
-                <Link href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
+              <Skeleton isLoaded={!isLoading} size="8">
+                <Tooltip
+                  closeOnClick={false}
+                  label={isCopied ? 'Copied!' : 'Copy URL'}
+                  openDelay={250}
+                >
                   <IconButton
-                    _icon={{ color: 'gray.500', size: 'sm' }}
-                    icon={<Icon as={MaterialIcons} name="verified" />}
-                  />
-                </Link>
-              </Tooltip>
-
-              {onShare ? (
-                <Tooltip label="Share post" openDelay={250}>
-                  <IconButton
-                    _icon={{ color: 'gray.500', size: 'sm' }}
-                    icon={<Icon as={Ionicons} name="share-social" />}
-                    onPress={() => onShare(messageItem)}
+                    _icon={{
+                      color: isCopied ? 'primary.500' : 'gray.400',
+                      size: 'sm',
+                    }}
+                    _pressed={{
+                      bg: 'transparent',
+                    }}
+                    icon={
+                      <Icon
+                        as={MaterialCommunityIcons}
+                        name={isCopied ? 'link-variant-plus' : 'link-variant'}
+                      />
+                    }
+                    onPress={copyUrl}
                   />
                 </Tooltip>
+              </Skeleton>
+              <Skeleton isLoaded={!isLoading} size="8">
+                <Tooltip label="Check ISCN record" openDelay={250}>
+                  <Link href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
+                    <IconButton
+                      _icon={{ color: 'gray.400', size: 'sm' }}
+                      icon={<Icon as={MaterialIcons} name="verified" />}
+                    />
+                  </Link>
+                </Tooltip>
+              </Skeleton>
+              {onShare ? (
+                <Skeleton isLoaded={!isLoading} size="8">
+                  <Tooltip label="Share post" openDelay={250}>
+                    <IconButton
+                      _icon={{ color: 'gray.400', size: 'sm' }}
+                      icon={<Icon as={Ionicons} name="share-social" />}
+                      onPress={() => onShare(messageItem)}
+                    />
+                  </Tooltip>
+                </Skeleton>
               ) : null}
             </HStack>
           </HStack>

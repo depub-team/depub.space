@@ -54,13 +54,13 @@ export const theme = extendTheme({
       defaultProps: {
         size: 'md',
         _hover: {
-          bg: 'primary.300',
+          bg: 'primary.500',
           _text: {
             color: 'white',
           },
         },
         _pressed: {
-          bg: 'primary.300',
+          bg: 'primary.100',
           _text: {
             color: 'white',
           },
@@ -93,7 +93,7 @@ export const theme = extendTheme({
           borderRadius: 'full',
           color: 'white',
           name: 'close',
-          size: 'sm',
+          size: 'xs',
         },
         _hover: {
           bg: 'gray.900:alpha.100',
