@@ -12,7 +12,7 @@ export const ImageModal: FC<ImageModalProps> = ({ source, aspectRatio = 1, ...pr
       <Modal.CloseButton />
       <Modal.Body p={0}>
         <AspectRatio ratio={aspectRatio}>
-          <Image flex={1} size="full" source={source} />
+          <Image alt="photo" flex={1} size="full" source={source} />
         </AspectRatio>
       </Modal.Body>
     </Modal.Content>

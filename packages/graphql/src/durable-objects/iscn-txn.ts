@@ -96,6 +96,29 @@ export class IscnTxn implements DurableObject {
   }
 
   public async getTransaction(request: Request) {
+    const url = new URL(request.url.replace(/^\//, ''));
+    const iscnId = decodeURIComponent(url.pathname.split('/').pop() || '');
+
+    if (!iscnId) {
+      return new Response(undefined, { status: 404 });
+    }
+
+    const recordKeys = await this.state.storage.get<RecordKeys>(`${RECORD_KEY_KEY}:${iscnId}`);
+
+    if (!recordKeys) {
+      return new Response(undefined, { status: 404 });
+    }
+
+    const transaction = await this.state.storage.get<ISCNRecord>(recordKeys?.transactionKey);
+
+    if (!transaction) {
+      return new Response(undefined, { status: 404 });
+    }
+
+    return new Response(JSON.stringify(transaction));
+  }
+
+  public async getTransactions(request: Request) {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '12', 10);
     const from = url.searchParams.get('from');
@@ -198,10 +221,16 @@ export class IscnTxn implements DurableObject {
       }
 
       if (request.method === 'GET') {
+        return this.getTransactions(request);
+      }
+    }
+
+    if (/^\/transactions\/.+/.test(url.pathname)) {
+      if (request.method === 'GET') {
         return this.getTransaction(request);
       }
     }
 
-    return new Response(null, { status: 403 });
+    return new Response(undefined, { status: 403 });
   }
 }
