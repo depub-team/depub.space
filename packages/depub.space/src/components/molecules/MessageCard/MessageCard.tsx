@@ -11,7 +11,6 @@ import {
   AspectRatio,
   Pressable,
   Tooltip,
-  Box,
   useClipboard,
   useToast,
   Icon,
@@ -140,13 +139,24 @@ const MessageCardComponent: FC<MessageCardProps> = ({
       >
         <Skeleton isLoaded={!isLoading} rounded="full" size="12">
           <Link href={isDev ? `/users/?account=${handle}` : `/${handle}`}>
-            <Avatar
-              bg="gray.200"
-              size="md"
-              source={profile?.profilePic ? { uri: profile.profilePic } : undefined}
+            <Tooltip
+              label={
+                likecoinAddress
+                  ? 'This profile has linked to Likecoin'
+                  : 'This profile has not linked to Likecoin'
+              }
+              openDelay={250}
             >
-              {abbrNickname}
-            </Avatar>
+              <Avatar
+                bg="gray.200"
+                borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
+                borderWidth={2}
+                size="md"
+                source={profile?.profilePic ? { uri: profile.profilePic } : undefined}
+              >
+                {abbrNickname}
+              </Avatar>
+            </Tooltip>
           </Link>
         </Skeleton>
 
@@ -201,12 +211,6 @@ const MessageCardComponent: FC<MessageCardProps> = ({
                 </HStack>
               </Skeleton.Text>
             </VStack>
-
-            <Skeleton.Text isLoaded={!isLoading} lines={1}>
-              <Text color="gray.500" fontSize="xs" ml={8}>
-                {dayFrom}
-              </Text>
-            </Skeleton.Text>
           </HStack>
 
           <Skeleton.Text isLoaded={!isLoading} lines={2} space={2}>
@@ -247,7 +251,12 @@ const MessageCardComponent: FC<MessageCardProps> = ({
           </VStack>
 
           <HStack justifyContent="space-between" space={4}>
-            <Box /> {/* empty box for spacing */}
+            <Skeleton.Text isLoaded={!isLoading} lines={1}>
+              <Text color="gray.500" fontSize="xs">
+                {dayFrom}
+              </Text>
+            </Skeleton.Text>
+
             <HStack space={2}>
               <Skeleton isLoaded={!isLoading} size="8">
                 <Tooltip label="Copy URL" openDelay={250}>
