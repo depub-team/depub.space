@@ -148,6 +148,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
               onPress={pickImage}
             />
           </Tooltip>
+
           <Text color="gray.500" fontSize="xs" ml="auto" textAlign="right">
             {(messageText || '').length} / {MAX_CHAR_LIMIT}
           </Text>
