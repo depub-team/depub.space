@@ -12,7 +12,7 @@ export const MessageModal: FC<MessageModalProps> = ({ message, ...props }) => (
   <Modal {...props}>
     <Modal.Content maxH="100%" maxW={MAX_WIDTH} w="100%">
       <Modal.CloseButton />
-      <Modal.Body pr={8} pt={8}>
+      <Modal.Body pt={8}>
         <MessageCard message={message} />
       </Modal.Body>
     </Modal.Content>
