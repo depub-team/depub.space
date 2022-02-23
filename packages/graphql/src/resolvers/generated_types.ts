@@ -53,11 +53,17 @@ export type Profile = {
 
 export type Query = {
   __typename?: 'Query';
+  getMessage?: Maybe<Message>;
   getUser?: Maybe<User>;
   getUserProfile?: Maybe<Profile>;
   messages?: Maybe<Array<Maybe<Message>>>;
   messagesByMentioned?: Maybe<Array<Maybe<Message>>>;
   messagesByTag?: Maybe<Array<Maybe<Message>>>;
+};
+
+
+export type QueryGetMessageArgs = {
+  iscnId: Scalars['String'];
 };
 
 
@@ -237,6 +243,7 @@ export type ProfileResolvers<ContextType = Context, ParentType extends Resolvers
 };
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  getMessage?: Resolver<Maybe<ResolversTypes['Message']>, ParentType, ContextType, RequireFields<QueryGetMessageArgs, 'iscnId'>>;
   getUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryGetUserArgs, 'dtagOrAddress'>>;
   getUserProfile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType, RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>>;
   messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<QueryMessagesArgs>>;

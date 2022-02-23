@@ -1,6 +1,7 @@
 import React, { memo, useEffect, useState } from 'react';
 import Debug from 'debug';
 import { Divider, useToast, VStack } from 'native-base';
+import { useRouter } from 'next/router';
 import { DesmosProfile, Message } from '../interfaces';
 import { AppStateError, useAppState, useSigningCosmWasmClient } from '../hooks';
 import {
@@ -9,15 +10,23 @@ import {
   MessageComposer,
   MessageFormType,
   ConnectWallet,
+  MessageModal,
 } from '../components';
 import { MAX_WIDTH } from '../contants';
 import { waitAsync, dataUrlToFile } from '../utils';
 
 const debug = Debug('web:<IndexPage />');
+const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
+const isDev = process.env.NODE_ENV !== 'production';
 
 export default function IndexPage() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const router = useRouter();
+  const rewriteRouteObject =
+    typeof window !== 'undefined' ? ((window as any) || {}).rewriteRoute || {} : {};
+  const iscnId = isDev ? router.query.id?.toString() : rewriteRouteObject.account; // rewriteRoute object is injecting by Cloudflare worker
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const {
     error: connectError,
@@ -27,8 +36,14 @@ export default function IndexPage() {
     walletAddress,
     offlineSigner,
   } = useSigningCosmWasmClient();
-  const { isLoading, fetchMessages, postMessage, fetchUser } = useAppState();
+  const { isLoading, fetchMessage, fetchMessages, postMessage, fetchUser } = useAppState();
   const toast = useToast();
+
+  const handleOnCloseModal = async () => {
+    setSelectedMessage(null);
+
+    await router.push('/', undefined, { shallow: true });
+  };
 
   const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
     debug('fetchNewMessages()');
@@ -94,6 +109,19 @@ export default function IndexPage() {
   };
 
   useEffect(() => {
+    if (iscnId) {
+      void (async () => {
+        debug('iscnId: %s', iscnId);
+
+        const message = await fetchMessage(`${ISCN_SCHEME}/${iscnId}`);
+
+        setSelectedMessage(message);
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [iscnId]);
+
+  useEffect(() => {
     debug('useEffect()');
 
     void fetchNewMessages();
@@ -152,15 +180,21 @@ export default function IndexPage() {
   ));
 
   return (
-    <Layout>
-      <MessageList
-        isLoading={isLoading}
-        isLoadingMore={isLoadingMore}
-        ItemSeparatorComponent={ListItemSeparatorComponent}
-        ListHeaderComponent={ListHeaderComponent}
-        messages={messages}
-        onFetchMessages={fetchNewMessages}
-      />
-    </Layout>
+    <>
+      <Layout>
+        <MessageList
+          isLoading={isLoading}
+          isLoadingMore={isLoadingMore}
+          ItemSeparatorComponent={ListItemSeparatorComponent}
+          ListHeaderComponent={ListHeaderComponent}
+          messages={messages}
+          onFetchMessages={fetchNewMessages}
+        />
+      </Layout>
+
+      {selectedMessage && (
+        <MessageModal isOpen message={selectedMessage} onClose={handleOnCloseModal} />
+      )}
+    </>
   );
 }
