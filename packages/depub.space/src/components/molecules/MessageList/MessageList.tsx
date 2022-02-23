@@ -14,6 +14,7 @@ export interface MessageListProps extends Omit<IFlatListProps<Message>, 'data' |
   messages: Message[];
   isLoading?: boolean;
   isLoadingMore?: boolean;
+  onShare?: (message: Message) => void;
   onFetchMessages?: (previousId?: string) => Promise<void>;
 }
 
@@ -29,6 +30,7 @@ export const MessageList: FC<MessageListProps> = ({
   isLoading,
   isLoadingMore,
   messages,
+  onShare,
   ...props
 }) => {
   const [refreshing, setRefreshing] = React.useState(false);
@@ -89,6 +91,7 @@ export const MessageList: FC<MessageListProps> = ({
           maxW={MAX_WIDTH}
           message={ctx.item}
           mx="auto"
+          onShare={onShare}
         />
       )}
       onEndReached={handleOnEndReached}
