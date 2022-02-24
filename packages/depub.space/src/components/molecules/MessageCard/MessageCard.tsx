@@ -261,7 +261,7 @@ export const MessageCard: FC<MessageCardProps> = ({
               </Skeleton.Text>
             </Box>
 
-            <HStack>
+            <HStack alignItems="center" space={1}>
               <Skeleton isLoaded={isLoaded} size="8">
                 <Tooltip label="Check ISCN record" openDelay={250}>
                   <Link href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
