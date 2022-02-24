@@ -21,7 +21,7 @@ import dayjs from 'dayjs';
 import Debug from 'debug';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Platform } from 'react-native';
-import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
 import {
@@ -71,6 +71,7 @@ export const MessageCard: FC<MessageCardProps> = ({
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
   const isCopied = copyIconState === 'copied';
+  const isLoaded = !isLoading;
 
   const copyUrl = async () => {
     await onCopy(shareableUrl);
@@ -138,7 +139,7 @@ export const MessageCard: FC<MessageCardProps> = ({
   return (
     <>
       <HStack flex={1} minHeight="80px" my={2} px={4} space={4} w="100%" {...props}>
-        <Skeleton isLoaded={!isLoading} rounded="full" size="12">
+        <Skeleton isLoaded={isLoaded} rounded="full" size="12">
           <Link href={isDev ? `/users/?account=${handle}` : `/${handle}`}>
             <Tooltip
               label={
@@ -164,7 +165,7 @@ export const MessageCard: FC<MessageCardProps> = ({
         <VStack flex={1} space={3}>
           <HStack alignItems="center" justifyContent="space-between">
             <VStack>
-              <Skeleton.Text isLoaded={!isLoading} lines={1}>
+              <Skeleton.Text isLoaded={isLoaded} lines={1}>
                 <Link href={isDev ? `/users/?account=${handle}` : `/${handle}`}>
                   <Text color="primary.500" fontSize="md" fontWeight="bold">
                     {displayName}
@@ -172,7 +173,7 @@ export const MessageCard: FC<MessageCardProps> = ({
                 </Link>
               </Skeleton.Text>
 
-              <Skeleton.Text isLoaded={!isLoading} lines={1}>
+              <Skeleton.Text isLoaded={isLoaded} lines={1}>
                 <HStack space={1}>
                   {profile?.dtag ? (
                     <Tooltip label="Click to copy the nickname" openDelay={250}>
@@ -214,7 +215,7 @@ export const MessageCard: FC<MessageCardProps> = ({
             </VStack>
           </HStack>
 
-          <Skeleton.Text isLoaded={!isLoading} lines={2} space={2}>
+          <Skeleton.Text isLoaded={isLoaded} lines={2} space={2}>
             <Text fontFamily="monospace" fontSize={{ base: 'md', md: 'lg' }} whiteSpace="pre-wrap">
               {Platform.OS === 'web' ? (
                 // eslint-disable-next-line react/no-danger
@@ -253,7 +254,7 @@ export const MessageCard: FC<MessageCardProps> = ({
 
           <HStack alignItems="center" justifyContent="space-between" space={4}>
             <Box>
-              <Skeleton.Text isLoaded={!isLoading} lines={1}>
+              <Skeleton.Text isLoaded={isLoaded} lines={1}>
                 <Text color="gray.400" fontSize="xs">
                   {dayFrom}
                 </Text>
@@ -261,7 +262,23 @@ export const MessageCard: FC<MessageCardProps> = ({
             </Box>
 
             <HStack>
-              <Skeleton isLoaded={!isLoading} size="8">
+              <Skeleton isLoaded={isLoaded} size="8">
+                <Tooltip label="Check ISCN record" openDelay={250}>
+                  <Link href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
+                    <Image
+                      h={26}
+                      source={{
+                        uri: isDev
+                          ? 'https://static.like.co/badge/iscn/iscn:/likecoin-chain/0RIALnZFq_MY485OoNwhQqpQMdyJw6_31t4foHCFye8/1.svg?dark=0&responsive=0&width=120'
+                          : `https://static.like.co/badge/iscn/${id}.svg?dark=0&responsive=0&width=120`,
+                      }}
+                      w={120}
+                    />
+                  </Link>
+                </Tooltip>
+              </Skeleton>
+
+              <Skeleton isLoaded={isLoaded} size="8">
                 <Tooltip
                   closeOnClick={false}
                   label={isCopied ? 'Copied!' : 'Copy URL'}
@@ -285,18 +302,9 @@ export const MessageCard: FC<MessageCardProps> = ({
                   />
                 </Tooltip>
               </Skeleton>
-              <Skeleton isLoaded={!isLoading} size="8">
-                <Tooltip label="Check ISCN record" openDelay={250}>
-                  <Link href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
-                    <IconButton
-                      _icon={{ color: 'gray.400', size: 'sm' }}
-                      icon={<Icon as={MaterialIcons} name="verified" />}
-                    />
-                  </Link>
-                </Tooltip>
-              </Skeleton>
+
               {onShare ? (
-                <Skeleton isLoaded={!isLoading} size="8">
+                <Skeleton isLoaded={isLoaded} size="8">
                   <Tooltip label="Share post" openDelay={250}>
                     <IconButton
                       _icon={{ color: 'gray.400', size: 'sm' }}
