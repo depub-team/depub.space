@@ -26,7 +26,7 @@ export default function IndexPage() {
   const router = useRouter();
   const rewriteRouteObject =
     typeof window !== 'undefined' ? ((window as any) || {}).rewriteRoute || {} : {};
-  const iscnId = isDev ? router.query.id?.toString() : rewriteRouteObject.account; // rewriteRoute object is injecting by Cloudflare worker
+  const iscnId = isDev ? router.query.id?.toString() : rewriteRouteObject.id; // rewriteRoute object is injecting by Cloudflare worker
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const {
     error: connectError,
