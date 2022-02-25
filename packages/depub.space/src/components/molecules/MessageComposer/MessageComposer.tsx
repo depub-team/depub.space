@@ -57,7 +57,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     useForm<MessageFormType>(validationOpt);
   const { errors } = formState;
   const [messageText] = watch(['message']);
-  const displayName = profile ? profile.nickname || profile.address : address;
+  const displayName = profile?.nickname || profile?.dtag || address;
   const abbrNickname = getAbbrNickname(displayName);
   const profilePic = profile?.profilePic;
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
