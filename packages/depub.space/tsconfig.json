@@ -15,8 +15,7 @@
     "incremental": true
   },
   "include": [
-    "src",
-    "types",
+    "src/**/*",
     "next.config.js",
     ".eslintrc.js",
     "babel.config.js",
