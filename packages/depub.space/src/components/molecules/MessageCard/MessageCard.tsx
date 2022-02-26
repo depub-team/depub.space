@@ -269,7 +269,7 @@ export const MessageCard: FC<MessageCardProps> = ({
                       h={26}
                       source={{
                         uri: isDev
-                          ? 'https://static.like.co/badge/iscn/iscn:/likecoin-chain/0RIALnZFq_MY485OoNwhQqpQMdyJw6_31t4foHCFye8/1.svg?dark=0&responsive=0&width=120'
+                          ? `https://static.like.co/badge/iscn/testnet/${id}.svg?dark=0&responsive=0&width=120`
                           : `https://static.like.co/badge/iscn/${id}.svg?dark=0&responsive=0&width=120`,
                       }}
                       w={120}
