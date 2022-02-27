@@ -26,7 +26,6 @@ export const TipsModal: FC<TipsModalProps> = ({
   recipientAddress,
   nickname,
   onSubmit,
-  onClose,
   ...props
 }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +49,7 @@ export const TipsModal: FC<TipsModalProps> = ({
 
     setIsLoading(false);
 
-    onClose();
+    props.onClose();
   };
 
   return (
