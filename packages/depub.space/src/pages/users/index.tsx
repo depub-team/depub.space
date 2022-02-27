@@ -2,6 +2,7 @@ import React, { memo, useEffect, useState } from 'react';
 import Debug from 'debug';
 import {
   Link,
+  Button,
   Box,
   IconButton,
   HStack,
@@ -9,17 +10,23 @@ import {
   Divider,
   VStack,
   Text,
+  Tooltip,
+  Image,
   Heading,
   Avatar,
 } from 'native-base';
 import { Platform } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'next/router';
-import { Layout, MessageList, MessageModal } from '../../components';
+import { TipsModal, Layout, MessageList, MessageModal, ConnectModal } from '../../components';
 import { Message, DesmosProfile } from '../../interfaces';
 import { useAppState, useSigningCosmWasmClient } from '../../hooks';
-import { getAbbrNickname, getLikecoinAddressByProfile } from '../../utils';
-import { getShortenAddress } from '../../utils/getShortenAddress';
+import {
+  sendLIKE,
+  getShortenAddress,
+  getAbbrNickname,
+  getLikecoinAddressByProfile,
+} from '../../utils';
 import { MAX_WIDTH } from '../../contants';
 
 const debug = Debug('web:<UserPage />');
@@ -33,11 +40,20 @@ export default function IndexPage() {
     typeof window !== 'undefined' ? ((window as any) || {}).rewriteRoute || {} : {};
   const account = isDev ? router.query.account?.toString() : rewriteRouteObject.account; // rewriteRoute object is injecting by Cloudflare worker
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isTipsModalOpen, setIsTipsModalOpen] = useState(false);
+  const [isConnectModalOpen, setIsConnectModaOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
   const [messages, setMessages] = useState<Message[]>([]);
-  const { error: connectError, walletAddress } = useSigningCosmWasmClient();
+  const {
+    error: connectError,
+    isLoading: isConnectLoading,
+    connectKeplr,
+    connectWalletConnect,
+    walletAddress,
+    offlineSigner,
+  } = useSigningCosmWasmClient();
   const { isLoading, fetchMessagesByOwner } = useAppState();
   const toast = useToast();
   const profilePic = profile?.profilePic;
@@ -48,6 +64,25 @@ export default function IndexPage() {
   const dtag = profile?.dtag;
   const likecoinWalletAddress = profile && getLikecoinAddressByProfile(profile);
   const showMessagesList = accountIsWalletAddress || likecoinWalletAddress || !isReady;
+  const isPageOwner = likecoinWalletAddress === walletAddress;
+
+  const handleOnTips = async (amount: number) => {
+    if (walletAddress && likecoinWalletAddress && offlineSigner) {
+      await sendLIKE(
+        walletAddress,
+        likecoinWalletAddress,
+        amount.toFixed(2),
+        offlineSigner,
+        'Send tips on depub.SPACE'
+      );
+
+      toast.show({
+        title: 'Sent tips successfully!',
+        status: 'success',
+        placement: 'top',
+      });
+    }
+  };
 
   const fetchNewMessages = async (previousId?: string) => {
     debug('fetchNewMessages()');
@@ -115,6 +150,9 @@ export default function IndexPage() {
     if (connectError) {
       debug('useEffect() -> connectError: %s', connectError);
 
+      setIsConnectModaOpen(false);
+      setIsTipsModalOpen(false);
+
       toast.show({
         title: connectError,
       });
@@ -123,7 +161,7 @@ export default function IndexPage() {
   }, [connectError]);
 
   const ListHeaderComponent = memo(() => (
-    <VStack h="100%" maxW="640px" mx="auto" my={4} px={4} space={8} w="100%">
+    <VStack h="100%" maxW="640px" mx="auto" my={4} px={4} w="100%">
       <HStack alignItems="center" flex={1} justifyContent="center" space={2}>
         <Link href="/">
           <IconButton
@@ -134,7 +172,13 @@ export default function IndexPage() {
           />
         </Link>
         <VStack alignItems="center" flex={1} justifyContent="center" space={4}>
-          <Avatar bg="gray.200" size="md" source={profilePic ? { uri: profilePic } : undefined}>
+          <Avatar
+            bg="gray.200"
+            borderColor={likecoinWalletAddress ? 'primary.500' : 'gray.200'}
+            borderWidth={2}
+            size="md"
+            source={profilePic ? { uri: profilePic } : undefined}
+          >
             {abbrNickname}
           </Avatar>
           <VStack alignItems="center" flex={1} justifyContent="center" space={1}>
@@ -148,9 +192,28 @@ export default function IndexPage() {
             </Box>
             {bio ? <Text fontSize="sm">{bio}</Text> : null}
           </VStack>
+          <HStack>
+            {likecoinWalletAddress && !isPageOwner && (
+              <Tooltip label="Send tips">
+                <Button
+                  isLoading={isConnectLoading}
+                  isLoadingText="Connecting to wallet..."
+                  leftIcon={
+                    <Image alt="tips" h={8} source={{ uri: '/images/likecoin-like.svg' }} w={8} />
+                  }
+                  variant="unstyled"
+                  onPress={() => {
+                    if (walletAddress) {
+                      setIsTipsModalOpen(true);
+                    } else {
+                      setIsConnectModaOpen(true);
+                    }
+                  }}
+                />
+              </Tooltip>
+            )}
+          </HStack>
         </VStack>
-
-        <Box w="48px" />
       </HStack>
 
       <Divider mb={8} />
@@ -189,9 +252,26 @@ export default function IndexPage() {
           </VStack>
         )}
       </Layout>
-
       {selectedMessage && (
         <MessageModal isOpen message={selectedMessage} onClose={handleOnCloseModal} />
+      )}
+      {likecoinWalletAddress && (
+        <TipsModal
+          isOpen={isTipsModalOpen}
+          nickname={nickname}
+          recipientAddress={account}
+          senderAddress={walletAddress}
+          onClose={() => setIsTipsModalOpen(false)}
+          onSubmit={handleOnTips}
+        />
+      )}
+      {walletAddress && (
+        <ConnectModal
+          isOpen={isConnectModalOpen}
+          onClose={() => setIsConnectModaOpen(false)}
+          onPressKeplr={connectKeplr}
+          onPressWalletConnect={connectWalletConnect}
+        />
       )}
     </>
   ) : null;

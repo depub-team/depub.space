@@ -40,7 +40,12 @@ const ConnectButton: FC<ConnectButtonProps> = ({ icon, title, description, ...pr
     </Text>
   </Button>
 );
-const ConnectModal: FC<ConnectModalProps> = ({ onPressWalletConnect, onPressKeplr, ...props }) => (
+
+export const ConnectModal: FC<ConnectModalProps> = ({
+  onPressWalletConnect,
+  onPressKeplr,
+  ...props
+}) => (
   <Modal {...props}>
     <Modal.Content maxWidth="400px">
       <Modal.CloseButton />
