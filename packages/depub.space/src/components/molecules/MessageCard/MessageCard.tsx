@@ -266,6 +266,7 @@ export const MessageCard: FC<MessageCardProps> = ({
                 <Tooltip label="Check ISCN record" openDelay={250}>
                   <Link href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
                     <Image
+                      alt="ISCN badge"
                       h={26}
                       source={{
                         uri: isDev
