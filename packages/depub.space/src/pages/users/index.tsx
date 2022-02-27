@@ -68,19 +68,29 @@ export default function IndexPage() {
 
   const handleOnTips = async (amount: number) => {
     if (walletAddress && likecoinWalletAddress && offlineSigner) {
-      await sendLIKE(
-        walletAddress,
-        likecoinWalletAddress,
-        amount.toFixed(2),
-        offlineSigner,
-        'Send tips on depub.SPACE'
-      );
+      try {
+        await sendLIKE(
+          walletAddress,
+          likecoinWalletAddress,
+          amount.toFixed(2),
+          offlineSigner,
+          'Send tips on depub.SPACE'
+        );
 
-      toast.show({
-        title: 'Sent tips successfully!',
-        status: 'success',
-        placement: 'top',
-      });
+        toast.show({
+          title: 'Sent tips successfully!',
+          status: 'success',
+          placement: 'top',
+        });
+      } catch (ex) {
+        debug('handleOnTips() -> error: %O', ex);
+
+        toast.show({
+          title: 'Failed to send, please try again later',
+          status: 'error',
+          placement: 'top',
+        });
+      }
     }
   };
 
@@ -155,6 +165,8 @@ export default function IndexPage() {
 
       toast.show({
         title: connectError,
+        status: 'error',
+        placement: 'top',
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -259,7 +271,7 @@ export default function IndexPage() {
         <TipsModal
           isOpen={isTipsModalOpen}
           nickname={nickname}
-          recipientAddress={account}
+          recipientAddress={likecoinWalletAddress}
           senderAddress={walletAddress}
           onClose={() => setIsTipsModalOpen(false)}
           onSubmit={handleOnTips}

@@ -54,7 +54,7 @@ export const TipsModal: FC<TipsModalProps> = ({
 
   return (
     <Modal {...props}>
-      <Modal.Content maxH="100%" maxW={380} w="100%">
+      <Modal.Content maxH="100%" maxW={400} w="100%">
         <Modal.CloseButton />
         <Modal.Body p={8}>
           <VStack alignItems="center" justifyContent="center" space={4}>
@@ -64,7 +64,7 @@ export const TipsModal: FC<TipsModalProps> = ({
                 {nickname}
               </Text>
             </Text>
-            <Text color="gray.500" fontSize="sm">
+            <Text color="gray.500" fontSize="xs">
               {recipientAddress}
             </Text>
 
