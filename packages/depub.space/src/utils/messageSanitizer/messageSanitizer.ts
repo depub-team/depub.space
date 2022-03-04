@@ -1,5 +1,3 @@
-const isDev = process.env.NODE_ENV !== 'production';
-
 export function removeHtmlTags(html: string) {
   return html.replace(/<[^>]*>/g, '');
 }
@@ -24,7 +22,7 @@ export const replaceTagToAnchor = (content: string): string => {
 
   return content.replace(hashTagRegex, hashTag => {
     const hashtag = hashTag.replace(/^#/, '');
-    const hashLink = isDev ? `/tags?name=${hashtag}` : `/hashtag/${hashtag}`;
+    const hashLink = `/hashtag/${hashtag}`;
 
     return `<a href="${hashLink}">${hashTag}</a>`;
   });
@@ -35,7 +33,7 @@ export const replaceHandleToAnchor = (content: string): string => {
 
   return content.replace(handleRegex, handleText => {
     const handle = handleText.replace(/^@/, '');
-    const hashLink = isDev ? `/users/?account=${handle}` : `/${handle}`;
+    const hashLink = `/user/${handle}`;
 
     // XXX: some url contains @, would double wrapping <a />
     if (content[content.indexOf(handleText) - 1] === '/') {

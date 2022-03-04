@@ -1,51 +1,56 @@
 import React, { FC, useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import * as Yup from 'yup';
 import { useForm, Controller } from 'react-hook-form';
 import {
   Text,
-  Box,
   Button,
   FormControl,
   Stack,
   HStack,
   TextArea,
   VStack,
+  IStackProps,
   WarningOutlineIcon,
-  Avatar,
   IconButton,
   Icon,
   Tooltip,
+  Collapse,
 } from 'native-base';
 import Debug from 'debug';
-import { getAbbrNickname, getLikecoinAddressByProfile, pickImageFromDevice } from '../../../utils';
-import { MAX_CHAR_LIMIT } from '../../../contants';
+import { pickImageFromDevice } from '../../../utils';
+import { MAX_CHAR_LIMIT } from '../../../constants';
 import { ImagePreview } from './ImagePreview';
-import { DesmosProfile } from '../../../interfaces';
 
 const debug = Debug('web:<MessageComposer />');
+const LINE_HEIGHT = 24;
+const TEXTAREA_PADDING = 19;
+const AnimatedTextArea = Animated.createAnimatedComponent(TextArea);
 
 export interface MessageFormType {
   message: string;
 }
 
-interface MessageComposerProps {
+export interface MessageComposerProps extends IStackProps {
   isLoading?: boolean;
+  collapsed?: boolean;
   defaultValue?: string;
-  address: string;
-  profile: DesmosProfile | null;
-  onSubmit: (data: MessageFormType, image?: string | null) => Promise<void>;
+  onSubmit?: (data: MessageFormType, image?: string | null) => Promise<void> | void;
 }
 export const MessageComposer: FC<MessageComposerProps> = ({
-  address,
-  profile,
   onSubmit,
   defaultValue,
   isLoading,
+  collapsed,
+  ...props
 }) => {
   const [image, setImage] = useState<string | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(collapsed);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isFocusing, setIsFocusing] = useState(false);
+  const [totalLines, setTotalLines] = useState(4);
   const formSchema = Yup.object().shape({
     message: Yup.string()
       .required('Message is required')
@@ -57,10 +62,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     useForm<MessageFormType>(validationOpt);
   const { errors } = formState;
   const [messageText] = watch(['message']);
-  const displayName = profile?.nickname || profile?.dtag || address;
-  const abbrNickname = getAbbrNickname(displayName);
-  const profilePic = profile?.profilePic;
-  const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
+  const height = useSharedValue(4);
 
   const pickImage = async () => {
     debug('pickImage()');
@@ -80,11 +82,33 @@ export const MessageComposer: FC<MessageComposerProps> = ({
 
   const handleOnSubmit = async () => {
     await handleSubmit(async data => {
-      await onSubmit(data, image);
+      if (onSubmit) await onSubmit(data, image);
 
       setIsSubmitted(true);
     })();
   };
+
+  const handleOnFocus = () => {
+    setIsCollapsed(false);
+    setIsFocusing(true);
+  };
+
+  const handleOnBlur = () => {
+    setIsCollapsed(collapsed);
+    setIsFocusing(false);
+  };
+
+  const textAreaStyle = useAnimatedStyle(() => ({
+    height: withSpring(height.value * LINE_HEIGHT + TEXTAREA_PADDING, {}, () => {
+      setTotalLines(height.value);
+    }),
+  }));
+
+  // trigger animation when state changed
+  useEffect(() => {
+    height.value = isCollapsed ? 1 : 4;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCollapsed]);
 
   useEffect(() => {
     // reset state
@@ -97,82 +121,89 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   }, [isSubmitted]);
 
   return (
-    <Stack
-      direction={{
-        base: 'column',
-        md: 'row',
+    <VStack
+      _dark={{
+        bg: isFocusing ? '#121212' : undefined,
       }}
-      flex={1}
-      mt={4}
-      space={4}
+      _light={{
+        bg: isFocusing ? '#fff' : undefined,
+      }}
+      borderRadius="lg"
+      mt={isCollapsed ? 0 : 4}
+      p={4}
+      shadow={isFocusing ? 'lg' : 'none'}
+      space={isCollapsed ? 0 : 4}
+      {...props}
     >
-      <Box alignItems="center" flex={{ base: '0 0 48px', md: 'unset' }}>
-        <Tooltip
-          label={
-            likecoinAddress
-              ? 'This profile has linked to Likecoin'
-              : 'This profile has not linked to Likecoin'
-          }
-          openDelay={250}
-        >
-          <Avatar
-            bg="gray.200"
-            borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
-            borderWidth={2}
-            size="md"
-            source={profilePic ? { uri: profilePic } : undefined}
-          >
-            {abbrNickname}
-          </Avatar>
-        </Tooltip>
-      </Box>
-      <VStack flex={1} minHeight="180px" space={4}>
-        <VStack space={4}>
-          <FormControl isInvalid={'message' in errors} isRequired>
-            <Stack>
-              <Controller
-                control={control}
-                defaultValue={defaultValue}
-                name="message"
-                render={({ field: { onChange, value } }) => (
-                  <TextArea
-                    defaultValue={value}
-                    isReadOnly={isLoading}
-                    maxLength={MAX_CHAR_LIMIT}
-                    placeholder="Not your key, not your tweet. Be web3 native."
-                    returnKeyType="done"
-                    value={value}
-                    onChangeText={onChange}
-                    onSubmitEditing={handleOnSubmit}
-                  />
-                )}
-              />
-              <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
-                {errors.message?.message}
-              </FormControl.ErrorMessage>
-            </Stack>
-          </FormControl>
+      <VStack>
+        <FormControl isInvalid={'message' in errors} isRequired>
+          <Stack>
+            <Controller
+              control={control}
+              defaultValue={defaultValue}
+              name="message"
+              render={({ field: { onChange, value } }) => (
+                <AnimatedTextArea
+                  _dark={{
+                    bg: 'darkBlue.900',
+                  }}
+                  _light={{
+                    bg: 'light.100',
+                  }}
+                  borderRadius={isCollapsed ? '3xl' : 'md'}
+                  defaultValue={value}
+                  isReadOnly={isLoading}
+                  maxLength={MAX_CHAR_LIMIT}
+                  placeholder="Not your key, not your tweet. Be web3 native."
+                  returnKeyType="done"
+                  style={[textAreaStyle]}
+                  totalLines={totalLines}
+                  value={value}
+                  onBlur={handleOnBlur}
+                  onChangeText={onChange}
+                  onFocus={handleOnFocus}
+                  onSubmitEditing={() => {
+                    void handleOnSubmit();
+                  }}
+                />
+              )}
+            />
+            <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
+              {errors.message?.message}
+            </FormControl.ErrorMessage>
+          </Stack>
+        </FormControl>
 
-          {image ? <ImagePreview image={image} onRemoveImage={() => setImage(null)} /> : null}
-        </VStack>
+        {image ? <ImagePreview image={image} onRemoveImage={() => setImage(null)} /> : null}
+      </VStack>
 
-        <HStack alignItems="center" justifyContent="space-between" mb={4} space={4}>
+      <Collapse isOpen={!isCollapsed}>
+        <HStack alignItems="center" justifyContent="space-between" space={4}>
           <Tooltip label="Upload Image" openDelay={250}>
             <IconButton
               _icon={{ color: 'primary.500' }}
+              borderRadius="full"
               icon={<Icon as={Ionicons} name="image-outline" />}
-              onPress={pickImage}
+              onPress={() => {
+                void pickImage();
+              }}
             />
           </Tooltip>
 
-          <Text color="gray.500" fontSize="xs" ml="auto" textAlign="right">
+          <Text color="gray.400" fontSize="xs" ml="auto" textAlign="right">
             {(messageText || '').length} / {MAX_CHAR_LIMIT}
           </Text>
-          <Button isLoading={isLoading} onPress={handleOnSubmit}>
+          <Button
+            isLoading={isLoading}
+            leftIcon={<Icon as={Ionicons} name="send" size="xs" />}
+            onPress={() => {
+              void handleOnSubmit();
+            }}
+          >
             Submit
           </Button>
         </HStack>
-      </VStack>
-    </Stack>
+      </Collapse>
+    </VStack>
   );
 };

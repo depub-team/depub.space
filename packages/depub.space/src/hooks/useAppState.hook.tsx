@@ -4,6 +4,7 @@ import React, {
   Reducer,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
 } from 'react';
@@ -13,45 +14,27 @@ import { OfflineSigner } from '@cosmjs/proto-signing';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import Debug from 'debug';
-import axios from 'axios';
-import { Message, User } from '../interfaces';
-import { submitToArweaveAndISCN } from '../utils';
+import { DesmosProfile, Message, User } from '../interfaces';
 import {
-  GRAPHQL_QUERY_GET_USER,
-  GRAPHQL_QUERY_MESSAGES,
-  GRAPHQL_QUERY_GET_MESSAGE,
-  GRAPHQL_QUERY_MESSAGES_BY_TAG,
-  GRAPHQL_QUERY_MESSAGES_BY_USER,
-  ROWS_PER_PAGE,
-} from '../contants';
+  getMessages,
+  submitToArweaveAndISCN,
+  getMessagesByOwner,
+  getUserByDTagOrAddress,
+  getMessagesByTag,
+  getMessageById,
+} from '../utils';
 import { signISCN } from '../utils/iscn';
+import { useAlert } from '../components/molecules/Alert';
+import { useWallet } from './useWallet.hook';
 
 const debug = Debug('web:useAppState');
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || '';
 
 export class AppStateError extends Error {}
-
-export interface MessagesQueryResponse {
-  messages: Message[];
-}
-
-export interface MessagesByTagQueryResponse {
-  messagesByTag: Message[];
-}
-
-export interface MessagesByOwnerResponse {
-  getUser: User & {
-    messages: Message[];
-  };
-}
-
-export interface GetUserResopnse {
-  getUser: User;
-}
 
 export interface AppStateContextProps {
   isLoading: boolean;
   error: string | null;
+  profile: DesmosProfile | null;
   fetchUser: (dtagOrAddress: string) => Promise<User | null>;
   fetchMessage: (iscnId: string) => Promise<Message | null>;
   fetchMessages: (previousId?: string) => Promise<Message[] | null>;
@@ -75,6 +58,7 @@ export interface AppStateContextProps {
 const initialState: AppStateContextProps = {
   error: null,
   isLoading: false,
+  profile: null,
   fetchUser: null as never,
   fetchMessages: null as never,
   fetchMessage: null as never,
@@ -90,11 +74,13 @@ export const AppStateContext = createContext<AppStateContextProps>(initialState)
 const enum ActionType {
   SET_IS_LOADING = 'SET_IS_LOADING',
   SET_ERROR = 'SET_ERROR',
+  SET_PROFILE = 'SET_PROFILE',
 }
 
 type Action =
   | { type: ActionType.SET_IS_LOADING; isLoading: boolean }
-  | { type: ActionType.SET_ERROR; error: string | null };
+  | { type: ActionType.SET_ERROR; error: string | null }
+  | { type: ActionType.SET_PROFILE; profile: DesmosProfile | null };
 
 const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
   debug('reducer: %O', action);
@@ -111,6 +97,11 @@ const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
         isLoading: false,
         error: action.error,
       };
+    case ActionType.SET_PROFILE:
+      return {
+        ...state,
+        profile: action.profile,
+      };
     default:
       throw new AppStateError('Cannot match action type');
   }
@@ -120,6 +111,8 @@ export const useAppState = () => useContext(AppStateContext);
 
 export const AppStateProvider: FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const alert = useAlert();
+  const { walletAddress, error: connectError } = useWallet();
 
   const fetchUser = useCallback(async (dtagOrAddress: string): Promise<User | null> => {
     debug('fetchUser(dtagOrAddress: %s)', dtagOrAddress);
@@ -127,26 +120,11 @@ export const AppStateProvider: FC = ({ children }) => {
     dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
     try {
-      const { data } = await axios.post<{ data: GetUserResopnse }>(
-        GRAPHQL_URL,
-        {
-          variables: {
-            dtagOrAddress,
-          },
-          query: GRAPHQL_QUERY_GET_USER,
-        },
-        {
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
+      const user = await getUserByDTagOrAddress(dtagOrAddress);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-      if (data && data.data.getUser) {
-        return data.data.getUser;
-      }
+      return user;
     } catch (ex) {
       debug('fetchMessagesByOwner() -> error: %O', ex);
 
@@ -176,28 +154,11 @@ export const AppStateProvider: FC = ({ children }) => {
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
       try {
-        const { data } = await axios.post<{ data: MessagesByOwnerResponse }>(
-          GRAPHQL_URL,
-          {
-            variables: {
-              dtagOrAddress: owner,
-              previousId,
-              limit: ROWS_PER_PAGE,
-            },
-            query: GRAPHQL_QUERY_MESSAGES_BY_USER,
-          },
-          {
-            headers: {
-              'Access-Control-Allow-Origin': '*',
-            },
-          }
-        );
+        const messagesByOwner = await getMessagesByOwner(owner, previousId);
 
         dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-        if (data && data.data.getUser) {
-          return data.data.getUser;
-        }
+        return messagesByOwner;
       } catch (ex) {
         debug('fetchMessagesByOwner() -> error: %O', ex);
 
@@ -220,27 +181,11 @@ export const AppStateProvider: FC = ({ children }) => {
     dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
     try {
-      const { data } = await axios.post<{ data: MessagesQueryResponse }>(
-        GRAPHQL_URL,
-        {
-          variables: {
-            previousId: previousId || null, // graphql not accepts undefined
-            limit: ROWS_PER_PAGE,
-          },
-          query: GRAPHQL_QUERY_MESSAGES,
-        },
-        {
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
+      const messages = await getMessages(previousId);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-      if (data && data.data.messages) {
-        return data.data.messages;
-      }
+      return messages;
     } catch (ex) {
       debug('fetchMessages() -> error: %O', ex);
 
@@ -255,32 +200,17 @@ export const AppStateProvider: FC = ({ children }) => {
     return null;
   }, []);
 
-  const fetchMessage = useCallback(async (iscnId?: string): Promise<Message | null> => {
+  const fetchMessage = useCallback(async (iscnId: string): Promise<Message | null> => {
     debug('fetchMessage(iscnId: %s)', iscnId);
 
     dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
     try {
-      const { data } = await axios.post<{ data: { getMessage: Message } }>(
-        GRAPHQL_URL,
-        {
-          variables: {
-            iscnId,
-          },
-          query: GRAPHQL_QUERY_GET_MESSAGE,
-        },
-        {
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
+      const message = await getMessageById(iscnId);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-      if (data && data.data.getMessage) {
-        return data.data.getMessage;
-      }
+      return message;
     } catch (ex) {
       debug('fetchMessage() -> error: %O', ex);
 
@@ -302,28 +232,11 @@ export const AppStateProvider: FC = ({ children }) => {
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
       try {
-        const { data } = await axios.post<{ data: MessagesByTagQueryResponse }>(
-          GRAPHQL_URL,
-          {
-            variables: {
-              tag,
-              previousId,
-              limit: ROWS_PER_PAGE,
-            },
-            query: GRAPHQL_QUERY_MESSAGES_BY_TAG,
-          },
-          {
-            headers: {
-              'Access-Control-Allow-Origin': '*',
-            },
-          }
-        );
+        const messages = await getMessagesByTag(tag, previousId);
 
         dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-        if (data && data.data.messagesByTag) {
-          return data.data.messagesByTag;
-        }
+        return messages;
       } catch (ex) {
         debug('fetchMessagesByTag() -> error: %O', ex);
 
@@ -417,6 +330,31 @@ export const AppStateProvider: FC = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [fetchMessages]
   );
+
+  useEffect(() => {
+    // eslint-disable-next-line func-names
+    void (async function () {
+      if (walletAddress) {
+        const user = await fetchUser(walletAddress);
+
+        if (user && user.profile) {
+          dispatch({ type: ActionType.SET_PROFILE, profile: user.profile });
+        }
+      }
+    })();
+  }, [walletAddress, fetchUser]);
+
+  useEffect(() => {
+    if (connectError) {
+      debug('useEffect() -> connectError: %s', connectError);
+
+      alert.show({
+        title: connectError,
+        status: 'error',
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectError]);
 
   const memoValue = useMemo(
     () => ({

@@ -15,17 +15,26 @@ const withTM = require("next-transpile-modules")([
 
 const SentryWebpackPluginOptions = {};
 
+const nextConfig = {
+  webpack5: true,
+  generateBuildId: () => nextBuildId({ dir: __dirname }),
+  rewrites () {
+    return [
+      {
+        source: '/(.*)', // react-navigation root
+        destination: '/'
+      },
+    ]
+  },
+};
+
 module.exports = withPlugins(
   [
     withTM,
     [withFonts, { projectRoot: __dirname }],
     [withExpo, { projectRoot: __dirname }],
-    (nextConfig) => withSentryConfig(nextConfig, SentryWebpackPluginOptions),
+    (cfg) => withSentryConfig(cfg, SentryWebpackPluginOptions),
   ],
-  {
-    webpack5: true,
-    trailingSlash: true,
-    generateBuildId: () => nextBuildId({ dir: __dirname })
-  }
+  nextConfig
 );
 /* eslint-enable import/no-extraneous-dependencies, @typescript-eslint/no-var-requires */
