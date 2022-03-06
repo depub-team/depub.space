@@ -21,7 +21,7 @@ import dayjs from 'dayjs';
 import Debug from 'debug';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Platform } from 'react-native';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
 import {
@@ -31,7 +31,6 @@ import {
   messageSanitizer,
   getLikecoinAddressByProfile,
 } from '../../../utils';
-import { useAlert } from '../Alert';
 
 dayjs.extend(relativeTime);
 
@@ -44,8 +43,7 @@ const isDev = process.env.NODE_ENV !== 'production';
 export interface MessageCardProps extends ComponentProps<typeof HStack> {
   message: Message;
   isLoading?: boolean;
-  onShare?: (message: Message) => void;
-  onAvatarPress?: (handle: string) => void;
+  onPress?: (message: Message) => void;
   onImagePress?: (image: string, aspectRatio?: number) => void;
 }
 
@@ -53,7 +51,7 @@ const areEqual = (prevProps: MessageCardProps, nextProps: MessageCardProps) =>
   prevProps.message.id === nextProps.message.id;
 
 export const MessageCard: FC<MessageCardProps> = memo(
-  ({ isLoading, onShare, onAvatarPress, onImagePress, message: messageItem, ...props }) => {
+  ({ isLoading, onPress, onImagePress, message: messageItem, ...props }) => {
     const { id, from, date, profile, images = [], message = '' } = messageItem;
     const { colorMode } = useColorMode();
     const isDarkMode = colorMode === 'dark';
@@ -63,8 +61,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
     const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
     const dayFrom = dayjs(date).fromNow();
     const [linkPreivew, setLinkPreview] = useState<LinkPreviewItem | null>(null);
-    const displayName = profile?.nickname || profile?.dtag || shortenAddress;
     const isMessageContainsUrl = /https?/.test(message);
+    const displayName = profile?.nickname || profile?.dtag || shortenAddress;
     const abbrNickname = getAbbrNickname(displayName);
     const { onCopy } = useClipboard();
     const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>([]);
@@ -72,8 +70,10 @@ export const MessageCard: FC<MessageCardProps> = memo(
     const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
     const isCopied = copyIconState === 'copied';
     const isLoaded = !isLoading;
-    const alert = useAlert();
-    const profilePicSource = useMemo(() => ({ uri: profile?.profilePic || undefined }), [profile]);
+    const profilePicSource = useMemo(
+      () => (profile ? { uri: profile?.profilePic } : undefined),
+      [profile]
+    );
     const imageSources = useMemo(() => images.map(image => ({ uri: image })), [images]);
     const iscnBadgeSource = useMemo(
       () => ({
@@ -97,24 +97,17 @@ export const MessageCard: FC<MessageCardProps> = memo(
         setCopyIconState('normal');
       }, 2000);
 
-      alert.show({
-        title: 'The URL has been copied to clipboard!',
-        status: 'success',
-      });
-
       return null;
     };
 
-    const handleOnShare = useCallback(
-      (item: Message) => () => {
-        if (onShare) onShare(item);
-      },
-      [onShare]
-    );
+    const handleOnPress = useCallback(
+      e => {
+        e.preventDefault();
 
-    const handleOnAvatarPress = useCallback(() => {
-      if (onAvatarPress) onAvatarPress(handle);
-    }, [onAvatarPress, handle]);
+        if (onPress) onPress(messageItem);
+      },
+      [onPress, messageItem]
+    );
 
     const handleOnImagePress = useCallback(
       (image, aspectRatio) => () => {
@@ -195,38 +188,39 @@ export const MessageCard: FC<MessageCardProps> = memo(
 
     return (
       <HStack flex={1} minHeight="80px" my={2} px={4} space={4} w="100%" {...props}>
-        <Skeleton isLoaded={isLoaded} rounded="full" size="12">
-          <Pressable onPress={handleOnAvatarPress}>
-            <Tooltip
-              label={
-                likecoinAddress
-                  ? 'This profile has linked to Likecoin'
-                  : 'This profile has not linked to Likecoin'
-              }
-              openDelay={250}
-            >
-              <Avatar
-                bg="gray.200"
-                borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
-                borderWidth={2}
-                size="md"
-                source={profilePicSource}
+        <Box alignSelf="flex-start">
+          <Skeleton isLoaded={isLoaded} rounded="full" size="12">
+            <Link href={`/user/${handle}`}>
+              <Tooltip
+                label={
+                  likecoinAddress
+                    ? 'This profile has linked to Likecoin'
+                    : 'This profile has not linked to Likecoin'
+                }
+                openDelay={250}
               >
-                {abbrNickname}
-              </Avatar>
-            </Tooltip>
-          </Pressable>
-        </Skeleton>
+                <Avatar
+                  borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
+                  borderWidth={2}
+                  size="md"
+                  source={profilePicSource}
+                >
+                  {abbrNickname}
+                </Avatar>
+              </Tooltip>
+            </Link>
+          </Skeleton>
+        </Box>
 
         <VStack flex={1} space={4}>
           <HStack alignItems="center" justifyContent="space-between">
             <Skeleton.Text flex={1} isLoaded={isLoaded} lines={2}>
               <VStack flex={1}>
-                <Pressable onPress={handleOnAvatarPress}>
+                <Link href={`/user/${handle}`}>
                   <Text color="primary.500" fontSize="md" fontWeight="bold">
                     {displayName}
                   </Text>
-                </Pressable>
+                </Link>
 
                 <HStack space={1}>
                   {profile?.dtag ? (
@@ -322,25 +316,22 @@ export const MessageCard: FC<MessageCardProps> = memo(
                         name={isCopied ? 'link-variant-plus' : 'link-variant'}
                       />
                     }
-                    onPress={() => {
-                      void copyUrl();
-                    }}
+                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                    onPress={copyUrl}
                   />
                 </Tooltip>
               </Skeleton>
 
-              {onShare ? (
-                <Skeleton isLoaded={isLoaded} size="8">
-                  <Tooltip label="Share post" openDelay={250}>
-                    <IconButton
-                      _icon={{ color: 'gray.400', size: 'sm' }}
-                      borderRadius="full"
-                      icon={<Icon as={Ionicons} name="share-social" />}
-                      onPress={handleOnShare(messageItem)}
-                    />
-                  </Tooltip>
-                </Skeleton>
-              ) : null}
+              <Skeleton isLoaded={isLoaded} size="8">
+                <Tooltip label="Share post" openDelay={250}>
+                  <IconButton
+                    _icon={{ color: 'gray.400', size: 'sm' }}
+                    borderRadius="full"
+                    icon={<Icon as={Ionicons} name="share-social" />}
+                    onPress={handleOnPress}
+                  />
+                </Tooltip>
+              </Skeleton>
             </HStack>
           </HStack>
         </VStack>
