@@ -36,7 +36,7 @@ export const LinkPreview: FC<LinkPreviewProps> = ({ preview }) => (
       <Stack space={2}>
         <Box>
           <Link href={preview.url} isExternal>
-            <Text color="gray.500" fontSize="xs" fontWeight="500">
+            <Text color="gray.400" fontSize="xs" fontWeight="500">
               {preview.url}
             </Text>
           </Link>

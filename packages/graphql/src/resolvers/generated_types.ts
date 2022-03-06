@@ -28,6 +28,12 @@ export type ChainLink = {
   externalAddress: Scalars['String'];
 };
 
+export type HashTag = {
+  __typename?: 'HashTag';
+  count: Scalars['Int'];
+  name: Scalars['String'];
+};
+
 export type Message = {
   __typename?: 'Message';
   date: Scalars['String'];
@@ -53,19 +59,18 @@ export type Profile = {
 
 export type Query = {
   __typename?: 'Query';
+  getHashTags?: Maybe<Array<Maybe<HashTag>>>;
   getMessage?: Maybe<Message>;
   getUser?: Maybe<User>;
   getUserProfile?: Maybe<Profile>;
   messages?: Maybe<Array<Maybe<Message>>>;
   messagesByMentioned?: Maybe<Array<Maybe<Message>>>;
-  messagesByTag?: Maybe<Array<Maybe<Message>>>;
+  messagesByChannel?: Maybe<Array<Maybe<Message>>>;
 };
-
 
 export type QueryGetMessageArgs = {
   iscnId: Scalars['String'];
 };
-
 
 export type QueryGetUserArgs = {
   dtagOrAddress: Scalars['String'];
@@ -73,17 +78,14 @@ export type QueryGetUserArgs = {
   previousId?: InputMaybe<Scalars['String']>;
 };
 
-
 export type QueryGetUserProfileArgs = {
   dtagOrAddress: Scalars['String'];
 };
-
 
 export type QueryMessagesArgs = {
   limit?: InputMaybe<Scalars['Int']>;
   previousId?: InputMaybe<Scalars['String']>;
 };
-
 
 export type QueryMessagesByMentionedArgs = {
   limit?: InputMaybe<Scalars['Int']>;
@@ -91,8 +93,7 @@ export type QueryMessagesByMentionedArgs = {
   previousId?: InputMaybe<Scalars['String']>;
 };
 
-
-export type QueryMessagesByTagArgs = {
+export type QueryMessagesByChannelArgs = {
   limit?: InputMaybe<Scalars['Int']>;
   previousId?: InputMaybe<Scalars['String']>;
   tag: Scalars['String'];
@@ -105,21 +106,19 @@ export type User = {
   profile?: Maybe<Profile>;
 };
 
-
 export type UserMessagesArgs = {
   limit?: InputMaybe<Scalars['Int']>;
   previousId?: InputMaybe<Scalars['String']>;
 };
 
-
-
 export type ResolverTypeWrapper<T> = Promise<T> | T;
-
 
 export type ResolverWithResolve<TResult, TParent, TContext, TArgs> = {
   resolve: ResolverFn<TResult, TParent, TContext, TArgs>;
 };
-export type Resolver<TResult, TParent = {}, TContext = {}, TArgs = {}> = ResolverFn<TResult, TParent, TContext, TArgs> | ResolverWithResolve<TResult, TParent, TContext, TArgs>;
+export type Resolver<TResult, TParent = {}, TContext = {}, TArgs = {}> =
+  | ResolverFn<TResult, TParent, TContext, TArgs>
+  | ResolverWithResolve<TResult, TParent, TContext, TArgs>;
 
 export type ResolverFn<TResult, TParent, TContext, TArgs> = (
   parent: TParent,
@@ -142,7 +141,13 @@ export type SubscriptionResolveFn<TResult, TParent, TContext, TArgs> = (
   info: GraphQLResolveInfo
 ) => TResult | Promise<TResult>;
 
-export interface SubscriptionSubscriberObject<TResult, TKey extends string, TParent, TContext, TArgs> {
+export interface SubscriptionSubscriberObject<
+  TResult,
+  TKey extends string,
+  TParent,
+  TContext,
+  TArgs
+> {
   subscribe: SubscriptionSubscribeFn<{ [key in TKey]: TResult }, TParent, TContext, TArgs>;
   resolve?: SubscriptionResolveFn<TResult, { [key in TKey]: TResult }, TContext, TArgs>;
 }
@@ -156,7 +161,13 @@ export type SubscriptionObject<TResult, TKey extends string, TParent, TContext, 
   | SubscriptionSubscriberObject<TResult, TKey, TParent, TContext, TArgs>
   | SubscriptionResolverObject<TResult, TParent, TContext, TArgs>;
 
-export type SubscriptionResolver<TResult, TKey extends string, TParent = {}, TContext = {}, TArgs = {}> =
+export type SubscriptionResolver<
+  TResult,
+  TKey extends string,
+  TParent = {},
+  TContext = {},
+  TArgs = {}
+> =
   | ((...args: any[]) => SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>)
   | SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>;
 
@@ -166,7 +177,11 @@ export type TypeResolveFn<TTypes, TParent = {}, TContext = {}> = (
   info: GraphQLResolveInfo
 ) => Maybe<TTypes> | Promise<Maybe<TTypes>>;
 
-export type IsTypeOfResolverFn<T = {}, TContext = {}> = (obj: T, context: TContext, info: GraphQLResolveInfo) => boolean | Promise<boolean>;
+export type IsTypeOfResolverFn<T = {}, TContext = {}> = (
+  obj: T,
+  context: TContext,
+  info: GraphQLResolveInfo
+) => boolean | Promise<boolean>;
 
 export type NextResolverFn<T> = () => Promise<T>;
 
@@ -183,6 +198,7 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
   ChainConfig: ResolverTypeWrapper<ChainConfig>;
   ChainLink: ResolverTypeWrapper<ChainLink>;
+  HashTag: ResolverTypeWrapper<HashTag>;
   ID: ResolverTypeWrapper<Scalars['ID']>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
   Message: ResolverTypeWrapper<Message>;
@@ -197,6 +213,7 @@ export type ResolversParentTypes = {
   Boolean: Scalars['Boolean'];
   ChainConfig: ChainConfig;
   ChainLink: ChainLink;
+  HashTag: HashTag;
   ID: Scalars['ID'];
   Int: Scalars['Int'];
   Message: Message;
@@ -206,20 +223,38 @@ export type ResolversParentTypes = {
   User: User;
 };
 
-export type ChainConfigResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ChainConfig'] = ResolversParentTypes['ChainConfig']> = {
+export type ChainConfigResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes['ChainConfig'] = ResolversParentTypes['ChainConfig']
+> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type ChainLinkResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ChainLink'] = ResolversParentTypes['ChainLink']> = {
+export type ChainLinkResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes['ChainLink'] = ResolversParentTypes['ChainLink']
+> = {
   chainConfig?: Resolver<Maybe<ResolversTypes['ChainConfig']>, ParentType, ContextType>;
   creationTime?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   externalAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type MessageResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Message'] = ResolversParentTypes['Message']> = {
+export type HashTagResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes['HashTag'] = ResolversParentTypes['HashTag']
+> = {
+  count?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MessageResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes['Message'] = ResolversParentTypes['Message']
+> = {
   date?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   from?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -229,7 +264,10 @@ export type MessageResolvers<ContextType = Context, ParentType extends Resolvers
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type ProfileResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Profile'] = ResolversParentTypes['Profile']> = {
+export type ProfileResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes['Profile'] = ResolversParentTypes['Profile']
+> = {
   address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   bio?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   chainLinks?: Resolver<Maybe<Array<Maybe<ResolversTypes['ChainLink']>>>, ParentType, ContextType>;
@@ -242,18 +280,60 @@ export type ProfileResolvers<ContextType = Context, ParentType extends Resolvers
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  getMessage?: Resolver<Maybe<ResolversTypes['Message']>, ParentType, ContextType, RequireFields<QueryGetMessageArgs, 'iscnId'>>;
-  getUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryGetUserArgs, 'dtagOrAddress'>>;
-  getUserProfile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType, RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>>;
-  messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<QueryMessagesArgs>>;
-  messagesByMentioned?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, RequireFields<QueryMessagesByMentionedArgs, 'mentioned'>>;
-  messagesByTag?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, RequireFields<QueryMessagesByTagArgs, 'tag'>>;
+export type QueryResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
+> = {
+  getHashTags?: Resolver<Maybe<Array<Maybe<ResolversTypes['HashTag']>>>, ParentType, ContextType>;
+  getMessage?: Resolver<
+    Maybe<ResolversTypes['Message']>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryGetMessageArgs, 'iscnId'>
+  >;
+  getUser?: Resolver<
+    Maybe<ResolversTypes['User']>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryGetUserArgs, 'dtagOrAddress'>
+  >;
+  getUserProfile?: Resolver<
+    Maybe<ResolversTypes['Profile']>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>
+  >;
+  messages?: Resolver<
+    Maybe<Array<Maybe<ResolversTypes['Message']>>>,
+    ParentType,
+    ContextType,
+    Partial<QueryMessagesArgs>
+  >;
+  messagesByMentioned?: Resolver<
+    Maybe<Array<Maybe<ResolversTypes['Message']>>>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryMessagesByMentionedArgs, 'mentioned'>
+  >;
+  messagesByChannel?: Resolver<
+    Maybe<Array<Maybe<ResolversTypes['Message']>>>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryMessagesByChannelArgs, 'tag'>
+  >;
 };
 
-export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+export type UserResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']
+> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<UserMessagesArgs>>;
+  messages?: Resolver<
+    Maybe<Array<Maybe<ResolversTypes['Message']>>>,
+    ParentType,
+    ContextType,
+    Partial<UserMessagesArgs>
+  >;
   profile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -261,9 +341,9 @@ export type UserResolvers<ContextType = Context, ParentType extends ResolversPar
 export type Resolvers<ContextType = Context> = {
   ChainConfig?: ChainConfigResolvers<ContextType>;
   ChainLink?: ChainLinkResolvers<ContextType>;
+  HashTag?: HashTagResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
   Profile?: ProfileResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
 };
-

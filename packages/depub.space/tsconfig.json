@@ -15,7 +15,10 @@
     "incremental": true
   },
   "include": [
+    "App.tsx",
+    "index.ts",
     "src/**/*",
+    "next-env.d.ts",
     "next.config.js",
     ".eslintrc.js",
     "babel.config.js",
