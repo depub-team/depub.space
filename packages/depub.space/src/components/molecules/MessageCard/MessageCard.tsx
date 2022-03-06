@@ -38,6 +38,7 @@ const debug = Debug('web:<MessageCard />');
 const PROXY_URL = process.env.NEXT_PUBLIC_PROXY_URL;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
+const ISCN_BADGE_URL = process.env.NEXT_PUBLIC_ISCN_BADGE_URL;
 const isDev = process.env.NODE_ENV !== 'production';
 
 export interface MessageCardProps extends ComponentProps<typeof HStack> {
@@ -77,13 +78,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
     const imageSources = useMemo(() => images.map(image => ({ uri: image })), [images]);
     const iscnBadgeSource = useMemo(
       () => ({
-        uri: isDev
-          ? `https://static.like.co/badge/iscn/testnet/${id}.svg?dark=${
-              isDarkMode ? '1' : '0'
-            }&responsive=0&width=120`
-          : `https://static.like.co/badge/iscn/${id}.svg?dark=${
-              isDarkMode ? '1' : '0'
-            }&responsive=0&width=120`,
+        uri: `${ISCN_BADGE_URL}/${id}.svg?dark=${isDarkMode ? '1' : '0'}&responsive=0&width=120`,
       }),
       [id, isDarkMode]
     );

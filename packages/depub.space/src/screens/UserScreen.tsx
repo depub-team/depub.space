@@ -121,36 +121,36 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
 
   const ListHeaderComponent = useMemo(
     () => (
-      <Stack
-        _dark={{
-          bg: 'darkBlue.900',
-          shadow: 'dark',
-        }}
-        _light={{ bg: 'white', shadow: 'light' }}
-        alignItems="center"
-        flex={1}
-        flexDirection={isHeaderHide ? 'row' : 'column'}
-        justifyContent="center"
-        mb={8}
-        px={4}
-        py={isHeaderHide ? 4 : 8}
-        space={4}
-      >
-        <Avatar mr={isHeaderHide ? 4 : 0} size={isHeaderHide ? 'md' : 'lg'} source={profilePic}>
-          {abbrNickname}
-        </Avatar>
-        <VStack alignItems={isHeaderHide ? 'flex-start' : 'center'} space={1}>
-          <Box textAlign={isHeaderHide ? 'left' : 'center'}>
-            <Heading fontSize="xl">{nickname}</Heading>
-            {dtag ? (
-              <Text color="gray.400" fontSize="sm">
-                @{dtag}
-              </Text>
-            ) : null}
-          </Box>
-          {!isHeaderHide && bio ? <Text fontSize="sm">{bio}</Text> : null}
-        </VStack>
-      </Stack>
+      <Box flex={1} mb={isHeaderHide ? 4 : 8}>
+        <Stack
+          _dark={{
+            bg: 'darkBlue.900',
+            shadow: 'dark',
+          }}
+          _light={{ bg: 'white', shadow: 'light' }}
+          alignItems="center"
+          flex={1}
+          flexDirection={isHeaderHide ? 'row' : 'column'}
+          justifyContent="center"
+          py={4}
+          space={4}
+        >
+          <Avatar mr={isHeaderHide ? 4 : 0} size={isHeaderHide ? 'md' : 'lg'} source={profilePic}>
+            {abbrNickname}
+          </Avatar>
+          <VStack alignItems={isHeaderHide ? 'flex-start' : 'center'} space={1}>
+            <Box textAlign={isHeaderHide ? 'left' : 'center'}>
+              <Heading fontSize="xl">{nickname}</Heading>
+              {dtag ? (
+                <Text color="gray.400" fontSize="sm">
+                  @{dtag}
+                </Text>
+              ) : null}
+            </Box>
+            {!isHeaderHide && bio ? <Text fontSize="sm">{bio}</Text> : null}
+          </VStack>
+        </Stack>
+      </Box>
     ),
     [abbrNickname, bio, dtag, isHeaderHide, nickname, profilePic]
   );
