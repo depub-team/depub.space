@@ -1,4 +1,4 @@
-import React, { FC, memo, useEffect, useMemo, useState } from 'react';
+import React, { FC, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -46,6 +46,7 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isFocusing, setIsFocusing] = useState(false);
     const [totalLines, setTotalLines] = useState(1);
+    const blurTimeout = useRef(0);
     const formSchema = Yup.object().shape({
       message: Yup.string()
         .required('Message is required')
@@ -98,6 +99,8 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     };
 
     const handleOnSubmit = async () => {
+      clearTimeout(blurTimeout.current); // avoid goes to collapse state
+
       await handleSubmit(async data => {
         if (onSubmit) await onSubmit(data, image);
 
@@ -111,8 +114,10 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     };
 
     const handleOnBlur = () => {
-      setIsCollapsed(true);
-      setIsFocusing(false);
+      blurTimeout.current = setTimeout(() => {
+        setIsCollapsed(true);
+        setIsFocusing(false);
+      }, 100) as unknown as number;
     };
 
     const textAreaStyle = useAnimatedStyle(() => ({

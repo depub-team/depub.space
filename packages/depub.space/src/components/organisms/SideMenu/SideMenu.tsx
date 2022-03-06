@@ -71,6 +71,7 @@ export const SideMenu: FC<SideMenuProps> = ({
     () => (profile ? { uri: profile.profilePic } : undefined),
     [profile]
   );
+  const userHandle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
 
   const handleOnConnect = useCallback(() => {
     navigation.navigate('ConnectWallet');
@@ -114,6 +115,14 @@ export const SideMenu: FC<SideMenuProps> = ({
               </SideMenuItem>
             </Link>
           ))}
+
+          {walletAddress ? (
+            <SideMenuItem icon={<Feather />} iconName="user">
+              <Link href={`/user/${userHandle}`}>
+                <Text fontWeight="bold">Your Posts</Text>
+              </Link>
+            </SideMenuItem>
+          ) : null}
 
           <SideMenuItem
             icon={<MaterialIcons />}
