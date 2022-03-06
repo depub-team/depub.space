@@ -1,5 +1,5 @@
 import { ulidFactory } from 'ulid-workers';
-import { ISCNHashTag, ISCNRecord } from '../interfaces';
+import { ISCNChannel, ISCNRecord } from '../interfaces';
 import { Bindings } from '../../bindings';
 
 const ulid = ulidFactory({ monotonic: false });
@@ -183,9 +183,10 @@ export class IscnTxn implements DurableObject {
   public async getHashTags(request: Request) {
     const url = new URL(request.url);
     const from = url.searchParams.get('from');
+    const start = from !== null ? from : undefined;
     const keyList = await this.state.storage.list<string>({
       prefix: `${HASHTAG_KEY}:`,
-      start: from !== null ? from : undefined,
+      start,
     });
     const keyListArr = Array.from(keyList.entries());
     const lastKey = keyListArr.length ? keyListArr[keyListArr.length - 1][0] : undefined;
@@ -203,7 +204,8 @@ export class IscnTxn implements DurableObject {
 
       return acc;
     }, {} as Record<string, number>);
-    const hashTags: ISCNHashTag[] = Object.keys(hashTagsWithCount)
+
+    const hashTags: ISCNChannel[] = Object.keys(hashTagsWithCount)
       .sort((a, b) => (hashTagsWithCount[a] > hashTagsWithCount[b] ? -1 : 1))
       .map(key => ({
         name: key,

@@ -21,7 +21,6 @@ const MyError = ({ hasGetInitialPropsRun, err }: ErrorPageProps) => {
 
   return (
     <Layout
-      hideNavbar
       metadata={{
         title: '404',
       }}

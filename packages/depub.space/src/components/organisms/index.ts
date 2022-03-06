@@ -1,3 +1,4 @@
+export * from './Channels';
 export * from './ConnectWalletModal';
 export * from './ImageModal';
 export * from './MessageModal';

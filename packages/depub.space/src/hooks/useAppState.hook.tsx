@@ -14,14 +14,15 @@ import { OfflineSigner } from '@cosmjs/proto-signing';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import Debug from 'debug';
-import { DesmosProfile, Message, User } from '../interfaces';
+import { DesmosProfile, Message, User, Channel } from '../interfaces';
 import {
   getMessages,
   submitToArweaveAndISCN,
   getMessagesByOwner,
   getUserByDTagOrAddress,
-  getMessagesByTag,
+  getMessagesByChannel,
   getMessageById,
+  getChannels,
 } from '../utils';
 import { signISCN } from '../utils/iscn';
 import { useAlert } from '../components/molecules/Alert';
@@ -35,10 +36,12 @@ export interface AppStateContextProps {
   isLoading: boolean;
   error: string | null;
   profile: DesmosProfile | null;
+  channels: Channel[];
   fetchUser: (dtagOrAddress: string) => Promise<User | null>;
+  fetchChannels: () => Promise<Channel[]>;
   fetchMessage: (iscnId: string) => Promise<Message | null>;
-  fetchMessages: (previousId?: string) => Promise<Message[] | null>;
-  fetchMessagesByTag: (tag: string, previousId?: string) => Promise<Message[] | null>;
+  fetchMessages: (previousId?: string) => Promise<Message[]>;
+  fetchMessagesByChannel: (tag: string, previousId?: string, limit?: number) => Promise<Message[]>;
   fetchMessagesByOwner: (
     owner: string,
     previousId?: string
@@ -56,13 +59,15 @@ export interface AppStateContextProps {
 }
 
 const initialState: AppStateContextProps = {
+  channels: [],
   error: null,
   isLoading: false,
   profile: null,
   fetchUser: null as never,
+  fetchChannels: null as never,
   fetchMessages: null as never,
   fetchMessage: null as never,
-  fetchMessagesByTag: null as never,
+  fetchMessagesByChannel: null as never,
   fetchMessagesByOwner: null as never,
   postMessage: null as never,
 };
@@ -75,12 +80,14 @@ const enum ActionType {
   SET_IS_LOADING = 'SET_IS_LOADING',
   SET_ERROR = 'SET_ERROR',
   SET_PROFILE = 'SET_PROFILE',
+  SET_CHANNELS = 'SET_CHANNELS',
 }
 
 type Action =
   | { type: ActionType.SET_IS_LOADING; isLoading: boolean }
   | { type: ActionType.SET_ERROR; error: string | null }
-  | { type: ActionType.SET_PROFILE; profile: DesmosProfile | null };
+  | { type: ActionType.SET_PROFILE; profile: DesmosProfile | null }
+  | { type: ActionType.SET_CHANNELS; channels: Channel[] };
 
 const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
   debug('reducer: %O', action);
@@ -101,6 +108,11 @@ const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
       return {
         ...state,
         profile: action.profile,
+      };
+    case ActionType.SET_CHANNELS:
+      return {
+        ...state,
+        channels: action.channels,
       };
     default:
       throw new AppStateError('Cannot match action type');
@@ -175,7 +187,33 @@ export const AppStateProvider: FC = ({ children }) => {
     []
   );
 
-  const fetchMessages = useCallback(async (previousId?: string): Promise<Message[] | null> => {
+  const fetchChannels = useCallback(async (): Promise<Channel[]> => {
+    debug('fetchChannels()');
+
+    dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
+
+    try {
+      const channels = await getChannels();
+
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+      dispatch({ type: ActionType.SET_CHANNELS, channels });
+
+      return channels;
+    } catch (ex) {
+      debug('fetchChannels() -> error: %O', ex);
+
+      dispatch({
+        type: ActionType.SET_ERROR,
+        error: 'Fail to fetch channels, please try again later.',
+      });
+
+      Sentry.captureException(ex);
+    }
+
+    return [];
+  }, []);
+
+  const fetchMessages = useCallback(async (previousId?: string): Promise<Message[]> => {
     debug('fetchMessages(previousId: %s)', previousId);
 
     dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
@@ -197,7 +235,7 @@ export const AppStateProvider: FC = ({ children }) => {
       Sentry.captureException(ex);
     }
 
-    return null;
+    return [];
   }, []);
 
   const fetchMessage = useCallback(async (iscnId: string): Promise<Message | null> => {
@@ -225,20 +263,20 @@ export const AppStateProvider: FC = ({ children }) => {
     return null;
   }, []);
 
-  const fetchMessagesByTag = useCallback(
-    async (tag: string, previousId?: string): Promise<Message[] | null> => {
-      debug('fetchMessagesByTag(tag: %s, previousId: %s)', tag, previousId);
+  const fetchMessagesByChannel = useCallback(
+    async (tag: string, previousId?: string, limit?: number): Promise<Message[]> => {
+      debug('fetchMessagesByChannel(tag: %s, previousId: %s)', tag, previousId);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
       try {
-        const messages = await getMessagesByTag(tag, previousId);
+        const messages = await getMessagesByChannel(tag, previousId, limit);
 
         dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
         return messages;
       } catch (ex) {
-        debug('fetchMessagesByTag() -> error: %O', ex);
+        debug('fetchMessagesByChannel() -> error: %O', ex);
 
         dispatch({
           type: ActionType.SET_ERROR,
@@ -248,7 +286,7 @@ export const AppStateProvider: FC = ({ children }) => {
         Sentry.captureException(ex);
       }
 
-      return null;
+      return [];
     },
     []
   );
@@ -356,6 +394,11 @@ export const AppStateProvider: FC = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectError]);
 
+  // get channels
+  useEffect(() => {
+    void fetchChannels();
+  }, [fetchChannels]);
+
   const memoValue = useMemo(
     () => ({
       ...state,
@@ -363,7 +406,8 @@ export const AppStateProvider: FC = ({ children }) => {
       fetchUser,
       fetchMessages,
       fetchMessage,
-      fetchMessagesByTag,
+      fetchChannels,
+      fetchMessagesByChannel,
       fetchMessagesByOwner,
     }),
     [
@@ -371,7 +415,8 @@ export const AppStateProvider: FC = ({ children }) => {
       fetchUser,
       postMessage,
       fetchMessage,
-      fetchMessagesByTag,
+      fetchChannels,
+      fetchMessagesByChannel,
       fetchMessages,
       fetchMessagesByOwner,
     ]
