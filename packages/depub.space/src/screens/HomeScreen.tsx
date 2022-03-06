@@ -13,7 +13,7 @@ import {
   useAlert,
   MessageComposer,
 } from '../components/molecules';
-import { waitAsync, dataUrlToFile } from '../utils';
+import { waitAsync, dataUrlToFile, getLikecoinAddressByProfile } from '../utils';
 import { Layout } from '../components/templates';
 import { MainStackParamList } from '../navigation/MainStackParamList';
 import { RootStackParamList } from '../navigation/RootStackParamList';
@@ -35,8 +35,10 @@ export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const dimension = useWindowDimensions();
   const { isLoading: isConnectLoading, walletAddress, offlineSigner } = useWallet();
-  const { channels, isLoading, fetchMessagesByChannel, postMessage } = useAppState();
+  const { profile, channels, isLoading, fetchMessagesByChannel, postMessage } = useAppState();
   const isLoggedIn = Boolean(walletAddress && !isConnectLoading);
+  const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
+  const userHandle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const alert = useAlert();
 
   const handleOnImagePress = useCallback((image: string, aspectRatio?: number) => {
@@ -79,44 +81,49 @@ export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChannels]);
 
-  const handleOnSubmit = useCallback(async (data: MessageFormType, image?: string | null) => {
-    try {
-      let file: File | undefined;
+  const handleOnSubmit = useCallback(
+    async (data: MessageFormType, image?: string | null) => {
+      try {
+        let file: File | undefined;
 
-      if (image) {
-        file = await dataUrlToFile(image, 'upload');
-      }
+        if (image) {
+          file = await dataUrlToFile(image, 'upload');
+        }
 
-      if (!offlineSigner) {
+        if (!offlineSigner) {
+          alert.show({
+            title: 'No valid signer, please connect wallet',
+            status: 'error',
+          });
+
+          return;
+        }
+
+        const txn = await postMessage(offlineSigner, data.message, file && [file]);
+
+        await waitAsync(500); // wait a bit
+
+        window.location.href = `/user/${userHandle}`;
+
+        if (txn) {
+          alert.show({
+            title: 'Post created successfully!',
+            status: 'success',
+          });
+        }
+      } catch (ex: any) {
         alert.show({
-          title: 'No valid signer, please connect wallet',
+          title:
+            ex instanceof AppStateError
+              ? ex.message
+              : 'Something went wrong, please try again later',
           status: 'error',
         });
-
-        return;
       }
-
-      const txn = await postMessage(offlineSigner, data.message, file && [file]);
-
-      await waitAsync(500); // wait a bit
-
-      await fetchNewMessages(); // then get new message
-
-      if (txn) {
-        alert.show({
-          title: 'Post created successfully!',
-          status: 'success',
-        });
-      }
-    } catch (ex: any) {
-      alert.show({
-        title:
-          ex instanceof AppStateError ? ex.message : 'Something went wrong, please try again later',
-        status: 'error',
-      });
-    }
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    [offlineSigner, postMessage, userHandle]
+  );
 
   const ListFooterComponent = useMemo(
     () =>

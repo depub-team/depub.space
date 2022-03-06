@@ -22,7 +22,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   const isWideScreen = dimensions.width >= 768;
   const { disconnect, walletAddress, isLoading: isConnectLoading } = useWallet();
   const { profile } = useAppState();
-  const fontFamily = useToken('fonts', 'body');
+  const fontFamily = useToken('fonts', 'heading');
 
   const handleOnLogout = () => {
     void disconnect();
@@ -63,7 +63,6 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
             headerShown: true,
             headerTitleStyle: {
               fontFamily,
-              fontWeight: 'bold',
             },
           }}
         >

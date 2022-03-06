@@ -11,7 +11,7 @@ import { AppStateError, useAppState, useWallet } from '../hooks';
 import { RootStackParamList } from '../navigation/RootStackParamList';
 import { MainStackParamList } from '../navigation/MainStackParamList';
 import { NAV_HEADER_HEIGHT } from '../constants';
-import { dataUrlToFile, waitAsync } from '../utils';
+import { dataUrlToFile, getLikecoinAddressByProfile, waitAsync } from '../utils';
 
 const debug = Debug('web:<ChannelScreen />');
 const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
@@ -28,8 +28,10 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
   const { isLoading: isConnectLoading, walletAddress, offlineSigner } = useWallet();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const { postMessage, isLoading, fetchMessagesByChannel } = useAppState();
+  const { profile, postMessage, isLoading, fetchMessagesByChannel } = useAppState();
   const isLoggedIn = Boolean(walletAddress && !isConnectLoading);
+  const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
+  const userHandle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const alert = useAlert();
 
   const fetchNewMessages = useCallback(
@@ -78,46 +80,51 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleOnSubmit = useCallback(async (data: MessageFormType, image?: string | null) => {
-    try {
-      let file: File | undefined;
+  const handleOnSubmit = useCallback(
+    async (data: MessageFormType, image?: string | null) => {
+      try {
+        let file: File | undefined;
 
-      if (image) {
-        file = await dataUrlToFile(image, 'upload');
-      }
+        if (image) {
+          file = await dataUrlToFile(image, 'upload');
+        }
 
-      if (!offlineSigner) {
+        if (!offlineSigner) {
+          alert.show({
+            title: 'No valid signer, please connect wallet',
+            status: 'error',
+          });
+
+          return;
+        }
+
+        const txn = await postMessage(offlineSigner, data.message, file && [file]);
+
+        await waitAsync(500); // wait a bit
+
+        setIsListReachedEnd(false); // reset
+
+        window.location.href = `/user/${userHandle}`;
+
+        if (txn) {
+          alert.show({
+            title: 'Post created successfully!',
+            status: 'success',
+          });
+        }
+      } catch (ex: any) {
         alert.show({
-          title: 'No valid signer, please connect wallet',
+          title:
+            ex instanceof AppStateError
+              ? ex.message
+              : 'Something went wrong, please try again later',
           status: 'error',
         });
-
-        return;
       }
-
-      const txn = await postMessage(offlineSigner, data.message, file && [file]);
-
-      await waitAsync(500); // wait a bit
-
-      setIsListReachedEnd(false); // reset
-
-      await fetchNewMessages(undefined, true); // then get new message
-
-      if (txn) {
-        alert.show({
-          title: 'Post created successfully!',
-          status: 'success',
-        });
-      }
-    } catch (ex: any) {
-      alert.show({
-        title:
-          ex instanceof AppStateError ? ex.message : 'Something went wrong, please try again later',
-        status: 'error',
-      });
-    }
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    [offlineSigner, postMessage, userHandle]
+  );
 
   const ListHeaderComponent = useMemo(
     () => (
