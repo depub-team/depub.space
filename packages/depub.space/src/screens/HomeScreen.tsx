@@ -166,7 +166,6 @@ export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
           shadow: 'dark',
         }}
         _light={{ bg: 'white', shadow: 'light' }}
-        mb={8}
         space={4}
         w="100%"
       >
