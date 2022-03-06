@@ -35,7 +35,7 @@ const ListFooterComponent: FC<{ isLoading?: boolean }> = ({ isLoading }) =>
       }}
       bg="rgba(0,0,0,0.025)"
       justifyContent="center"
-      my={24}
+      py={24}
       space={8}
     >
       <Spinner accessibilityLabel="Loading messages" size="lg" />
