@@ -1,133 +1,153 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, memo, useEffect, useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import * as Yup from 'yup';
 import { useForm, Controller } from 'react-hook-form';
 import {
   Text,
-  Box,
   Button,
   FormControl,
   Stack,
   HStack,
   TextArea,
   VStack,
+  IStackProps,
   WarningOutlineIcon,
-  Avatar,
   IconButton,
   Icon,
   Tooltip,
+  Collapse,
 } from 'native-base';
 import Debug from 'debug';
-import { getAbbrNickname, getLikecoinAddressByProfile, pickImageFromDevice } from '../../../utils';
-import { MAX_CHAR_LIMIT } from '../../../contants';
+import { pickImageFromDevice } from '../../../utils';
+import { MAX_CHAR_LIMIT } from '../../../constants';
 import { ImagePreview } from './ImagePreview';
-import { DesmosProfile } from '../../../interfaces';
 
 const debug = Debug('web:<MessageComposer />');
+const LINE_HEIGHT = 24;
+const TEXTAREA_PADDING = 19;
+const AnimatedTextArea = Animated.createAnimatedComponent(TextArea);
 
 export interface MessageFormType {
   message: string;
 }
 
-interface MessageComposerProps {
+export interface MessageComposerProps extends IStackProps {
   isLoading?: boolean;
   defaultValue?: string;
-  address: string;
-  profile: DesmosProfile | null;
-  onSubmit: (data: MessageFormType, image?: string | null) => Promise<void>;
+  onSubmit?: (data: MessageFormType, image?: string | null) => Promise<void> | void;
 }
-export const MessageComposer: FC<MessageComposerProps> = ({
-  address,
-  profile,
-  onSubmit,
-  defaultValue,
-  isLoading,
-}) => {
-  const [image, setImage] = useState<string | null>(null);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const formSchema = Yup.object().shape({
-    message: Yup.string()
-      .required('Message is required')
-      .min(4, 'Message length should be at least 4 characters')
-      .max(MAX_CHAR_LIMIT, `Message must not exceed ${MAX_CHAR_LIMIT} characters`),
-  });
-  const validationOpt = { resolver: yupResolver(formSchema) };
-  const { reset, formState, control, handleSubmit, watch } =
-    useForm<MessageFormType>(validationOpt);
-  const { errors } = formState;
-  const [messageText] = watch(['message']);
-  const displayName = profile?.nickname || profile?.dtag || address;
-  const abbrNickname = getAbbrNickname(displayName);
-  const profilePic = profile?.profilePic;
-  const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
 
-  const pickImage = async () => {
-    debug('pickImage()');
+export const MessageComposer: FC<MessageComposerProps> = memo(
+  ({ onSubmit, defaultValue, isLoading, ...props }) => {
+    const [image, setImage] = useState<string | null>(null);
+    const [isCollapsed, setIsCollapsed] = useState(true);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isFocusing, setIsFocusing] = useState(false);
+    const [totalLines, setTotalLines] = useState(1);
+    const formSchema = Yup.object().shape({
+      message: Yup.string()
+        .required('Message is required')
+        .min(4, 'Message length should be at least 4 characters')
+        .max(MAX_CHAR_LIMIT, `Message must not exceed ${MAX_CHAR_LIMIT} characters`),
+    });
+    const validationOpt = { resolver: yupResolver(formSchema) };
+    const { reset, formState, control, handleSubmit, watch } =
+      useForm<MessageFormType>(validationOpt);
+    const { errors } = formState;
+    const [messageText] = watch(['message']);
+    const height = useSharedValue(1);
+    const containerStyles = useMemo(
+      () => ({
+        _dark: {
+          bg: isFocusing ? 'darkBlue.900' : undefined,
+        },
+        _light: {
+          bg: isFocusing ? '#fff' : undefined,
+        },
+      }),
+      [isFocusing]
+    );
+    const textAreaStyles = useMemo(
+      () => ({
+        _dark: {
+          bg: 'darkBlue.900',
+        },
+        _light: {
+          bg: 'light.100',
+        },
+      }),
+      []
+    );
 
-    try {
-      const result = await pickImageFromDevice();
+    const pickImage = async () => {
+      debug('pickImage()');
 
-      debug('pickImage() -> result: %O', result);
+      try {
+        const result = await pickImageFromDevice();
 
-      if (result) {
-        setImage(result);
+        debug('pickImage() -> result: %O', result);
+
+        if (result) {
+          setImage(result);
+        }
+      } catch (ex) {
+        debug('pickImage() -> error: %O', ex);
       }
-    } catch (ex) {
-      debug('pickImage() -> error: %O', ex);
-    }
-  };
+    };
 
-  const handleOnSubmit = async () => {
-    await handleSubmit(async data => {
-      await onSubmit(data, image);
+    const handleOnSubmit = async () => {
+      await handleSubmit(async data => {
+        if (onSubmit) await onSubmit(data, image);
 
-      setIsSubmitted(true);
-    })();
-  };
+        setIsSubmitted(true);
+      })();
+    };
 
-  useEffect(() => {
-    // reset state
-    if (isSubmitted) {
-      reset({ message: '' });
+    const handleOnFocus = () => {
+      setIsCollapsed(false);
+      setIsFocusing(true);
+    };
 
-      setIsSubmitted(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSubmitted]);
+    const handleOnBlur = () => {
+      setIsCollapsed(true);
+      setIsFocusing(false);
+    };
 
-  return (
-    <Stack
-      direction={{
-        base: 'column',
-        md: 'row',
-      }}
-      flex={1}
-      mt={4}
-      space={4}
-    >
-      <Box alignItems="center" flex={{ base: '0 0 48px', md: 'unset' }}>
-        <Tooltip
-          label={
-            likecoinAddress
-              ? 'This profile has linked to Likecoin'
-              : 'This profile has not linked to Likecoin'
-          }
-          openDelay={250}
-        >
-          <Avatar
-            bg="gray.200"
-            borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
-            borderWidth={2}
-            size="md"
-            source={profilePic ? { uri: profilePic } : undefined}
-          >
-            {abbrNickname}
-          </Avatar>
-        </Tooltip>
-      </Box>
-      <VStack flex={1} minHeight="180px" space={4}>
-        <VStack space={4}>
+    const textAreaStyle = useAnimatedStyle(() => ({
+      height: withSpring(height.value * LINE_HEIGHT + TEXTAREA_PADDING, {}, () => {
+        setTotalLines(height.value);
+      }),
+    }));
+
+    // trigger animation when state changed
+    useEffect(() => {
+      height.value = isCollapsed ? 1 : 4;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isCollapsed]);
+
+    useEffect(() => {
+      // reset state
+      if (isSubmitted) {
+        reset({ message: '' });
+
+        setIsSubmitted(false);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isSubmitted]);
+
+    return (
+      <VStack
+        borderRadius="lg"
+        mt={isCollapsed ? 0 : 4}
+        p={4}
+        shadow={isFocusing ? 'lg' : 'none'}
+        space={isCollapsed ? 0 : 4}
+        {...containerStyles}
+        {...props}
+      >
+        <VStack>
           <FormControl isInvalid={'message' in errors} isRequired>
             <Stack>
               <Controller
@@ -135,14 +155,21 @@ export const MessageComposer: FC<MessageComposerProps> = ({
                 defaultValue={defaultValue}
                 name="message"
                 render={({ field: { onChange, value } }) => (
-                  <TextArea
+                  <AnimatedTextArea
+                    _dark={textAreaStyles}
+                    borderRadius={isCollapsed ? '3xl' : 'md'}
                     defaultValue={value}
                     isReadOnly={isLoading}
                     maxLength={MAX_CHAR_LIMIT}
                     placeholder="Not your key, not your tweet. Be web3 native."
                     returnKeyType="done"
+                    style={[textAreaStyle]}
+                    totalLines={totalLines}
                     value={value}
+                    onBlur={handleOnBlur}
                     onChangeText={onChange}
+                    onFocus={handleOnFocus}
+                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
                     onSubmitEditing={handleOnSubmit}
                   />
                 )}
@@ -156,23 +183,34 @@ export const MessageComposer: FC<MessageComposerProps> = ({
           {image ? <ImagePreview image={image} onRemoveImage={() => setImage(null)} /> : null}
         </VStack>
 
-        <HStack alignItems="center" justifyContent="space-between" mb={4} space={4}>
-          <Tooltip label="Upload Image" openDelay={250}>
-            <IconButton
-              _icon={{ color: 'primary.500' }}
-              icon={<Icon as={Ionicons} name="image-outline" />}
-              onPress={pickImage}
-            />
-          </Tooltip>
+        <Collapse isOpen={!isCollapsed}>
+          <HStack alignItems="center" justifyContent="space-between" space={4}>
+            <Tooltip label="Upload Image" openDelay={250}>
+              <IconButton
+                _icon={{ color: 'primary.500' }}
+                borderRadius="full"
+                icon={<Icon as={Ionicons} name="image-outline" />}
+                onPress={() => {
+                  void pickImage();
+                }}
+              />
+            </Tooltip>
 
-          <Text color="gray.500" fontSize="xs" ml="auto" textAlign="right">
-            {(messageText || '').length} / {MAX_CHAR_LIMIT}
-          </Text>
-          <Button isLoading={isLoading} onPress={handleOnSubmit}>
-            Submit
-          </Button>
-        </HStack>
+            <Text color="gray.400" fontSize="xs" ml="auto" textAlign="right">
+              {(messageText || '').length} / {MAX_CHAR_LIMIT}
+            </Text>
+            <Button
+              isLoading={isLoading}
+              leftIcon={<Icon as={Ionicons} name="send" size="xs" />}
+              onPress={() => {
+                void handleOnSubmit();
+              }}
+            >
+              Submit
+            </Button>
+          </HStack>
+        </Collapse>
       </VStack>
-    </Stack>
-  );
-};
+    );
+  }
+);

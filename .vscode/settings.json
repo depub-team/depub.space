@@ -27,6 +27,7 @@
     "stylelint",
     "superkv",
     "ulid",
+    "unstyled",
     "UZERO"
   ],
   "eslint.workingDirectories": [
