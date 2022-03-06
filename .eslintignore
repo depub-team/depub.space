@@ -5,10 +5,10 @@ node_modules
 **/.DS_Store
 **/.next
 **/static
-storybook/static
 .vscode
 .next
 static
 *.log
 **/models/index.d.ts
 **/generated_types.ts
+.storybook

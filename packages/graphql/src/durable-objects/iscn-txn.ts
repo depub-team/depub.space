@@ -1,5 +1,5 @@
 import { ulidFactory } from 'ulid-workers';
-import { ISCNRecord } from '../interfaces';
+import { ISCNChannel, ISCNRecord } from '../interfaces';
 import { Bindings } from '../../bindings';
 
 const ulid = ulidFactory({ monotonic: false });
@@ -180,6 +180,41 @@ export class IscnTxn implements DurableObject {
     );
   }
 
+  public async getHashTags(request: Request) {
+    const url = new URL(request.url);
+    const from = url.searchParams.get('from');
+    const start = from !== null ? from : undefined;
+    const keyList = await this.state.storage.list<string>({
+      prefix: `${HASHTAG_KEY}:`,
+      start,
+    });
+    const keyListArr = Array.from(keyList.entries());
+    const lastKey = keyListArr.length ? keyListArr[keyListArr.length - 1][0] : undefined;
+
+    if (lastKey === from) {
+      return new Response(JSON.stringify({ hashTags: [], lastKey }));
+    }
+
+    const hashTagsWithCount = keyListArr.reduce((acc, [k]) => {
+      const key = k.split(':')[1];
+      const count = acc[key] || 0;
+
+      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+      acc[key] = count + 1;
+
+      return acc;
+    }, {} as Record<string, number>);
+
+    const hashTags: ISCNChannel[] = Object.keys(hashTagsWithCount)
+      .sort((a, b) => (hashTagsWithCount[a] > hashTagsWithCount[b] ? -1 : 1))
+      .map(key => ({
+        name: key,
+        count: hashTagsWithCount[key],
+      }));
+
+    return new Response(JSON.stringify({ hashTags, lastKey }));
+  }
+
   public async getSequence(_request: Request) {
     // await this.state.storage.deleteAll(); // debug
 
@@ -222,6 +257,12 @@ export class IscnTxn implements DurableObject {
 
       if (request.method === 'GET') {
         return this.getTransactions(request);
+      }
+    }
+
+    if (url.pathname === '/hashTags') {
+      if (request.method === 'GET') {
+        return this.getHashTags(request);
       }
     }
 

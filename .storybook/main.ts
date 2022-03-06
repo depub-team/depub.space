@@ -1,27 +1,58 @@
 import path from 'path';
+import type { StorybookConfig } from '@storybook/core-common';
+import webpack from 'webpack';
 
-const main = {
+const main: StorybookConfig = {
   core: {
     builder: 'webpack5',
   },
 
   stories: ['../packages/**/*.stories.tsx'],
 
-  addons: ['@storybook/addon-links', '@storybook/addon-essentials'],
+  staticDirs: ['../packages/depub.space/public'],
+
+  addons: [
+    '@storybook/addon-links',
+    '@storybook/addon-essentials',
+    '@storybook/addon-interactions',
+    '@storybook/addon-react-native-web',
+    'storybook-dark-mode',
+  ],
+
+  framework: '@storybook/react',
 
   typescript: {
     check: false,
-    reactDocgen: false,
+    checkOptions: {},
+    reactDocgen: 'react-docgen-typescript',
+    reactDocgenTypescriptOptions: {
+      shouldExtractLiteralValuesFromEnum: true,
+      propFilter: (prop: any) => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),
+    },
   },
 
   webpackFinal: async (config: any) => {
-    // Default rule for images /\.(svg|ico|jpg|jpeg|png|gif|eot|otf|webp|ttf|woff|woff2|cur|ani|pdf)(\?.*)?$/
-    const fileLoaderRule = config.module.rules.find(
-      (rule: any) => rule.test && rule.test.test('.svg')
-    );
-    fileLoaderRule.exclude = /\.svg$/;
-
     config.resolve.alias['@depub/theme'] = path.resolve(__dirname, '../packages/theme/src');
+
+    config.resolve.alias['react-native$'] = 'react-native-web';
+
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      process: require.resolve('process/browser'),
+      zlib: require.resolve('browserify-zlib'),
+      stream: require.resolve('stream-browserify'),
+      util: require.resolve('util'),
+      buffer: require.resolve('buffer'),
+      asset: require.resolve('assert'),
+    };
+
+    config.plugins = [
+      ...config.plugins,
+      new webpack.ProvidePlugin({
+        Buffer: ['buffer', 'Buffer'],
+        process: 'process/browser',
+      }),
+    ];
 
     config.module.rules.push({
       test: /\.svg$/,
