@@ -157,6 +157,10 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
+      navigation.setOptions({
+        title: account,
+      });
+
       // reset
       setIsReady(false);
       setProfile(null);
@@ -166,7 +170,8 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
       void (async () => {
         await fetchNewMessages(undefined, true);
       })();
-    }, [fetchNewMessages])
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fetchNewMessages, account])
   );
 
   return account ? (

@@ -32,7 +32,7 @@ const menuItems: MenuItems[] = [
   {
     icon: <Entypo />,
     iconName: 'home',
-    name: 'Home',
+    name: 'Explore',
     link: '/',
   },
   {
