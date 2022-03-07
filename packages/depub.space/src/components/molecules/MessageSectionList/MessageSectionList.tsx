@@ -132,7 +132,7 @@ export const MessageSectionList: FC<MessageSectionListProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const ItemSeparatorComponent = useCallback(() => <Divider my={4} w="100%" />, []);
+  const ItemSeparatorComponent = useCallback(() => <Divider bg="gray.200" my={4} w="100%" />, []);
 
   // reference: https://gist.github.com/r0b0t3d/db629f5f4e249c7a5b6a3c211f2b8aa8
   return (

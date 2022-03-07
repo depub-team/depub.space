@@ -165,7 +165,7 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
         isLoadingMore={isLoadingMore}
         ListHeaderComponent={ListHeaderComponent}
         scrollEventThrottle={100}
-        stickyHeaderIndices={[0]}
+        stickyHeaderIndices={isLoggedIn ? [0] : undefined} // sticky message composer if logged in
         onFetchData={fetchNewMessages}
         onImagePress={handleOnImagePress}
         onPress={handleOnPress}
