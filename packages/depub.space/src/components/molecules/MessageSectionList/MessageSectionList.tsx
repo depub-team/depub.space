@@ -71,7 +71,9 @@ export const MessageSectionList: FC<MessageSectionListProps> = ({
           #{info.section.title}
         </Text>
         <Text color="darkBlue.900" fontSize="xs">
-          <Link href={`/channels/${info.section.title}`}>more</Link>
+          <Link href={`/channels/${info.section.title}`}>
+            <Text>more</Text>
+          </Link>
         </Text>
       </HStack>
     ),

@@ -127,21 +127,21 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
   );
 
   const ListHeaderComponent = useMemo(
-    () => (
-      <VStack
-        _dark={{
-          bg: 'darkBlue.900',
-          shadow: 'dark',
-        }}
-        _light={{ bg: 'white', shadow: 'light' }}
-        space={4}
-        w="100%"
-      >
-        {isLoggedIn ? (
+    () =>
+      isLoggedIn ? (
+        <VStack
+          _dark={{
+            bg: 'darkBlue.900',
+            shadow: 'dark',
+          }}
+          _light={{ bg: 'white', shadow: 'light' }}
+          mb={4}
+          space={4}
+          w="100%"
+        >
           <MessageComposer isLoading={isLoading} onSubmit={handleOnSubmit} />
-        ) : undefined}
-      </VStack>
-    ),
+        </VStack>
+      ) : undefined,
     [handleOnSubmit, isLoading, isLoggedIn]
   );
 
