@@ -4,7 +4,6 @@ import {
   Button,
   HStack,
   Link,
-  Pressable,
   Switch,
   Text,
   Tooltip,
@@ -99,13 +98,9 @@ export const SideMenu: FC<SideMenuProps> = ({
           }}
           justifyContent="center"
         >
-          <Pressable
-            onPress={() => {
-              navigation.navigate('Home');
-            }}
-          >
+          <Link href="/">
             <HLogoText width={190} />
-          </Pressable>
+          </Link>
         </HStack>
         <VStack mb="auto" mt={{ base: 8, md: 16 }} space={2}>
           {menuItems.map(({ icon, iconName, name, link }) => (

@@ -164,6 +164,10 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
                     _dark={textAreaStyles}
                     borderRadius={isCollapsed ? '3xl' : 'md'}
                     defaultValue={value}
+                    fontSize={{
+                      base: 'sm',
+                      md: 'md',
+                    }}
                     isReadOnly={isLoading}
                     maxLength={MAX_CHAR_LIMIT}
                     placeholder="Not your key, not your tweet. Be web3 native."
