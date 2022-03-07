@@ -4,7 +4,7 @@ import {
   DrawerContentComponentProps,
   DrawerScreenProps,
 } from '@react-navigation/drawer';
-import { Box, HStack, Icon, IconButton, useToken } from 'native-base';
+import { Box, HStack, Icon, IconButton, useBreakpointValue, useToken } from 'native-base';
 import React, { FC } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { DrawerActions } from '@react-navigation/native';
@@ -23,6 +23,10 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   const { disconnect, walletAddress, isLoading: isConnectLoading } = useWallet();
   const { profile } = useAppState();
   const fontFamily = useToken('fonts', 'heading');
+  const headerTitleLeftMargin = useBreakpointValue({
+    base: 0,
+    md: 16,
+  });
 
   const handleOnLogout = () => {
     void disconnect();
@@ -43,7 +47,6 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
       <IconButton
         borderRadius="full"
         icon={<Icon as={Ionicons} name="menu" size="md" />}
-        ml={{ base: 2, md: 4 }}
         onPress={() => {
           navigation.dispatch(DrawerActions.toggleDrawer());
         }}
@@ -69,6 +72,9 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
           <MainStack.Group
             screenOptions={{
               headerLeft: renderDrawerMenuButton,
+              headerTitleContainerStyle: {
+                marginLeft: headerTitleLeftMargin,
+              },
             }}
           >
             <MainStack.Screen component={HomeScreen} name="Home" />
@@ -83,7 +89,10 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
 
           <MainStack.Group
             screenOptions={{
-              headerLeft: () => null,
+              headerLeft: renderDrawerMenuButton,
+              headerTitleContainerStyle: {
+                marginLeft: headerTitleLeftMargin,
+              },
             }}
           >
             <MainStack.Screen component={UserScreen} name="User" />

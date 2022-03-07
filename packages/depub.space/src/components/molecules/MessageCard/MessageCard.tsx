@@ -182,7 +182,15 @@ export const MessageCard: FC<MessageCardProps> = memo(
     }, [images]);
 
     return (
-      <HStack flex={1} minHeight="80px" my={2} px={4} space={4} w="100%" {...props}>
+      <HStack
+        flex={1}
+        minHeight="80px"
+        my={2}
+        px={{ base: 3, md: 4 }}
+        space={{ base: 2, md: 4 }}
+        w="100%"
+        {...props}
+      >
         <Box alignSelf="flex-start">
           <Skeleton isLoaded={isLoaded} rounded="full" size="12">
             <Link href={`/user/${handle}`}>
