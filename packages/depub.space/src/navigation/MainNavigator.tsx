@@ -43,7 +43,6 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
       <IconButton
         borderRadius="full"
         icon={<Icon as={Ionicons} name="menu" size="md" />}
-        ml={{ base: 2, md: 4 }}
         onPress={() => {
           navigation.dispatch(DrawerActions.toggleDrawer());
         }}
@@ -69,6 +68,9 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
           <MainStack.Group
             screenOptions={{
               headerLeft: renderDrawerMenuButton,
+              headerTitleContainerStyle: {
+                marginLeft: 0,
+              },
             }}
           >
             <MainStack.Screen component={HomeScreen} name="Home" />
@@ -83,7 +85,10 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
 
           <MainStack.Group
             screenOptions={{
-              headerLeft: () => null,
+              headerLeft: renderDrawerMenuButton,
+              headerTitleContainerStyle: {
+                marginLeft: 0,
+              },
             }}
           >
             <MainStack.Screen component={UserScreen} name="User" />
