@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Message } from '../interfaces';
+import { Message, PaginatedResponse } from '../interfaces';
 
 import { ROWS_PER_PAGE, GRAPHQL_QUERY_MESSAGES_BY_TAG } from '../constants';
 
@@ -13,7 +13,7 @@ export const getMessagesByChannel = async (
   channel: string,
   previousId?: string,
   limit = ROWS_PER_PAGE
-) => {
+): Promise<PaginatedResponse<Message[]>> => {
   const { data } = await axios.post<{ data: MessagesByChannelQueryResponse }>(
     GRAPHQL_URL,
     {
@@ -31,9 +31,15 @@ export const getMessagesByChannel = async (
     }
   );
 
-  if (data && data.data.messagesByTag) {
-    return data.data.messagesByTag;
+  if (data && data.data.messagesByTag.length) {
+    return {
+      data: data.data.messagesByTag,
+      hasMore: data.data.messagesByTag.length >= limit,
+    };
   }
 
-  return [];
+  return {
+    data: [],
+    hasMore: false,
+  };
 };

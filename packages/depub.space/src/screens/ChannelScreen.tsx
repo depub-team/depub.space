@@ -1,4 +1,5 @@
-import React, { FC, useState, useCallback, useMemo } from 'react';
+import React, { FC, useState, useCallback, useEffect } from 'react';
+import update from 'immutability-helper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Debug from 'debug';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
@@ -8,13 +9,13 @@ import { VStack } from 'native-base';
 import { Layout, MessageComposer, MessageFormType, MessageList, useAlert } from '../components';
 import { Message } from '../interfaces';
 import { AppStateError, useAppState, useWallet } from '../hooks';
-import { RootStackParamList } from '../navigation/RootStackParamList';
-import { MainStackParamList } from '../navigation/MainStackParamList';
+import type { RootStackParamList, MainStackParamList } from '../navigation';
 import { NAV_HEADER_HEIGHT } from '../constants';
 import { dataUrlToFile, getLikecoinAddressByProfile, waitAsync } from '../utils';
 
 const debug = Debug('web:<ChannelScreen />');
-const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
+
+const stickyHeaderIndices = [0];
 
 export type ChannelScreenProps = CompositeScreenProps<
   DrawerScreenProps<MainStackParamList, 'Channel'>,
@@ -24,6 +25,7 @@ export type ChannelScreenProps = CompositeScreenProps<
 export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => {
   const name = decodeURIComponent(route.params.name);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [channelName, setChannelName] = useState<string | null>(null);
   const dimension = useWindowDimensions();
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
   const { isLoading: isConnectLoading, walletAddress, offlineSigner } = useWallet();
@@ -34,131 +36,123 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
   const userHandle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const alert = useAlert();
 
-  const fetchNewMessages = useCallback(
-    async (previousId?: string, refresh?: boolean) => {
-      debug('fetchNewMessages(previousId: %s, refresh: %O)', previousId, refresh);
+  const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
+    debug(
+      'fetchNewMessages(previousId: %s, refresh: %O, name: %s, isListReachedEnd: %O, isLoadingMore: %O)',
+      previousId,
+      refresh,
+      name,
+      isListReachedEnd,
+      isLoadingMore
+    );
 
-      if (isLoadingMore || isListReachedEnd) {
+    if (isLoadingMore || isListReachedEnd) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+
+    const { data: newMessages, hasMore } = await fetchMessagesByChannel(name, previousId);
+
+    if (!hasMore) {
+      setIsListReachedEnd(true);
+    }
+
+    if (newMessages) {
+      if (!refresh) {
+        setMessages(update(messages, { $push: newMessages }));
+      } else {
+        setMessages(update(messages, { $set: newMessages }));
+      }
+    }
+
+    setIsLoadingMore(false);
+  };
+
+  const handleOnSubmit = async (data: MessageFormType, image?: string | null) => {
+    try {
+      let file: File | undefined;
+
+      if (image) {
+        file = await dataUrlToFile(image, 'upload');
+      }
+
+      if (!offlineSigner) {
+        alert.show({
+          title: 'No valid signer, please connect wallet',
+          status: 'error',
+        });
+
         return;
       }
 
-      setIsLoadingMore(true);
+      const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
-      const newMessages = await fetchMessagesByChannel(name, previousId);
+      await waitAsync(100); // wait a bit
 
-      if (newMessages) {
-        if (!refresh) {
-          if (newMessages.length === 0) {
-            setIsListReachedEnd(true);
-          }
+      setIsListReachedEnd(false); // reset
 
-          setMessages(msgs => Array.from(new Set(msgs.concat(newMessages))));
-        } else {
-          setMessages(newMessages);
-        }
-      }
+      window.location.href = `/user/${userHandle}`;
 
-      setIsLoadingMore(false);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isListReachedEnd]
-  );
-
-  const handleOnPress = useCallback((message: Message) => {
-    debug('handleOnPress(message: %O)', message);
-
-    const messageIscnId = message.id.replace(new RegExp(`^${ISCN_SCHEME}/`), '');
-
-    navigation.navigate('Post', { id: messageIscnId });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleOnImagePress = useCallback((image: string, aspectRatio?: number) => {
-    debug('handleOnImagePress(image: %s, aspectRatio: %d)', aspectRatio);
-
-    navigation.navigate('Image', { image, aspectRatio });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleOnSubmit = useCallback(
-    async (data: MessageFormType, image?: string | null) => {
-      try {
-        let file: File | undefined;
-
-        if (image) {
-          file = await dataUrlToFile(image, 'upload');
-        }
-
-        if (!offlineSigner) {
-          alert.show({
-            title: 'No valid signer, please connect wallet',
-            status: 'error',
-          });
-
-          return;
-        }
-
-        const txn = await postMessage(offlineSigner, data.message, file && [file]);
-
-        await waitAsync(500); // wait a bit
-
-        setIsListReachedEnd(false); // reset
-
-        window.location.href = `/user/${userHandle}`;
-
-        if (txn) {
-          alert.show({
-            title: 'Post created successfully!',
-            status: 'success',
-          });
-        }
-      } catch (ex: any) {
+      if (txn) {
         alert.show({
-          title:
-            ex instanceof AppStateError
-              ? ex.message
-              : 'Something went wrong, please try again later',
-          status: 'error',
+          title: 'Post created successfully!',
+          status: 'success',
         });
       }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [offlineSigner, postMessage, userHandle]
-  );
+    } catch (ex: any) {
+      alert.show({
+        title:
+          ex instanceof AppStateError ? ex.message : 'Something went wrong, please try again later',
+        status: 'error',
+      });
+    }
+  };
 
-  const ListHeaderComponent = useMemo(
-    () =>
-      isLoggedIn ? (
-        <VStack
-          _dark={{
-            bg: 'darkBlue.900',
-            shadow: 'dark',
-          }}
-          _light={{ bg: 'white', shadow: 'light' }}
-          mb={4}
-          space={4}
-          w="100%"
-        >
-          <MessageComposer isLoading={isLoading} onSubmit={handleOnSubmit} />
-        </VStack>
-      ) : undefined,
-    [handleOnSubmit, isLoading, isLoggedIn]
-  );
+  const renderListHeader = () =>
+    isLoggedIn ? (
+      <VStack
+        _dark={{
+          bg: 'darkBlue.900',
+          shadow: 'dark',
+        }}
+        _light={{ bg: 'white', shadow: 'light' }}
+        mb={4}
+        space={4}
+        w="100%"
+      >
+        <MessageComposer
+          isLoading={isLoading}
+          profile={profile}
+          walletAddress={walletAddress}
+          onSubmit={handleOnSubmit}
+        />
+      </VStack>
+    ) : null;
+
+  useEffect(() => {
+    void (async () => {
+      await fetchNewMessages(undefined, true);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelName, setIsListReachedEnd]);
 
   useFocusEffect(
     useCallback(() => {
-      navigation.setOptions({
-        title: `#${name}`,
-      });
+      debug('useFocusEffect() -> name: %s', name);
 
       // reset
-      setIsListReachedEnd(true);
+      if (channelName !== name) {
+        navigation.setOptions({
+          title: `#${name}`,
+        });
 
-      void (async () => {
-        await fetchNewMessages(undefined, true);
-      })();
+        setIsListReachedEnd(false);
+        setMessages(msgs => update(msgs, { $set: [] }));
+        setChannelName(name);
+      }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [name])
+    }, [name, channelName])
   );
 
   return (
@@ -168,13 +162,13 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
         h={dimension.height - NAV_HEADER_HEIGHT}
         isLoading={isLoading}
         isLoadingMore={isLoadingMore}
-        ListHeaderComponent={ListHeaderComponent}
+        ListHeaderComponent={renderListHeader}
         scrollEventThrottle={100}
-        stickyHeaderIndices={[0]}
+        stickyHeaderIndices={stickyHeaderIndices}
         onFetchData={fetchNewMessages}
-        onImagePress={handleOnImagePress}
-        onPress={handleOnPress}
       />
     </Layout>
   );
 };
+
+(ChannelScreen as any).whyDidYouRender = true;

@@ -257,6 +257,7 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
       mentioned,
       author,
     });
+
     const messages = await Promise.all(
       transactions.map(async t => {
         const authorAddress = getAuthorAddress(t);

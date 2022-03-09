@@ -8,14 +8,15 @@ import { Box, HStack, Icon, IconButton, useBreakpointValue, useToken } from 'nat
 import React, { FC } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { DrawerActions } from '@react-navigation/native';
-import { Channels, SideMenu } from '../components';
 import { useAppState, useWallet } from '../hooks';
-import { MainStackParamList } from './MainStackParamList';
+import type { MainStackParamList } from './MainStackParamList';
 import { ChannelScreen, HomeScreen, UserScreen, WorldFeedScreen } from '../screens';
+import { Channels } from '../components/organisms/Channels';
+import { SideMenu } from '../components/organisms/SideMenu';
 
 const MainStack = createDrawerNavigator<MainStackParamList>();
 
-type MainNavigatorProps = DrawerScreenProps<MainStackParamList>;
+export type MainNavigatorProps = DrawerScreenProps<MainStackParamList>;
 
 export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   const dimensions = useWindowDimensions();

@@ -8,13 +8,13 @@ export interface ChannelsQueryResponse {
   getHashTags: Channel[];
 }
 
-export const getChannels = async (previousId?: string) => {
+export const getChannels = async (previousId?: string, limit = ROWS_PER_PAGE) => {
   const { data } = await axios.post<{ data: ChannelsQueryResponse }>(
     GRAPHQL_URL,
     {
       variables: {
         previousId: previousId || null, // graphql not accepts undefined
-        limit: ROWS_PER_PAGE,
+        limit,
       },
       query: GRAPHQL_QUERY_CHANNELS,
     },

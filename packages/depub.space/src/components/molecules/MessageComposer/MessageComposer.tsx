@@ -1,7 +1,7 @@
 import React, { FC, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Yup from 'yup';
 import { useForm, Controller } from 'react-hook-form';
 import {
@@ -18,11 +18,19 @@ import {
   Icon,
   Tooltip,
   Collapse,
+  Avatar,
 } from 'native-base';
 import Debug from 'debug';
-import { pickImageFromDevice } from '../../../utils';
+import { Link } from '@react-navigation/native';
+import {
+  getAbbrNickname,
+  getLikecoinAddressByProfile,
+  getShortenAddress,
+  pickImageFromDevice,
+} from '../../../utils';
 import { MAX_CHAR_LIMIT } from '../../../constants';
 import { ImagePreview } from './ImagePreview';
+import { DesmosProfile } from '../../../interfaces';
 
 const debug = Debug('web:<MessageComposer />');
 const LINE_HEIGHT = 24;
@@ -36,15 +44,26 @@ export interface MessageFormType {
 export interface MessageComposerProps extends IStackProps {
   isLoading?: boolean;
   defaultValue?: string;
+  profile: DesmosProfile | null;
+  walletAddress: string | null;
+  onFocus?: () => void;
+  onBlur?: () => void;
   onSubmit?: (data: MessageFormType, image?: string | null) => Promise<void> | void;
 }
 
+const areEqual = (prevProps: MessageComposerProps, nextProps: MessageComposerProps) => {
+  const keys = ['isLoading', 'defaultValue', 'onSubmit', 'profile'] as Array<
+    keyof MessageComposerProps
+  >;
+
+  return keys.every(key => prevProps[key] === nextProps[key]);
+};
+
 export const MessageComposer: FC<MessageComposerProps> = memo(
-  ({ onSubmit, defaultValue, isLoading, ...props }) => {
+  ({ onSubmit, onBlur, onFocus, defaultValue, isLoading, walletAddress, profile, ...props }) => {
     const [image, setImage] = useState<string | null>(null);
     const [isCollapsed, setIsCollapsed] = useState(true);
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const [isFocusing, setIsFocusing] = useState(false);
     const [totalLines, setTotalLines] = useState(1);
     const blurTimeout = useRef(0);
     const formSchema = Yup.object().shape({
@@ -58,28 +77,16 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
       useForm<MessageFormType>(validationOpt);
     const { errors } = formState;
     const [messageText] = watch(['message']);
-    const height = useSharedValue(1);
-    const containerStyles = useMemo(
-      () => ({
-        _dark: {
-          bg: isFocusing ? 'darkBlue.900' : undefined,
-        },
-        _light: {
-          bg: isFocusing ? '#fff' : undefined,
-        },
-      }),
-      [isFocusing]
-    );
-    const textAreaStyles = useMemo(
-      () => ({
-        _dark: {
-          bg: 'darkBlue.900',
-        },
-        _light: {
-          bg: 'light.100',
-        },
-      }),
-      []
+    const shortenAddress =
+      walletAddress &&
+      getShortenAddress(`${walletAddress.slice(0, 10)}...${walletAddress.slice(-4)}`);
+    const displayName = profile?.nickname || profile?.dtag || shortenAddress || '';
+    const abbrNickname = getAbbrNickname(displayName);
+    const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
+    const handle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
+    const profilePicSource = useMemo(
+      () => (profile ? { uri: profile?.profilePic } : undefined),
+      [profile]
     );
 
     const pickImage = async () => {
@@ -110,27 +117,32 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
 
     const handleOnFocus = () => {
       setIsCollapsed(false);
-      setIsFocusing(true);
+      if (onFocus) onFocus();
     };
 
     const handleOnBlur = () => {
       blurTimeout.current = setTimeout(() => {
         setIsCollapsed(true);
-        setIsFocusing(false);
+        if (onBlur) onBlur();
       }, 100) as unknown as number;
     };
 
-    const textAreaStyle = useAnimatedStyle(() => ({
-      height: withSpring(height.value * LINE_HEIGHT + TEXTAREA_PADDING, {}, () => {
-        setTotalLines(height.value);
-      }),
-    }));
+    const textAreaStyle = useAnimatedStyle(() => {
+      const lineHeight = isCollapsed ? 1 : 4;
 
-    // trigger animation when state changed
-    useEffect(() => {
-      height.value = isCollapsed ? 1 : 4;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      return {
+        height: withSpring(lineHeight * LINE_HEIGHT + TEXTAREA_PADDING, {}, () => {
+          setTotalLines(lineHeight);
+        }),
+      };
     }, [isCollapsed]);
+
+    const avatarStyle = useAnimatedStyle(
+      () => ({
+        maxWidth: withSpring(isCollapsed ? 0 : 48),
+      }),
+      [isCollapsed]
+    );
 
     useEffect(() => {
       // reset state
@@ -143,54 +155,75 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     }, [isSubmitted]);
 
     return (
-      <VStack
-        borderRadius="lg"
-        mt={isCollapsed ? 0 : 4}
-        p={4}
-        shadow={isFocusing ? 'lg' : 'none'}
-        space={isCollapsed ? 0 : 4}
-        {...containerStyles}
-        {...props}
-      >
-        <VStack>
-          <FormControl isInvalid={'message' in errors} isRequired>
-            <Stack>
-              <Controller
-                control={control}
-                defaultValue={defaultValue}
-                name="message"
-                render={({ field: { onChange, value } }) => (
-                  <AnimatedTextArea
-                    _dark={textAreaStyles}
-                    borderRadius={isCollapsed ? '3xl' : 'md'}
-                    defaultValue={value}
-                    fontSize={{
-                      base: 'sm',
-                      md: 'md',
-                    }}
-                    isReadOnly={isLoading}
-                    maxLength={MAX_CHAR_LIMIT}
-                    placeholder="Not your key, not your tweet. Be web3 native."
-                    returnKeyType="done"
-                    style={[textAreaStyle]}
-                    totalLines={totalLines}
-                    value={value}
-                    onBlur={handleOnBlur}
-                    onChangeText={onChange}
-                    onFocus={handleOnFocus}
-                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                    onSubmitEditing={handleOnSubmit}
-                  />
-                )}
-              />
-              <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
-                {errors.message?.message}
-              </FormControl.ErrorMessage>
-            </Stack>
-          </FormControl>
+      <VStack borderRadius="lg" p={4} space={isCollapsed ? 0 : 4} {...props}>
+        <HStack flex={1} space={isCollapsed ? 0 : { base: 2, md: 4 }}>
+          <Animated.View style={[{ flex: 1, overflow: 'hidden' }, avatarStyle]}>
+            <Link
+              to={{
+                screen: 'User',
+                params: {
+                  account: handle,
+                },
+              }}
+            >
+              <Tooltip
+                label={
+                  likecoinAddress
+                    ? 'This profile has linked to Likecoin'
+                    : 'This profile has not linked to Likecoin'
+                }
+                openDelay={250}
+              >
+                <Avatar
+                  borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
+                  borderWidth={2}
+                  size="md"
+                  source={profilePicSource}
+                >
+                  {abbrNickname}
+                </Avatar>
+              </Tooltip>
+            </Link>
+          </Animated.View>
+          <VStack flex={2}>
+            <FormControl isInvalid={'message' in errors} isRequired>
+              <Stack>
+                <Controller
+                  control={control}
+                  defaultValue={defaultValue}
+                  name="message"
+                  render={({ field: { onChange, value } }) => (
+                    <AnimatedTextArea
+                      borderRadius={isCollapsed ? '3xl' : 'md'}
+                      defaultValue={value}
+                      fontSize={{
+                        base: 'sm',
+                        md: 'md',
+                      }}
+                      isReadOnly={isLoading}
+                      maxLength={MAX_CHAR_LIMIT}
+                      placeholder="Not your key, not your tweet. Be web3 native."
+                      returnKeyType="done"
+                      style={[textAreaStyle]}
+                      totalLines={totalLines}
+                      value={value}
+                      onBlur={handleOnBlur}
+                      onChangeText={onChange}
+                      onFocus={handleOnFocus}
+                      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                      onSubmitEditing={handleOnSubmit}
+                    />
+                  )}
+                />
+                <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
+                  {errors.message?.message}
+                </FormControl.ErrorMessage>
+              </Stack>
+            </FormControl>
 
-          {image ? <ImagePreview image={image} onRemoveImage={() => setImage(null)} /> : null}
-        </VStack>
+            {image ? <ImagePreview image={image} onRemoveImage={() => setImage(null)} /> : null}
+          </VStack>
+        </HStack>
 
         <Collapse isOpen={!isCollapsed}>
           <HStack alignItems="center" justifyContent="space-between" space={4}>
@@ -221,5 +254,6 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
         </Collapse>
       </VStack>
     );
-  }
+  },
+  areEqual
 );
