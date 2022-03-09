@@ -1,11 +1,12 @@
 import React, { FC, useCallback, useState } from 'react';
 import Debug from 'debug';
-import { Link, Center, Text, HStack, Spinner, Divider, SectionList } from 'native-base';
+import { Link, Text, HStack, SectionList, Box } from 'native-base';
 import { ListRenderItemInfo, RefreshControl, SectionListData } from 'react-native';
 import { ISectionListProps } from 'native-base/lib/typescript/components/basic/SectionList/types';
 import { Message } from '../../../interfaces';
 import { MessageCard } from '../MessageCard';
-import { END_REACHED_THRESHOLD, ROWS_PER_PAGE } from '../../../constants';
+import { END_REACHED_THRESHOLD } from '../../../constants';
+import { ListEmpty, ListLoading, ListItemSeparator } from '../../atoms';
 
 const debug = Debug('web:<MessageSectionList />');
 
@@ -19,37 +20,11 @@ export interface MessageSectionListProps
   onFetchData?: (previousId?: string) => Promise<void>;
 }
 
-const ListEmptyComponent: FC = () => (
-  <Center my={8}>
-    <Text color="gray.400">No Message</Text>
-  </Center>
-);
-
-const ListFooterComponent: FC<{ isLoading?: boolean }> = ({ isLoading }) =>
-  isLoading ? (
-    <HStack
-      _dark={{
-        borderTopColor: 'gray.800',
-      }}
-      _light={{
-        borderTopColor: 'gray.200',
-      }}
-      bg="rgba(0,0,0,0.025)"
-      justifyContent="center"
-      my={24}
-      space={8}
-    >
-      <Spinner accessibilityLabel="Loading messages" size="lg" />
-    </HStack>
-  ) : null;
-
 export const MessageSectionList: FC<MessageSectionListProps> = ({
   onFetchData,
   isLoading,
   isLoadingMore,
   data,
-  onPress,
-  onImagePress,
   ...props
 }) => {
   const [refreshing, setRefreshing] = useState(false);
@@ -59,43 +34,41 @@ export const MessageSectionList: FC<MessageSectionListProps> = ({
 
   const renderSectionHeader = useCallback(
     (info: { section: SectionListData<Message> }) => (
-      <HStack
-        alignItems="center"
-        bg="primary.500"
-        justifyContent="space-between"
-        mb={4}
-        px={4}
-        py={2}
-      >
+      <HStack alignItems="center" bg="primary.600" justifyContent="space-between" px={4} py={2}>
         <Text color="white" fontSize="sm" fontWeight="bold">
           #{info.section.title}
         </Text>
-        <Text color="darkBlue.900" fontSize="xs">
-          <Link href={`/channels/${info.section.title}`}>
-            <Text>more</Text>
-          </Link>
-        </Text>
+        <Link href={`/channels/${info.section.title}`}>
+          <Text color="white" fontSize="xs">
+            <Text>+ more</Text>
+          </Text>
+        </Link>
       </HStack>
     ),
     []
   );
 
-  const renderItem = useCallback(
-    (info: ListRenderItemInfo<Message>) => (
-      <MessageCard message={info.item} onImagePress={onImagePress} onPress={onPress} />
+  const renderSectionSeparator = useCallback(
+    () => (
+      <Box
+        _dark={{
+          borderTopColor: 'gray.800',
+        }}
+        _light={{
+          borderTopColor: 'gray.200',
+        }}
+        borderTopWidth={1}
+        h={4}
+        w="100%"
+      />
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
-  const renderListFooter = useCallback(
-    () => <ListFooterComponent isLoading={isLoadingShow} />,
-    [isLoadingShow]
-  );
-
-  const renderListEmpty = useCallback(
-    () => (isLoadingShow ? null : <ListEmptyComponent />),
-    [isLoadingShow]
+  const renderItem = useCallback(
+    (info: ListRenderItemInfo<Message>) => <MessageCard message={info.item} />,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   const handleOnEndReached = useCallback(
@@ -132,25 +105,20 @@ export const MessageSectionList: FC<MessageSectionListProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const ItemSeparatorComponent = useCallback(() => <Divider bg="gray.200" my={4} w="100%" />, []);
-
   // reference: https://gist.github.com/r0b0t3d/db629f5f4e249c7a5b6a3c211f2b8aa8
   return (
     <SectionList
       contentInsetAdjustmentBehavior="automatic" // refereance: https://reactnavigation.org/docs/native-stack-navigator/#headerlargetitle
-      initialNumToRender={ROWS_PER_PAGE}
-      ItemSeparatorComponent={ItemSeparatorComponent}
+      ItemSeparatorComponent={ListItemSeparator}
       keyExtractor={keyExtractor}
-      ListEmptyComponent={renderListEmpty}
-      ListFooterComponent={renderListFooter}
-      maxToRenderPerBatch={6}
+      ListEmptyComponent={!isLoadingShow ? <ListEmpty /> : null}
+      ListFooterComponent={isLoadingShow ? <ListLoading /> : null}
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleOnRefresh} />}
       renderItem={renderItem}
       renderSectionHeader={renderSectionHeader}
-      scrollEventThrottle={100}
       sections={data}
-      windowSize={5}
+      SectionSeparatorComponent={renderSectionSeparator}
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onEndReached={handleOnEndReached}
       onEndReachedThreshold={END_REACHED_THRESHOLD}

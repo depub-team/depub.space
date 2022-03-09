@@ -14,7 +14,7 @@ import { OfflineSigner } from '@cosmjs/proto-signing';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import Debug from 'debug';
-import { DesmosProfile, Message, User, Channel } from '../interfaces';
+import { DesmosProfile, Message, User, Channel, PaginatedResponse } from '../interfaces';
 import {
   getMessages,
   submitToArweaveAndISCN,
@@ -23,6 +23,7 @@ import {
   getMessagesByChannel,
   getMessageById,
   getChannels,
+  GetUserResponse,
 } from '../utils';
 import { signISCN } from '../utils/iscn';
 import { useAlert } from '../components/molecules/Alert';
@@ -40,17 +41,16 @@ export interface AppStateContextProps {
   fetchUser: (dtagOrAddress: string) => Promise<User | null>;
   fetchChannels: () => Promise<Channel[]>;
   fetchMessage: (iscnId: string) => Promise<Message | null>;
-  fetchMessages: (previousId?: string) => Promise<Message[]>;
-  fetchMessagesByChannel: (tag: string, previousId?: string, limit?: number) => Promise<Message[]>;
+  fetchMessages: (previousId?: string) => Promise<PaginatedResponse<Message[]>>;
+  fetchMessagesByChannel: (
+    tag: string,
+    previousId?: string,
+    limit?: number
+  ) => Promise<PaginatedResponse<Message[]>>;
   fetchMessagesByOwner: (
     owner: string,
     previousId?: string
-  ) => Promise<
-    | (User & {
-        messages: Message[];
-      })
-    | null
-  >;
+  ) => Promise<PaginatedResponse<GetUserResponse | null> | null>;
   postMessage: (
     offlineSigner: OfflineSigner,
     message: string,
@@ -138,7 +138,7 @@ export const AppStateProvider: FC = ({ children }) => {
 
       return user;
     } catch (ex) {
-      debug('fetchMessagesByOwner() -> error: %O', ex);
+      debug('fetchUser() -> error: %O', ex);
 
       dispatch({
         type: ActionType.SET_ERROR,
@@ -155,12 +155,7 @@ export const AppStateProvider: FC = ({ children }) => {
     async (
       owner: string,
       previousId?: string
-    ): Promise<
-      | (User & {
-          messages: Message[];
-        })
-      | null
-    > => {
+    ): Promise<PaginatedResponse<GetUserResponse | null> | null> => {
       debug('fetchMessagesByOwner(owner: %s, previousId: %s)', owner, previousId);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
@@ -213,30 +208,36 @@ export const AppStateProvider: FC = ({ children }) => {
     return [];
   }, []);
 
-  const fetchMessages = useCallback(async (previousId?: string): Promise<Message[]> => {
-    debug('fetchMessages(previousId: %s)', previousId);
+  const fetchMessages = useCallback(
+    async (previousId?: string): Promise<PaginatedResponse<Message[]>> => {
+      debug('fetchMessages(previousId: %s)', previousId);
 
-    dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
-    try {
-      const messages = await getMessages(previousId);
+      try {
+        const messages = await getMessages(previousId);
 
-      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-      return messages;
-    } catch (ex) {
-      debug('fetchMessages() -> error: %O', ex);
+        return messages;
+      } catch (ex) {
+        debug('fetchMessages() -> error: %O', ex);
 
-      dispatch({
-        type: ActionType.SET_ERROR,
-        error: 'Fail to fetch messages, please try again later.',
-      });
+        dispatch({
+          type: ActionType.SET_ERROR,
+          error: 'Fail to fetch messages, please try again later.',
+        });
 
-      Sentry.captureException(ex);
-    }
+        Sentry.captureException(ex);
+      }
 
-    return [];
-  }, []);
+      return {
+        data: [],
+        hasMore: false,
+      };
+    },
+    []
+  );
 
   const fetchMessage = useCallback(async (iscnId: string): Promise<Message | null> => {
     debug('fetchMessage(iscnId: %s)', iscnId);
@@ -264,7 +265,11 @@ export const AppStateProvider: FC = ({ children }) => {
   }, []);
 
   const fetchMessagesByChannel = useCallback(
-    async (tag: string, previousId?: string, limit?: number): Promise<Message[]> => {
+    async (
+      tag: string,
+      previousId?: string,
+      limit?: number
+    ): Promise<PaginatedResponse<Message[]>> => {
       debug('fetchMessagesByChannel(tag: %s, previousId: %s)', tag, previousId);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
@@ -286,7 +291,10 @@ export const AppStateProvider: FC = ({ children }) => {
         Sentry.captureException(ex);
       }
 
-      return [];
+      return {
+        data: [],
+        hasMore: false,
+      };
     },
     []
   );

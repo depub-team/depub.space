@@ -3,14 +3,13 @@ import { getLinkPreview } from 'link-preview-js';
 import {
   Image,
   Box,
-  Link,
   Text,
   Skeleton,
   HStack,
   VStack,
   Avatar,
   AspectRatio,
-  Pressable,
+  Link as NBLink,
   Tooltip,
   useClipboard,
   Icon,
@@ -20,8 +19,10 @@ import {
 import dayjs from 'dayjs';
 import Debug from 'debug';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { Platform } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Platform, Pressable } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Link, useNavigation } from '@react-navigation/native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
 import {
@@ -31,6 +32,7 @@ import {
   messageSanitizer,
   getLikecoinAddressByProfile,
 } from '../../../utils';
+import type { RootStackParamList } from '../../../navigation';
 
 dayjs.extend(relativeTime);
 
@@ -44,17 +46,16 @@ const isDev = process.env.NODE_ENV !== 'production';
 export interface MessageCardProps extends ComponentProps<typeof HStack> {
   message: Message;
   isLoading?: boolean;
-  onPress?: (message: Message) => void;
-  onImagePress?: (image: string, aspectRatio?: number) => void;
 }
 
 const areEqual = (prevProps: MessageCardProps, nextProps: MessageCardProps) =>
   prevProps.message.id === nextProps.message.id;
 
 export const MessageCard: FC<MessageCardProps> = memo(
-  ({ isLoading, onPress, onImagePress, message: messageItem, ...props }) => {
+  ({ isLoading, message: messageItem, ...props }) => {
     const { id, from, date, profile, images = [], message = '' } = messageItem;
     const { colorMode } = useColorMode();
+    const navigation = useNavigation<NativeStackScreenProps<RootStackParamList>['navigation']>();
     const isDarkMode = colorMode === 'dark';
     const iscnId = id.replace(new RegExp(`^${ISCN_SCHEME}/`), '');
     const [copyIconState, setCopyIconState] = useState<'copied' | 'normal'>('normal');
@@ -83,7 +84,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
       [id, isDarkMode]
     );
 
-    const copyUrl = async () => {
+    const copyUrl = useCallback(async () => {
       await onCopy(shareableUrl);
 
       setCopyIconState('copied');
@@ -93,23 +94,16 @@ export const MessageCard: FC<MessageCardProps> = memo(
       }, 2000);
 
       return null;
-    };
+    }, [onCopy, shareableUrl]);
 
-    const handleOnPress = useCallback(
-      e => {
+    const handleOnPress = useCallback((e: any) => {
+      if (e.target.tagName !== 'A') {
         e.preventDefault();
 
-        if (onPress) onPress(messageItem);
-      },
-      [onPress, messageItem]
-    );
-
-    const handleOnImagePress = useCallback(
-      (image, aspectRatio) => () => {
-        if (onImagePress) onImagePress(image, aspectRatio);
-      },
-      [onImagePress]
-    );
+        navigation.navigate('Post', { id: iscnId });
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const renderContent = useCallback(
       () =>
@@ -193,7 +187,14 @@ export const MessageCard: FC<MessageCardProps> = memo(
       >
         <Box alignSelf="flex-start">
           <Skeleton isLoaded={isLoaded} rounded="full" size="12">
-            <Link href={`/user/${handle}`}>
+            <Link
+              to={{
+                screen: 'User',
+                params: {
+                  account: handle,
+                },
+              }}
+            >
               <Tooltip
                 label={
                   likecoinAddress
@@ -215,11 +216,18 @@ export const MessageCard: FC<MessageCardProps> = memo(
           </Skeleton>
         </Box>
 
-        <VStack flex={1} space={4}>
+        <VStack flex={1}>
           <HStack alignItems="center" justifyContent="space-between">
             <Skeleton.Text flex={1} isLoaded={isLoaded} lines={2}>
               <VStack flex={1}>
-                <Link href={`/user/${handle}`}>
+                <Link
+                  to={{
+                    screen: 'User',
+                    params: {
+                      account: handle,
+                    },
+                  }}
+                >
                   <Text color="primary.500" fontSize="md" fontWeight="bold">
                     {displayName}
                   </Text>
@@ -241,44 +249,58 @@ export const MessageCard: FC<MessageCardProps> = memo(
             </Skeleton.Text>
           </HStack>
 
-          <Skeleton.Text isLoaded={isLoaded} lines={2} space={2}>
-            <Text
-              fontFamily="text"
-              fontSize={{ base: 'md', md: 'lg' }}
-              fontWeight="500"
-              whiteSpace="pre-wrap"
-            >
-              {renderContent()}
-            </Text>
-          </Skeleton.Text>
+          <Pressable onPress={handleOnPress}>
+            <VStack>
+              <Skeleton.Text isLoaded={isLoaded} lines={2} space={2}>
+                <Text
+                  fontFamily="text"
+                  fontSize={{ base: 'md', md: 'lg' }}
+                  fontWeight="500"
+                  py={4}
+                  whiteSpace="pre-wrap"
+                >
+                  {renderContent()}
+                </Text>
+              </Skeleton.Text>
 
-          {linkPreivew ? <LinkPreview flex={1} preview={linkPreivew} /> : null}
+              {linkPreivew ? <LinkPreview flex={1} preview={linkPreivew} /> : null}
 
-          {images.length ? (
-            <VStack space={2}>
-              {images.map((image, index) => {
-                const aspectRatio = imageSizes[index]
-                  ? imageSizes[index][0] / imageSizes[index][1]
-                  : 1;
+              {images.length ? (
+                <VStack space={2}>
+                  {images.map((image, index) => {
+                    const aspectRatio = imageSizes[index]
+                      ? imageSizes[index][0] / imageSizes[index][1]
+                      : 1;
 
-                return (
-                  <Pressable key={image} onPress={handleOnImagePress(image, aspectRatio)}>
-                    <AspectRatio ratio={aspectRatio}>
-                      <Image
-                        alt={`Image ${index}`}
-                        borderColor="gray.200"
-                        borderWidth={1}
-                        resizeMode="cover"
-                        rounded="lg"
-                        source={imageSources[index]}
-                        textAlign="center"
-                      />
-                    </AspectRatio>
-                  </Pressable>
-                );
-              })}
+                    return (
+                      <Link
+                        key={image}
+                        to={{
+                          screen: 'Image',
+                          params: {
+                            image,
+                            aspectRatio,
+                          },
+                        }}
+                      >
+                        <AspectRatio ratio={aspectRatio}>
+                          <Image
+                            alt={`Image ${index}`}
+                            borderColor="gray.200"
+                            borderWidth={1}
+                            resizeMode="cover"
+                            rounded="lg"
+                            source={imageSources[index]}
+                            textAlign="center"
+                          />
+                        </AspectRatio>
+                      </Link>
+                    );
+                  })}
+                </VStack>
+              ) : null}
             </VStack>
-          ) : null}
+          </Pressable>
 
           <HStack alignItems="center" justifyContent="space-between" space={4}>
             <Box>
@@ -292,9 +314,9 @@ export const MessageCard: FC<MessageCardProps> = memo(
             <HStack alignItems="center" space={1}>
               <Skeleton isLoaded={isLoaded} size="8">
                 <Tooltip label="Check ISCN record" openDelay={250}>
-                  <Link href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
+                  <NBLink href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
                     <Image alt="ISCN badge" h={26} source={iscnBadgeSource} w={120} />
-                  </Link>
+                  </NBLink>
                 </Tooltip>
               </Skeleton>
 
@@ -321,17 +343,6 @@ export const MessageCard: FC<MessageCardProps> = memo(
                     }
                     // eslint-disable-next-line @typescript-eslint/no-misused-promises
                     onPress={copyUrl}
-                  />
-                </Tooltip>
-              </Skeleton>
-
-              <Skeleton isLoaded={isLoaded} size="8">
-                <Tooltip label="Share post" openDelay={250}>
-                  <IconButton
-                    _icon={{ color: 'gray.400', size: 'sm' }}
-                    borderRadius="full"
-                    icon={<Icon as={Ionicons} name="share-social" />}
-                    onPress={handleOnPress}
                   />
                 </Tooltip>
               </Skeleton>
