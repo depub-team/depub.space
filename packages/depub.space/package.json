@@ -49,6 +49,7 @@
     "expo-status-bar": "1.2.0",
     "form-data": "4.0.0",
     "glob-promise": "4.2.2",
+    "immutability-helper": "3.1.1",
     "link-preview-js": "2.1.13",
     "native-base": "3.3.7",
     "next": "12.1.0",

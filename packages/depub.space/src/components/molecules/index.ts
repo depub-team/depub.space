@@ -4,3 +4,4 @@ export * from './MessageCard';
 export * from './MessageComposer';
 export * from './MessageList';
 export * from './MessageSectionList';
+export * from './UserHeader';

@@ -3,42 +3,42 @@ import {
   Avatar,
   Button,
   HStack,
-  Link,
+  Link as NBLink,
   Switch,
   Text,
   Tooltip,
   useColorMode,
   VStack,
 } from 'native-base';
-import { MaterialIcons, Entypo, Feather } from '@expo/vector-icons';
+import { MaterialIcons, Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
 import { HLogoText } from '@depub/theme';
 import { SideMenuItem } from './SideMenuItem';
 import { HomeScreenNavigationProps } from '../../../screens/HomeScreen';
 import { ConnectWalletButton } from '../../atoms/ConnectWalletButton';
-import { DesmosProfile } from '../../../interfaces';
+import type { DesmosProfile } from '../../../interfaces';
 import { getAbbrNickname, getLikecoinAddressByProfile, getShortenAddress } from '../../../utils';
 
 interface MenuItems {
   icon: JSX.Element;
   iconName: string;
   name: string;
-  link: string;
+  route?: any;
+  items?: MenuItems[];
 }
 
 const menuItems: MenuItems[] = [
   {
-    icon: <Entypo />,
-    iconName: 'home',
-    name: 'Explore',
-    link: '/',
-  },
-  {
     icon: <Feather />,
     iconName: 'globe',
-    name: 'World Feed',
-    link: '/channels/all',
+    name: 'Channels',
+    route: {
+      screen: 'Channel',
+      params: {
+        name: 'kungheifatchoy',
+      },
+    },
   },
 ];
 
@@ -70,7 +70,6 @@ export const SideMenu: FC<SideMenuProps> = ({
     () => (profile ? { uri: profile.profilePic } : undefined),
     [profile]
   );
-  const userHandle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
 
   const handleOnConnect = useCallback(() => {
     navigation.navigate('ConnectWallet');
@@ -89,35 +88,34 @@ export const SideMenu: FC<SideMenuProps> = ({
         }}
         py={6}
       >
-        <HStack
-          _dark={{
-            color: 'white',
-          }}
-          _light={{
-            color: 'black',
-          }}
-          justifyContent="center"
-        >
-          <Link href="/">
+        <HStack justifyContent="flex-start" pl={4}>
+          <NBLink
+            _dark={{
+              color: 'white',
+            }}
+            _light={{
+              color: 'black',
+            }}
+            href="/"
+          >
             <HLogoText width={190} />
-          </Link>
+          </NBLink>
         </HStack>
-        <VStack mb="auto" mt={{ base: 8, md: 16 }} space={2}>
-          {menuItems.map(({ icon, iconName, name, link }) => (
-            <Link key={name} display="block" flex={1} href={link}>
-              <SideMenuItem icon={icon} iconName={iconName}>
-                {name}
-              </SideMenuItem>
-            </Link>
-          ))}
-
-          {walletAddress ? (
-            <SideMenuItem icon={<Feather />} iconName="user">
-              <Link href={`/user/${userHandle}`}>
-                <Text fontWeight="bold">Your Posts</Text>
-              </Link>
+        <VStack mb="auto" mt={{ base: 8, md: 12 }} space={2}>
+          {menuItems.map(({ icon, iconName, name, route }) => (
+            <SideMenuItem
+              key={name}
+              icon={icon}
+              iconName={iconName}
+              onPress={() => {
+                if (route) {
+                  navigation.navigate(route.screen, route.params);
+                }
+              }}
+            >
+              {name}
             </SideMenuItem>
-          ) : null}
+          ))}
 
           <SideMenuItem
             icon={<MaterialIcons />}
