@@ -8,7 +8,17 @@ const typeDefs = gql`
     getMessage(iscnId: String!): Message
     getUser(dtagOrAddress: String!, previousId: String, limit: Int): User
     getUserProfile(dtagOrAddress: String!): Profile
-    getHashTags: [HashTag]
+    getChannels: Channels
+  }
+
+  type Channels {
+    list: [List]!
+    hashTags: [HashTag]!
+  }
+
+  type List {
+    name: String!
+    hashTag: String!
   }
 
   type HashTag {
