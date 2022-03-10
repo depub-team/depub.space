@@ -30,7 +30,7 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
   const { isLoading: isConnectLoading, walletAddress, offlineSigner } = useWallet();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const { profile, postMessage, isLoading, fetchMessagesByChannel } = useAppState();
+  const { profile, postMessage, isLoading, fetchMessagesByHashTag } = useAppState();
   const isLoggedIn = Boolean(walletAddress && !isConnectLoading);
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const userHandle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
@@ -52,7 +52,7 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
 
     setIsLoadingMore(true);
 
-    const { data: newMessages, hasMore } = await fetchMessagesByChannel(name, previousId);
+    const { data: newMessages, hasMore } = await fetchMessagesByHashTag(name, previousId);
 
     if (!hasMore) {
       setIsListReachedEnd(true);

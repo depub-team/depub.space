@@ -5,18 +5,18 @@ import { ROWS_PER_PAGE, GRAPHQL_QUERY_MESSAGES_BY_USER } from '../constants';
 
 const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || '';
 
-export type GetUserResponse = User & {
+export type GetUserWithMessagesResponse = User & {
   messages: Message[];
 };
 export interface MessagesByOwnerResponse {
-  getUser: GetUserResponse;
+  getUser: GetUserWithMessagesResponse;
 }
 
 export const getMessagesByOwner = async (
   owner: string,
   previousId?: string,
   limit = ROWS_PER_PAGE
-): Promise<PaginatedResponse<GetUserResponse | null>> => {
+): Promise<PaginatedResponse<GetUserWithMessagesResponse | null>> => {
   const { data } = await axios.post<{ data: MessagesByOwnerResponse }>(
     GRAPHQL_URL,
     {

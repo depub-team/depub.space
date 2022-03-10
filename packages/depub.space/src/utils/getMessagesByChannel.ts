@@ -5,16 +5,16 @@ import { ROWS_PER_PAGE, GRAPHQL_QUERY_MESSAGES_BY_TAG } from '../constants';
 
 const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || '';
 
-export interface MessagesByChannelQueryResponse {
-  messagesByTag: Message[];
+export interface MessagesByHashTagQueryResponse {
+  messagesByHashTag: Message[];
 }
 
-export const getMessagesByChannel = async (
+export const getMessagesByHashTag = async (
   channel: string,
   previousId?: string,
   limit = ROWS_PER_PAGE
 ): Promise<PaginatedResponse<Message[]>> => {
-  const { data } = await axios.post<{ data: MessagesByChannelQueryResponse }>(
+  const { data } = await axios.post<{ data: MessagesByHashTagQueryResponse }>(
     GRAPHQL_URL,
     {
       variables: {
@@ -31,10 +31,10 @@ export const getMessagesByChannel = async (
     }
   );
 
-  if (data && data.data.messagesByTag.length) {
+  if (data && data.data.messagesByHashTag.length) {
     return {
-      data: data.data.messagesByTag,
-      hasMore: data.data.messagesByTag.length >= limit,
+      data: data.data.messagesByHashTag,
+      hasMore: data.data.messagesByHashTag.length >= limit,
     };
   }
 

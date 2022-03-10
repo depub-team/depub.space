@@ -26,7 +26,7 @@ export const GRAPHQL_TYPE_MESSAGE = `{
 }`;
 
 export const GRAPHQL_QUERY_MESSAGES_BY_USER = `
-  query GetUserWithMessages($dtagOrAddress: String!, $previousId: String, $limit: Int) { 
+  query GetUserWithMessagess($dtagOrAddress: String!, $previousId: String, $limit: Int) { 
     getUser(dtagOrAddress: $dtagOrAddress) {
       id
       profile ${GRAPHQL_TYPE_PROFILE}
@@ -57,16 +57,22 @@ export const GRAPHQL_QUERY_GET_MESSAGE = `
 `;
 
 export const GRAPHQL_QUERY_MESSAGES_BY_TAG = `
-  query MessagesByTag($tag: String!, $previousId: String, $limit: Int) {
-    messagesByTag(tag: $tag, previousId: $previousId, limit: $limit) ${GRAPHQL_TYPE_MESSAGE}
+  query MessagesByHashTag($tag: String!, $previousId: String, $limit: Int) {
+    messagesByHashTag(tag: $tag, previousId: $previousId, limit: $limit) ${GRAPHQL_TYPE_MESSAGE}
   }
 `;
 
 export const GRAPHQL_QUERY_CHANNELS = `
-  query GetHashTags {
-    getHashTags {
-      name
-      count
+  query GetChannels {
+    getChannels {
+      list {
+        name
+        hashTag
+      }
+      hashTags {
+        name
+        count
+      }
     }
   }
 `;
