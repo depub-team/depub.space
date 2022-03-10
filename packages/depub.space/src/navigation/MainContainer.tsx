@@ -22,12 +22,19 @@ import {
 } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AppStateProvider, WalletProvider } from '../hooks';
 import { AlertProvider } from '../components';
 import { RootNavigator } from './RootNavigator';
 import { RootStackParamList } from './RootStackParamList';
 
 void SplashScreen.preventAutoHideAsync();
+
+const nativeBaseConfig = {
+  dependencies: {
+    'linear-gradient': LinearGradient,
+  },
+};
 
 const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [Linking.createURL('/')],
@@ -129,7 +136,11 @@ const MainContainer = () => {
   ) : (
     <SafeAreaProvider>
       <NavigationContainer documentTitle={{ enabled: false }} linking={linking}>
-        <NativeBaseProvider colorModeManager={colorModeManager} theme={theme}>
+        <NativeBaseProvider
+          colorModeManager={colorModeManager}
+          config={nativeBaseConfig}
+          theme={theme}
+        >
           <NavigationThemeProvider>
             <View
               _dark={{

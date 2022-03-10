@@ -22,7 +22,6 @@ export interface SideMenuItemProps {
   defaultCollapsed?: boolean;
   active?: boolean;
   items?: SideMenuItemProps[];
-  mode?: 'primary' | 'subitem';
   onPress?: () => void;
 }
 
@@ -36,12 +35,10 @@ export const SideMenuItem: FC<SideMenuItemProps> = ({
   name,
   children,
   active,
-  mode = 'primary',
   onPress,
 }) => {
   const navigation = useNavigation<HomeScreenNavigationProps>();
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
-  const isPrimary = mode === 'primary';
   const defaultIconName = isCollapsed ? 'chevron-right' : 'chevron-down';
   const myIconName =
     (isCollapsed && collapsedIconName ? collapsedIconName : iconName) || defaultIconName;
@@ -81,19 +78,15 @@ export const SideMenuItem: FC<SideMenuItemProps> = ({
             base: 3,
             md: 4,
           }}
-          py={
-            isPrimary
-              ? {
-                  base: 2,
-                  md: 3,
-                }
-              : 1
-          }
+          py={{
+            base: 2,
+            md: 3,
+          }}
           space={4}
         >
           {myIcon && myIconName ? (
             <Box w={8}>
-              <Icon as={myIcon} name={myIconName} />
+              <Icon as={myIcon} name={myIconName} size="sm" />
             </Box>
           ) : undefined}
 
