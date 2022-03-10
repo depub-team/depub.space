@@ -88,7 +88,6 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
               name: hashTag,
               icon: <Feather />,
               iconName: 'hash',
-              mode: 'subitem',
               active:
                 focusedRoute?.name === 'Channel' && (focusedRoute?.params as any)?.name === hashTag,
               routeParams: {
