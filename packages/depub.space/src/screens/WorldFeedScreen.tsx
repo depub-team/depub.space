@@ -22,13 +22,14 @@ export type WorldFeedScreenProps = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
-export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
+export const WorldFeedScreen: FC<WorldFeedScreenProps> = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
   const dimension = useWindowDimensions();
   const { isLoading: isConnectLoading, walletAddress, offlineSigner } = useWallet();
-  const { profile, isLoading, fetchMessages, postMessage } = useAppState();
+  const { profile, isLoading, fetchMessages, postMessage, showLoading, closeLoading } =
+    useAppState();
   const isLoggedIn = Boolean(walletAddress && !isConnectLoading);
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const userHandle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
@@ -78,13 +79,11 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
       }
 
       // show loading
-      navigation.navigate('Loading');
+      showLoading();
 
       const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
       await waitAsync(500); // wait a bit
-
-      setIsListReachedEnd(false); // reset
 
       window.location.href = `/user/${userHandle}`;
 
@@ -95,6 +94,8 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
         });
       }
     } catch (ex: any) {
+      closeLoading(); // back from loading
+
       alert.show({
         title:
           ex instanceof AppStateError ? ex.message : 'Something went wrong, please try again later',

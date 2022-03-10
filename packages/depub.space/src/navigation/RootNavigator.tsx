@@ -3,7 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { MainNavigator } from './MainNavigator';
 import { NotFoundScreen } from '../screens/NotFoundScreen';
 import { RootStackParamList } from './RootStackParamList';
-import { LoadingScreen, ConnectWalletScreen, ImageScreen, PostScreen } from '../screens';
+import { ConnectWalletScreen, ImageScreen, PostScreen } from '../screens';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
@@ -21,7 +21,6 @@ export const RootNavigator: FC = memo(() => (
       <RootStack.Screen component={ConnectWalletScreen} name="ConnectWallet" />
       <RootStack.Screen component={ImageScreen} name="Image" />
       <RootStack.Screen component={PostScreen} name="Post" />
-      <RootStack.Screen component={LoadingScreen} name="Loading" />
     </RootStack.Group>
   </RootStack.Navigator>
 ));
