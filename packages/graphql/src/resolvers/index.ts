@@ -57,6 +57,14 @@ interface GetUserProfileArgs {
   dtagOrAddress: string;
 }
 
+interface GetChannelsResponse {
+  hashTags: ISCNChannel[];
+  list: Array<{
+    name: string;
+    hashTag: string;
+  }>;
+}
+
 const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile | null> => {
   const kvStore = new KVStore(ctx.env.WORKERS_GRAPHQL_CACHE);
 
@@ -283,8 +291,8 @@ const getUserProfile = async (args: GetUserProfileArgs, ctx: Context) => {
   return profile;
 };
 
-const getHashTags = async (_args: any, ctx: Context): Promise<ISCNChannel[]> => {
-  try {
+const getChannels = async (_args: any, ctx: Context): Promise<GetChannelsResponse> => {
+  const getChannelsFromDurableObject = async () => {
     // get latest key
     const previousId = await ctx.env.WORKERS_GRAPHQL_CACHE.get(HASHTAG_SEQUENCE_KEY);
 
@@ -348,12 +356,19 @@ const getHashTags = async (_args: any, ctx: Context): Promise<ISCNChannel[]> => 
     await ctx.env.WORKERS_GRAPHQL_CACHE.put(HASHTAG_RECORD_KEY, JSON.stringify(updatedRecords));
 
     return trimmedRecords;
+  };
+
+  try {
+    const hashTags = await getChannelsFromDurableObject();
+    const list = await ctx.dataSources.notionAPI.getList();
+
+    return { hashTags, list };
   } catch (ex: any) {
     // eslint-disable-next-line no-console
     console.error(ex);
   }
 
-  return [];
+  return { hashTags: [], list: [] };
 };
 
 const resolvers: Resolvers = {
@@ -364,7 +379,7 @@ const resolvers: Resolvers = {
     messagesByMentioned: async (_parent, args, ctx) => getMessages(args, ctx),
     getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
     getMessage: (_parent, args, ctx) => getMessage(args, ctx),
-    getHashTags: (_parent, args, ctx) => getHashTags(args, ctx),
+    getChannels: (_parent, args, ctx) => getChannels(args, ctx),
   },
   User: {
     messages: async (parent, args, ctx) => {

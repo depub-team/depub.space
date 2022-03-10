@@ -1,5 +1,5 @@
 import { Bindings } from '../bindings';
-import { DesmosAPI, ISCNQueryAPI } from './datasources';
+import { DesmosAPI, ISCNQueryAPI, NotionAPI } from './datasources';
 
 type ContextFunctionParams = {
   request: Request;
@@ -10,6 +10,7 @@ type Context = {
   dataSources: {
     iscnQueryAPI: ISCNQueryAPI;
     desmosAPI: DesmosAPI;
+    notionAPI: NotionAPI;
   };
 };
 
