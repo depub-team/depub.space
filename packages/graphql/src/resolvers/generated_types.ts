@@ -76,7 +76,7 @@ export type Query = {
   getUser?: Maybe<User>;
   getUserProfile?: Maybe<Profile>;
   messages?: Maybe<Array<Maybe<Message>>>;
-  messagesByChannel?: Maybe<Array<Maybe<Message>>>;
+  messagesByHashTag?: Maybe<Array<Maybe<Message>>>;
   messagesByMentioned?: Maybe<Array<Maybe<Message>>>;
 };
 
@@ -104,7 +104,7 @@ export type QueryMessagesArgs = {
 };
 
 
-export type QueryMessagesByChannelArgs = {
+export type QueryMessagesByHashTagArgs = {
   limit?: InputMaybe<Scalars['Int']>;
   previousId?: InputMaybe<Scalars['String']>;
   tag: Scalars['String'];
@@ -291,7 +291,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   getUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryGetUserArgs, 'dtagOrAddress'>>;
   getUserProfile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType, RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>>;
   messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<QueryMessagesArgs>>;
-  messagesByChannel?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, RequireFields<QueryMessagesByChannelArgs, 'tag'>>;
+  messagesByHashTag?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, RequireFields<QueryMessagesByHashTagArgs, 'tag'>>;
   messagesByMentioned?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, RequireFields<QueryMessagesByMentionedArgs, 'mentioned'>>;
 };
 
