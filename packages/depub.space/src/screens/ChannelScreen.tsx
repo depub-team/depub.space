@@ -30,7 +30,8 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
   const { isLoading: isConnectLoading, walletAddress, offlineSigner } = useWallet();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const { profile, postMessage, isLoading, fetchMessagesByHashTag } = useAppState();
+  const { profile, postMessage, isLoading, fetchMessagesByHashTag, showLoading, closeLoading } =
+    useAppState();
   const isLoggedIn = Boolean(walletAddress && !isConnectLoading);
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const userHandle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
@@ -87,13 +88,11 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
       }
 
       // show loading
-      navigation.navigate('Loading');
+      showLoading();
 
       const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
-      await waitAsync(100); // wait a bit
-
-      setIsListReachedEnd(false); // reset
+      await waitAsync(500); // wait a bit
 
       // force to reload
       window.location.href = `/user/${userHandle}`;
@@ -105,6 +104,8 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
         });
       }
     } catch (ex: any) {
+      closeLoading(); // back from loading
+
       alert.show({
         title:
           ex instanceof AppStateError ? ex.message : 'Something went wrong, please try again later',

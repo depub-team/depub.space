@@ -124,7 +124,7 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
       blurTimeout.current = setTimeout(() => {
         setIsCollapsed(true);
         if (onBlur) onBlur();
-      }, 100) as unknown as number;
+      }, 500) as unknown as number;
     };
 
     const textAreaStyle = useAnimatedStyle(() => {
@@ -153,6 +153,16 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isSubmitted]);
+
+    // clear timeout when unmounting
+    useEffect(
+      () => () => {
+        if (blurTimeout.current) {
+          clearTimeout(blurTimeout.current);
+        }
+      },
+      []
+    );
 
     return (
       <VStack borderRadius="lg" p={4} space={isCollapsed ? 0 : 4} {...props}>
@@ -244,9 +254,8 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
             <Button
               isLoading={isLoading}
               leftIcon={<Icon as={Ionicons} name="send" size="xs" />}
-              onPress={() => {
-                void handleOnSubmit();
-              }}
+              // eslint-disable-next-line @typescript-eslint/no-misused-promises
+              onPress={handleOnSubmit}
             >
               Submit
             </Button>

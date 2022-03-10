@@ -12,7 +12,7 @@ import { DrawerActions, findFocusedRoute } from '@react-navigation/native';
 import { useAppState, useWallet } from '../hooks';
 import type { MainStackParamList } from './MainStackParamList';
 import { ChannelScreen, HomeScreen, UserScreen, WorldFeedScreen } from '../screens';
-import { Channels } from '../components/organisms/Channels';
+import { Trends } from '../components/organisms/Trends';
 import { SideMenu } from '../components/organisms/SideMenu/SideMenu';
 import type { SideMenuItemProps } from '../components/organisms/SideMenu/SideMenuItem';
 
@@ -151,7 +151,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
           </MainStack.Group>
         </MainStack.Navigator>
       </Box>
-      <Channels flex={1} />
+      <Trends flex={1} />
     </HStack>
   );
 };

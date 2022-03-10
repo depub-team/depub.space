@@ -45,7 +45,6 @@ const linking: LinkingOptions<RootStackParamList> = {
       Post: ':id',
       ConnectWallet: 'connectWallet',
       Image: 'image',
-      Loading: 'loading',
     },
   },
 };
