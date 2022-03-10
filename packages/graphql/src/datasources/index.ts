@@ -1,3 +1,3 @@
 export * from './desmos.api';
 export * from './iscn-query.api';
-export * from './notoin.api';
+export * from './notion.api';

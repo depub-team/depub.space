@@ -1,33 +1,47 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import {
   createDrawerNavigator,
   DrawerContentComponentProps,
   DrawerScreenProps,
 } from '@react-navigation/drawer';
+import update from 'immutability-helper';
 import { Box, HStack, Icon, IconButton, useBreakpointValue, useToken } from 'native-base';
-import React, { FC } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { DrawerActions } from '@react-navigation/native';
+import { DrawerActions, findFocusedRoute } from '@react-navigation/native';
 import { useAppState, useWallet } from '../hooks';
 import type { MainStackParamList } from './MainStackParamList';
 import { ChannelScreen, HomeScreen, UserScreen, WorldFeedScreen } from '../screens';
 import { Channels } from '../components/organisms/Channels';
-import { SideMenu } from '../components/organisms/SideMenu';
+import { SideMenu } from '../components/organisms/SideMenu/SideMenu';
+import type { SideMenuItemProps } from '../components/organisms/SideMenu/SideMenuItem';
 
 const MainStack = createDrawerNavigator<MainStackParamList>();
 
 export type MainNavigatorProps = DrawerScreenProps<MainStackParamList>;
 
+const defaultMenuItem: SideMenuItemProps = {
+  icon: <Feather />,
+  iconName: 'globe',
+  name: 'World Feed',
+  routeParams: {
+    screen: 'WorldFeed',
+  },
+};
+
 export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   const dimensions = useWindowDimensions();
   const isWideScreen = dimensions.width >= 768;
   const { disconnect, walletAddress, isLoading: isConnectLoading } = useWallet();
-  const { profile } = useAppState();
+  const { profile, channels } = useAppState();
+  const [menuItems, setMenuItems] = useState<SideMenuItemProps[]>([]);
   const fontFamily = useToken('fonts', 'heading');
   const headerTitleLeftMargin = useBreakpointValue({
     base: 0,
     md: 16,
   });
+  const navigationState = navigation.getState();
+  const focusedRoute = findFocusedRoute(navigationState);
 
   const handleOnLogout = () => {
     void disconnect();
@@ -36,6 +50,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   const renderDrawerContent = (props: DrawerContentComponentProps) => (
     <SideMenu
       isLoading={isConnectLoading}
+      menuItems={menuItems}
       profile={profile}
       walletAddress={walletAddress}
       onLogout={handleOnLogout}
@@ -54,6 +69,41 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
       />
     );
 
+  useEffect(() => {
+    const channelMap = channels.reduce(
+      (obj, { name, hashTag }) => ({
+        ...obj,
+        [name]: (obj[name] || []).concat(hashTag),
+      }),
+      {} as Record<string, string[]>
+    );
+
+    // compose the side menu items
+    setMenuItems(items =>
+      update(items, {
+        $set: Object.keys(channelMap)
+          .map<SideMenuItemProps>(key => ({
+            name: key,
+            items: channelMap[key].map(hashTag => ({
+              name: hashTag,
+              icon: <Feather />,
+              iconName: 'hash',
+              mode: 'subitem',
+              active:
+                focusedRoute?.name === 'Channel' && (focusedRoute?.params as any)?.name === hashTag,
+              routeParams: {
+                screen: 'Channel',
+                params: {
+                  name: hashTag,
+                },
+              },
+            })),
+          }))
+          .concat(defaultMenuItem),
+      })
+    );
+  }, [channels, focusedRoute]);
+
   return (
     <HStack flex={1} safeArea>
       <Box flex={2}>
@@ -62,7 +112,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
           screenOptions={{
             drawerType: isWideScreen ? 'permanent' : 'slide',
             drawerStyle: {
-              width: 280,
+              width: 320,
             },
             headerShown: true,
             headerTitleStyle: {
