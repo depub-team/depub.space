@@ -1,14 +1,22 @@
 import axios from 'axios';
-import { Channel } from '../interfaces';
+import { HashTag, List } from '../interfaces';
 import { ROWS_PER_PAGE, GRAPHQL_QUERY_CHANNELS } from '../constants';
 
 const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || '';
 
-export interface ChannelsQueryResponse {
-  getHashTags: Channel[];
+export interface GetChannelsResponse {
+  list: List[];
+  hashTags: HashTag[];
 }
 
-export const getChannels = async (previousId?: string, limit = ROWS_PER_PAGE) => {
+export interface ChannelsQueryResponse {
+  getChannels: GetChannelsResponse;
+}
+
+export const getChannels = async (
+  previousId?: string,
+  limit = ROWS_PER_PAGE
+): Promise<GetChannelsResponse> => {
   const { data } = await axios.post<{ data: ChannelsQueryResponse }>(
     GRAPHQL_URL,
     {
@@ -25,9 +33,12 @@ export const getChannels = async (previousId?: string, limit = ROWS_PER_PAGE) =>
     }
   );
 
-  if (data && data.data.getHashTags) {
-    return data.data.getHashTags;
+  if (data && data.data.getChannels) {
+    return data.data.getChannels;
   }
 
-  return [];
+  return {
+    list: [],
+    hashTags: [],
+  };
 };
