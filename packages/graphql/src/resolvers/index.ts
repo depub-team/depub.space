@@ -375,7 +375,7 @@ const resolvers: Resolvers = {
   Query: {
     getUser: (_parent, args, ctx) => getUser(args.dtagOrAddress, ctx),
     messages: async (_parent, args, ctx) => getMessages(args, ctx),
-    messagesByChannel: async (_parent, args, ctx) => getMessages(args, ctx),
+    messagesByHashTag: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByMentioned: async (_parent, args, ctx) => getMessages(args, ctx),
     getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
     getMessage: (_parent, args, ctx) => getMessage(args, ctx),
