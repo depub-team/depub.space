@@ -9,7 +9,8 @@
     "build": "next build && next export",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "svgr": "svgr ./public/icons -d ./src/components/atoms/icons --typescript --native --svg-props className="
   },
   "dependencies": {
     "@cosmjs/cosmwasm-stargate": "~0.26.5",
@@ -63,13 +64,14 @@
     "react-native-gesture-handler": "2.3.0",
     "react-native-reanimated": "2.4.1",
     "react-native-safe-area-context": "4.1.2",
-    "react-native-svg": "12.1.1",
+    "react-native-svg": "12.3.0",
     "react-native-web": "0.17.6",
     "styled-jsx": "5.0.0",
     "yup": "0.32.11"
   },
   "devDependencies": {
     "@expo/next-adapter": "3.1.20",
+    "@svgr/cli": "6.2.0",
     "@types/debug": "4.1.7",
     "@types/jest": "27.4.1",
     "@types/react": "17.0.39",

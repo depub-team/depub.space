@@ -4,3 +4,4 @@ export * from './ListEmpty';
 export * from './ListItemSeparator';
 export * from './ListLoading';
 export * from './Meta';
+export * from './icons';
