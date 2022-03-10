@@ -19,6 +19,7 @@ import {
   Tooltip,
   Collapse,
   Avatar,
+  Box,
 } from 'native-base';
 import Debug from 'debug';
 import { Link } from '@react-navigation/native';
@@ -92,6 +93,8 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     const pickImage = async () => {
       debug('pickImage()');
 
+      clearTimeout(blurTimeout.current);
+
       try {
         const result = await pickImageFromDevice();
 
@@ -106,6 +109,8 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     };
 
     const handleOnSubmit = async () => {
+      debug('handleOnSubmit()');
+
       clearTimeout(blurTimeout.current); // avoid goes to collapse state
 
       await handleSubmit(async data => {
@@ -237,14 +242,14 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
 
         <Collapse isOpen={!isCollapsed}>
           <HStack alignItems="center" justifyContent="space-between" space={4}>
+            <Box w={12} />
             <Tooltip label="Upload Image" openDelay={250}>
               <IconButton
                 _icon={{ color: 'primary.500' }}
                 borderRadius="full"
                 icon={<Icon as={Ionicons} name="image-outline" />}
-                onPress={() => {
-                  void pickImage();
-                }}
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                onPress={pickImage}
               />
             </Tooltip>
 
