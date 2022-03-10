@@ -19,7 +19,15 @@ export class NotionAPI extends DataSource {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.secret}`,
       },
-      body: JSON.stringify({ page_size: 100 }),
+      body: JSON.stringify({
+        page_size: 100,
+        sorts: [
+          {
+            property: 'Order',
+            direction: 'ascending',
+          },
+        ],
+      }),
     });
     const data = await response.json<
       NotionResponse<{

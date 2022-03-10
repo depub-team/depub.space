@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo } from 'react';
+import React, { FC, useMemo } from 'react';
 import {
   Avatar,
   Button,
@@ -10,42 +10,22 @@ import {
   useColorMode,
   VStack,
 } from 'native-base';
-import { MaterialIcons, Feather } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
 import { HLogoText } from '@depub/theme';
+import { useNavigation } from '@react-navigation/native';
+import type { SideMenuItemProps } from './SideMenuItem';
 import { SideMenuItem } from './SideMenuItem';
-import { HomeScreenNavigationProps } from '../../../screens/HomeScreen';
 import { ConnectWalletButton } from '../../atoms/ConnectWalletButton';
 import type { DesmosProfile } from '../../../interfaces';
 import { getAbbrNickname, getLikecoinAddressByProfile, getShortenAddress } from '../../../utils';
-
-interface MenuItems {
-  icon: JSX.Element;
-  iconName: string;
-  name: string;
-  route?: any;
-  items?: MenuItems[];
-}
-
-const menuItems: MenuItems[] = [
-  {
-    icon: <Feather />,
-    iconName: 'globe',
-    name: 'Channels',
-    route: {
-      screen: 'Channel',
-      params: {
-        name: 'kungheifatchoy',
-      },
-    },
-  },
-];
+import type { HomeScreenNavigationProps } from '../../../screens';
 
 export interface SideMenuProps extends DrawerContentComponentProps {
   onLogout?: () => void;
   isLoading?: boolean;
   walletAddress: string | null;
+  menuItems: SideMenuItemProps[];
   profile: DesmosProfile | null;
 }
 
@@ -53,12 +33,13 @@ export const SideMenu: FC<SideMenuProps> = ({
   onLogout,
   isLoading,
   walletAddress,
+  menuItems,
   profile,
   ...props
 }) => {
   const isLogged = Boolean(walletAddress);
-  const navigation = useNavigation<HomeScreenNavigationProps>();
   const { colorMode, toggleColorMode } = useColorMode();
+  const navigation = useNavigation<HomeScreenNavigationProps>();
   const isDarkMode = colorMode === 'dark';
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const shortenAddress =
@@ -71,10 +52,9 @@ export const SideMenu: FC<SideMenuProps> = ({
     [profile]
   );
 
-  const handleOnConnect = useCallback(() => {
+  const handleOnConnect = () => {
     navigation.navigate('ConnectWallet');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  };
 
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1 }}>
@@ -102,19 +82,8 @@ export const SideMenu: FC<SideMenuProps> = ({
           </NBLink>
         </HStack>
         <VStack mb="auto" mt={{ base: 8, md: 12 }} space={2}>
-          {menuItems.map(({ icon, iconName, name, route }) => (
-            <SideMenuItem
-              key={name}
-              icon={icon}
-              iconName={iconName}
-              onPress={() => {
-                if (route) {
-                  navigation.navigate(route.screen, route.params);
-                }
-              }}
-            >
-              {name}
-            </SideMenuItem>
+          {menuItems.map(menuItemProps => (
+            <SideMenuItem key={menuItemProps.name} {...menuItemProps} />
           ))}
 
           <SideMenuItem
