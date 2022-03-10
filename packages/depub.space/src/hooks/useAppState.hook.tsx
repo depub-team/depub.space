@@ -428,11 +428,6 @@ export const AppStateProvider: FC = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectError]);
 
-  // get channels
-  useEffect(() => {
-    void fetchChannels();
-  }, [fetchChannels]);
-
   const memoValue = useMemo(
     () => ({
       ...state,
