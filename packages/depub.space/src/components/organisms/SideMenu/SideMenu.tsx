@@ -1,9 +1,11 @@
 import React, { FC, useMemo } from 'react';
 import {
   Avatar,
+  Box,
   Button,
   HStack,
   Link as NBLink,
+  ScrollView,
   Switch,
   Text,
   Tooltip,
@@ -57,18 +59,21 @@ export const SideMenu: FC<SideMenuProps> = ({
   };
 
   return (
-    <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1 }}>
+    <DrawerContentScrollView
+      {...props}
+      contentContainerStyle={{ flex: 1 }}
+      style={{ flexBasis: '100vh', flexGrow: 0 }}
+    >
       <VStack
-        flex={1}
-        h="100vh"
-        justifyContent="space-between"
+        flex="1 0 100%"
         px={{
           base: 4,
           md: 6,
         }}
         py={6}
+        space={8}
       >
-        <HStack justifyContent="flex-start" pl={4}>
+        <HStack justifyContent="flex-start" pl={4} space={4}>
           <NBLink
             _dark={{
               color: 'white',
@@ -81,22 +86,50 @@ export const SideMenu: FC<SideMenuProps> = ({
             <HLogoText width={190} />
           </NBLink>
         </HStack>
-        <VStack mb="auto" mt={{ base: 8, md: 12 }} space={2}>
-          {menuItems.map(menuItemProps => (
-            <SideMenuItem key={menuItemProps.name} {...menuItemProps} />
-          ))}
 
-          <SideMenuItem
-            icon={<MaterialIcons />}
-            iconName="nightlight-round"
-            onPress={() => toggleColorMode()}
-          >
-            <HStack alignItems="center" flex={1} justifyContent="space-between">
-              <Text fontWeight="bold">Night Mode</Text>
-              <Switch isChecked={isDarkMode} size="md" onToggle={() => toggleColorMode()} />
-            </HStack>
-          </SideMenuItem>
-        </VStack>
+        <ScrollView position="relative">
+          <VStack flex={1} space={2}>
+            {menuItems.map(menuItemProps => (
+              <SideMenuItem key={menuItemProps.name} {...menuItemProps} />
+            ))}
+
+            <SideMenuItem
+              icon={<MaterialIcons />}
+              iconName="nightlight-round"
+              onPress={() => toggleColorMode()}
+            >
+              <HStack alignItems="center" flex={1} justifyContent="space-between">
+                <Text fontWeight="bold">Night Mode</Text>
+                <Switch isChecked={isDarkMode} size="md" onToggle={() => toggleColorMode()} />
+              </HStack>
+            </SideMenuItem>
+          </VStack>
+          <Box
+            _dark={{
+              bg: {
+                linearGradient: {
+                  colors: ['transparent', 'white'],
+                  start: [0, 0],
+                  end: [0, 1],
+                },
+              },
+            }}
+            _light={{
+              bg: {
+                linearGradient: {
+                  colors: ['transparent', 'white'],
+                  start: [0, 0],
+                  end: [0, 1],
+                },
+              },
+            }}
+            bottom={0}
+            h={8}
+            left={0}
+            position="sticky"
+            w="100%"
+          />
+        </ScrollView>
 
         {isLogged ? (
           <VStack space={4}>
