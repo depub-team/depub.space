@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useMemo,
   useReducer,
+  useState,
 } from 'react';
 import * as Sentry from '@sentry/nextjs';
 import * as Crypto from 'expo-crypto';
@@ -28,6 +29,7 @@ import {
 } from '../utils';
 import { signISCN } from '../utils/iscn';
 import { useAlert } from '../components/molecules/Alert';
+import { LoadingModal } from '../components/organisms/LoadingModal';
 import { useWallet } from './useWallet.hook';
 
 const debug = Debug('web:useAppState');
@@ -40,6 +42,8 @@ export interface AppStateContextProps {
   profile: DesmosProfile | null;
   channels: List[];
   hashTags: HashTag[];
+  showLoading: () => void;
+  closeLoading: () => void;
   fetchUser: (dtagOrAddress: string) => Promise<User | null>;
   fetchChannels: () => Promise<GetChannelsResponse>;
   fetchMessage: (iscnId: string) => Promise<Message | null>;
@@ -67,6 +71,8 @@ const initialState: AppStateContextProps = {
   isLoading: false,
   profile: null,
   fetchUser: null as never,
+  showLoading: null as never,
+  closeLoading: null as never,
   fetchChannels: null as never,
   fetchMessages: null as never,
   fetchMessage: null as never,
@@ -133,6 +139,7 @@ export const useAppState = () => useContext(AppStateContext);
 
 export const AppStateProvider: FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [isLoadingModalOpen, setIsLoadingModalOpen] = useState(false);
   const alert = useAlert();
   const { walletAddress, error: connectError } = useWallet();
 
@@ -388,6 +395,14 @@ export const AppStateProvider: FC = ({ children }) => {
     [fetchMessages]
   );
 
+  const showLoading = useCallback(() => {
+    setIsLoadingModalOpen(true);
+  }, []);
+
+  const closeLoading = useCallback(() => {
+    setIsLoadingModalOpen(false);
+  }, []);
+
   useEffect(() => {
     // eslint-disable-next-line func-names
     void (async function () {
@@ -428,6 +443,8 @@ export const AppStateProvider: FC = ({ children }) => {
       fetchChannels,
       fetchMessagesByHashTag,
       fetchMessagesByOwner,
+      showLoading,
+      closeLoading,
     }),
     [
       state,
@@ -438,8 +455,16 @@ export const AppStateProvider: FC = ({ children }) => {
       fetchMessagesByHashTag,
       fetchMessages,
       fetchMessagesByOwner,
+      showLoading,
+      closeLoading,
     ]
   );
 
-  return <AppStateContext.Provider value={memoValue}>{children}</AppStateContext.Provider>;
+  return (
+    <AppStateContext.Provider value={memoValue}>
+      {children}
+
+      <LoadingModal isOpen={isLoadingModalOpen} />
+    </AppStateContext.Provider>
+  );
 };

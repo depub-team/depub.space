@@ -39,7 +39,7 @@ const renderItem = ({ item: { name, count } }: ListRenderItemInfo<HashTag>) => (
   <ChannelItem count={count} name={name} />
 );
 
-export const Channels: FC<IVStackProps> = ({ ...props }) => {
+export const Trends: FC<IVStackProps> = ({ ...props }) => {
   const { hashTags, isLoading } = useAppState();
   const dimension = useWindowDimensions();
   const isLoadingShow = !hashTags.length && isLoading;
