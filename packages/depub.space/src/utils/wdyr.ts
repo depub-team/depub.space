@@ -13,9 +13,7 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     'Applying whyDidYouRender, to help you locate unnecessary re-renders during development. See https://github.com/welldone-software/why-did-you-render'
   );
 
-  whyDidYouRender(React, {
-    trackAllPureComponents: true,
-  });
+  whyDidYouRender(React);
 }
 
 export default {};

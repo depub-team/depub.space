@@ -41,12 +41,10 @@ export const ConnectWalletScreen: FC<ConnectWalletScreenProps> = ({ navigation }
     <ConnectWalletModal
       isOpen
       onClose={handleOnClose}
-      onPressKeplr={() => {
-        void connectKeplr();
-      }}
-      onPressWalletConnect={() => {
-        void connectWalletConnect();
-      }}
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onPressKeplr={connectKeplr}
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onPressWalletConnect={connectWalletConnect}
     />
   );
 };

@@ -27,7 +27,9 @@ interface RecordKeys {
   mentionKeys: Map<string, string>;
 }
 export class IscnTxn implements DurableObject {
-  constructor(private readonly state: DurableObjectState, private readonly env: Bindings) {}
+  constructor(private readonly state: DurableObjectState, private readonly env: Bindings) {
+    // this.state.storage.deleteAll();
+  }
 
   public async addTransactions(request: Request) {
     const records = await request.json<ISCNRecord[]>();
@@ -55,12 +57,15 @@ export class IscnTxn implements DurableObject {
           const transactionKey = `${TRANSACTION_KEY}:${ulid()}`;
           const authorTransactionKey = `${AUTHOR_KEY}:${author.entity['@id']}:${ulid()}`;
           const hashtagKeys = hashtags
-            ? hashtags.map(tag => [tag, `${HASHTAG_KEY}:${tag.replace(/^#/, '')}:${ulid()}`])
+            ? hashtags.map(tag => [
+                tag,
+                `${HASHTAG_KEY}:${tag.toLowerCase().replace(/^#/, '')}:${ulid()}`,
+              ])
             : [];
           const mentionKeys = mentions
             ? mentions.map(mention => [
                 mention,
-                `${MENTION_KEY}:${mention.replace(/^@/, '')}:${ulid()}`,
+                `${MENTION_KEY}:${mention.toLowerCase().replace(/^@/, '')}:${ulid()}`,
               ])
             : [];
 
@@ -142,7 +147,7 @@ export class IscnTxn implements DurableObject {
       );
     } else if (mentioned) {
       const keyList = await this.state.storage.list<string>({
-        prefix: `${MENTION_KEY}:${mentioned}`,
+        prefix: `${MENTION_KEY}:${mentioned.toLocaleLowerCase()}`,
         reverse: true,
         limit,
         end: new Map(recordKeys?.mentionKeys || []).get(`@${mentioned}`),
@@ -153,7 +158,7 @@ export class IscnTxn implements DurableObject {
       );
     } else if (hashtag) {
       const keyList = await this.state.storage.list<string>({
-        prefix: `${HASHTAG_KEY}:${hashtag}`,
+        prefix: `${HASHTAG_KEY}:${hashtag.toLowerCase()}`,
         reverse: true,
         limit,
         end: new Map(recordKeys?.hashtagKeys || []).get(`#${hashtag}`),

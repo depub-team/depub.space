@@ -3,12 +3,22 @@ import { gql } from 'apollo-server-cloudflare';
 const typeDefs = gql`
   type Query {
     messages(previousId: String, limit: Int): [Message]
-    messagesByChannel(tag: String!, previousId: String, limit: Int): [Message]
+    messagesByHashTag(tag: String!, previousId: String, limit: Int): [Message]
     messagesByMentioned(mentioned: String!, previousId: String, limit: Int): [Message]
     getMessage(iscnId: String!): Message
     getUser(dtagOrAddress: String!, previousId: String, limit: Int): User
     getUserProfile(dtagOrAddress: String!): Profile
-    getHashTags: [HashTag]
+    getChannels: Channels
+  }
+
+  type Channels {
+    list: [List]!
+    hashTags: [HashTag]!
+  }
+
+  type List {
+    name: String!
+    hashTag: String!
   }
 
   type HashTag {

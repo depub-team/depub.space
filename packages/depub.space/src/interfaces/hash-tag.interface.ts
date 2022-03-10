@@ -1,4 +1,4 @@
-export interface Channel {
+export interface HashTag {
   name: string;
   count: number;
 }
