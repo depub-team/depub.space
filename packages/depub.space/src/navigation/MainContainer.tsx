@@ -1,6 +1,13 @@
 import React, { FC, useEffect, useState } from 'react';
 import * as Linking from 'expo-linking';
-import { ColorMode, StorageManager, NativeBaseProvider, useColorMode, useToken } from 'native-base';
+import {
+  View,
+  ColorMode,
+  StorageManager,
+  NativeBaseProvider,
+  useColorMode,
+  useToken,
+} from 'native-base';
 import { theme } from '@depub/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
@@ -11,6 +18,7 @@ import {
   DefaultTheme,
   LinkingOptions,
   NavigationContainer,
+  ThemeProvider,
 } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -21,14 +29,7 @@ import { RootStackParamList } from './RootStackParamList';
 
 void SplashScreen.preventAutoHideAsync();
 
-declare global {
-  namespace ReactNavigation {
-    // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    interface RootParamList extends RootStackParamList {}
-  }
-}
-
-export const linking: LinkingOptions<RootStackParamList> = {
+const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [Linking.createURL('/')],
   config: {
     screens: {
@@ -44,6 +45,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       Post: ':id',
       ConnectWallet: 'connectWallet',
       Image: 'image',
+      Loading: 'loading',
     },
   },
 };
@@ -70,7 +72,7 @@ const colorModeManager: StorageManager = {
   },
 };
 
-const NavigationContainerWrapper: FC = ({ children }) => {
+const NavigationThemeProvider: FC = ({ children }) => {
   const { colorMode } = useColorMode();
   const darkBlue900 = useToken('colors', 'darkBlue.900');
   const isDarkMode = colorMode === 'dark';
@@ -86,14 +88,10 @@ const NavigationContainerWrapper: FC = ({ children }) => {
   };
 
   return (
-    <NavigationContainer
-      documentTitle={{ enabled: false }}
-      linking={linking}
-      theme={navigationTheme}
-    >
+    <ThemeProvider value={navigationTheme}>
       <StatusBar style={isDarkMode ? 'dark' : 'light'} />
       {children}
-    </NavigationContainer>
+    </ThemeProvider>
   );
 };
 
@@ -131,17 +129,38 @@ const MainContainer = () => {
     <AppLoading />
   ) : (
     <SafeAreaProvider>
-      <NativeBaseProvider colorModeManager={colorModeManager} theme={theme}>
-        <AlertProvider>
-          <WalletProvider>
-            <AppStateProvider>
-              <NavigationContainerWrapper>
-                <RootNavigator />
-              </NavigationContainerWrapper>
-            </AppStateProvider>
-          </WalletProvider>
-        </AlertProvider>
-      </NativeBaseProvider>
+      <NavigationContainer documentTitle={{ enabled: false }} linking={linking}>
+        <NativeBaseProvider colorModeManager={colorModeManager} theme={theme}>
+          <NavigationThemeProvider>
+            <View
+              _dark={{
+                bg: 'darkBlue.900',
+              }}
+              _light={{
+                bg: 'white',
+              }}
+              flex={1}
+            >
+              <AlertProvider>
+                <WalletProvider>
+                  <AppStateProvider>
+                    <View
+                      _web={{
+                        maxW: '1440px',
+                      }}
+                      alignSelf="center"
+                      flex={1}
+                      w="100%"
+                    >
+                      <RootNavigator />
+                    </View>
+                  </AppStateProvider>
+                </WalletProvider>
+              </AlertProvider>
+            </View>
+          </NavigationThemeProvider>
+        </NativeBaseProvider>
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 };
