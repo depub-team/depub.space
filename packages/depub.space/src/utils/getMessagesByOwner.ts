@@ -1,24 +1,29 @@
 import axios from 'axios';
-import { Message, User } from '../interfaces';
+import { Message, PaginatedResponse, User } from '../interfaces';
 
 import { ROWS_PER_PAGE, GRAPHQL_QUERY_MESSAGES_BY_USER } from '../constants';
 
 const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || '';
 
+export type GetUserWithMessagesResponse = User & {
+  messages: Message[];
+};
 export interface MessagesByOwnerResponse {
-  getUser: User & {
-    messages: Message[];
-  };
+  getUser: GetUserWithMessagesResponse;
 }
 
-export const getMessagesByOwner = async (owner: string, previousId?: string) => {
+export const getMessagesByOwner = async (
+  owner: string,
+  previousId?: string,
+  limit = ROWS_PER_PAGE
+): Promise<PaginatedResponse<GetUserWithMessagesResponse | null>> => {
   const { data } = await axios.post<{ data: MessagesByOwnerResponse }>(
     GRAPHQL_URL,
     {
       variables: {
         dtagOrAddress: owner,
         previousId,
-        limit: ROWS_PER_PAGE,
+        limit,
       },
       query: GRAPHQL_QUERY_MESSAGES_BY_USER,
     },
@@ -29,9 +34,15 @@ export const getMessagesByOwner = async (owner: string, previousId?: string) => 
     }
   );
 
-  if (data && data.data.getUser) {
-    return data.data.getUser;
+  if (data && data.data.getUser.messages.length) {
+    return {
+      data: data.data.getUser,
+      hasMore: data.data.getUser.messages.length >= limit,
+    };
   }
 
-  return null;
+  return {
+    data: null,
+    hasMore: false,
+  };
 };

@@ -1,21 +1,22 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import update from 'immutability-helper';
 import Debug from 'debug';
-import { Link as NBLink, Box, VStack, Text, Heading, Avatar, Stack } from 'native-base';
+import { Link as NBLink, Box, VStack, Text } from 'native-base';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { Layout, MessageList } from '../components';
+import { Layout, MessageList, UserHeader } from '../components';
 import { Message, DesmosProfile } from '../interfaces';
 import { useAppState, useWallet } from '../hooks';
-import { getAbbrNickname, getLikecoinAddressByProfile } from '../utils';
+import { getLikecoinAddressByProfile } from '../utils';
 import { getShortenAddress } from '../utils/getShortenAddress';
 import { MainStackParamList } from '../navigation/MainStackParamList';
 import { RootStackParamList } from '../navigation/RootStackParamList';
 
 const debug = Debug('web:<UserScreen />');
-const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
 const SCROLL_THRESHOLD = 150;
+const stickyHeaderIndices = [0];
 
 export type UserScreenProps = CompositeScreenProps<
   DrawerScreenProps<MainStackParamList, 'User'>,
@@ -27,18 +28,15 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
   const { account } = route.params;
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isHeaderHide, setIsHeaderHide] = useState(false);
+  const [userAccount, setUserAccount] = useState<string | null>(null);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
   const [messages, setMessages] = useState<Message[]>([]);
   const { walletAddress } = useWallet();
   const { isLoading, fetchMessagesByOwner } = useAppState();
-  const profilePic = useMemo(
-    () => (profile?.profilePic ? { uri: profile?.profilePic } : undefined),
-    [profile]
-  );
+  const profilePic = profile?.profilePic;
   const nickname = profile?.nickname || shortenAccount;
-  const abbrNickname = getAbbrNickname(nickname);
   const isWalletAddress = /^(cosmos1|like1)/.test(account);
   const bio = profile?.bio;
   const dtag = profile?.dtag;
@@ -51,11 +49,9 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
     async (previousId?: string, refresh?: boolean) => {
       debug('fetchNewMessages()');
 
-      if (!account) {
-        return;
-      }
+      if (!account || isLoadingMore || isListReachedEnd) {
+        debug('fetchNewMessages() -> early return');
 
-      if (isLoadingMore || isListReachedEnd) {
         return;
       }
 
@@ -64,22 +60,22 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
       const res = await fetchMessagesByOwner(account, previousId);
 
       if (res) {
-        const newMessages = res.messages;
+        const newMessages = res.data?.messages || [];
 
-        if (newMessages) {
-          if (newMessages.length === 0) {
-            setIsListReachedEnd(true);
-          }
-
-          if (!refresh) {
-            setMessages(msgs => Array.from(new Set(msgs.concat(newMessages))));
-          } else {
-            setMessages(newMessages);
-          }
+        if (!res.hasMore) {
+          setIsListReachedEnd(true);
         }
 
-        if (res.profile) {
-          setProfile(res.profile);
+        if (newMessages) {
+          if (!refresh) {
+            setMessages(msgs => update(msgs, { $push: newMessages }));
+          } else {
+            if (res.data?.profile) {
+              setProfile(res.data.profile);
+            }
+
+            setMessages(msgs => update(msgs, { $set: newMessages }));
+          }
         }
 
         setIsReady(true);
@@ -87,8 +83,7 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
 
       setIsLoadingMore(false);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [account]
+    [account, fetchMessagesByOwner, isLoadingMore, isListReachedEnd]
   );
 
   const handleOnScroll = useCallback(
@@ -105,73 +100,43 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
     []
   );
 
-  const handleOnPress = useCallback((message: Message) => {
-    const messageIscnId = message.id.replace(new RegExp(`^${ISCN_SCHEME}/`), '');
-
-    navigation.navigate('Post', { id: messageIscnId });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleOnImagePress = useCallback((image: string, aspectRatio?: number) => {
-    debug('handleOnImagePress(image: %s, aspectRatio: %d)', aspectRatio);
-
-    navigation.navigate('Image', { image, aspectRatio });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const ListHeaderComponent = useMemo(
+  const renderListHeaderComponent = useCallback(
     () => (
-      <Box flex={1} mb={isHeaderHide ? 4 : 8}>
-        <Stack
-          _dark={{
-            bg: 'darkBlue.900',
-            shadow: 'dark',
-          }}
-          _light={{ bg: 'white', shadow: 'light' }}
-          alignItems="center"
-          flex={1}
-          flexDirection={isHeaderHide ? 'row' : 'column'}
-          justifyContent="center"
-          py={4}
-          space={4}
-        >
-          <Avatar mr={isHeaderHide ? 4 : 0} size={isHeaderHide ? 'md' : 'lg'} source={profilePic}>
-            {abbrNickname}
-          </Avatar>
-          <VStack alignItems={isHeaderHide ? 'flex-start' : 'center'} space={1}>
-            <Box textAlign={isHeaderHide ? 'left' : 'center'}>
-              <Heading fontSize="xl">{nickname}</Heading>
-              {dtag ? (
-                <Text color="gray.400" fontSize="sm">
-                  @{dtag}
-                </Text>
-              ) : null}
-            </Box>
-            {!isHeaderHide && bio ? <Text fontSize="sm">{bio}</Text> : null}
-          </VStack>
-        </Stack>
-      </Box>
+      <UserHeader
+        bio={bio}
+        collapse={isHeaderHide}
+        dtag={dtag}
+        nickname={nickname}
+        profilePic={profilePic}
+      />
     ),
-    [abbrNickname, bio, dtag, isHeaderHide, nickname, profilePic]
+    [bio, dtag, isHeaderHide, nickname, profilePic]
   );
+
+  useEffect(() => {
+    void (async () => {
+      await fetchNewMessages(undefined, true);
+    })();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userAccount]);
 
   useFocusEffect(
     useCallback(() => {
-      navigation.setOptions({
-        title: account,
-      });
-
       // reset
-      setIsReady(false);
-      setProfile(null);
-      setMessages([]);
-      setIsListReachedEnd(false);
+      if (userAccount !== account) {
+        navigation.setOptions({
+          title: account,
+        });
 
-      void (async () => {
-        await fetchNewMessages(undefined, true);
-      })();
+        setIsReady(false);
+        setProfile(null);
+        setMessages([]);
+        setIsListReachedEnd(false);
+        setUserAccount(account);
+      }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [fetchNewMessages, account])
+    }, [account, userAccount])
   );
 
   return account ? (
@@ -181,16 +146,21 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
           data={messages}
           isLoading={isLoading}
           isLoadingMore={isLoadingMore}
-          ListHeaderComponent={ListHeaderComponent}
-          stickyHeaderIndices={[0]}
+          ListHeaderComponent={renderListHeaderComponent}
+          stickyHeaderIndices={stickyHeaderIndices}
           onFetchData={fetchNewMessages}
-          onImagePress={handleOnImagePress}
-          onPress={handleOnPress}
           onScroll={handleOnScroll}
         />
       ) : (
         <VStack space={4}>
-          {ListHeaderComponent}
+          <UserHeader
+            bio={bio}
+            collapse={isHeaderHide}
+            dtag={dtag}
+            nickname={nickname}
+            profilePic={profilePic}
+          />
+
           <Box px={4}>
             <Text color="gray.400" textAlign="center">
               This profile has not linked to Likecoin, if you are the profile owner, please go to{' '}
