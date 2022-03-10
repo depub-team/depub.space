@@ -25,10 +25,10 @@ export type HomeScreenNavigationProps = HomeScreenProps['navigation'];
 
 export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
   const [messages, setMessages] = useState<Array<{ title: string; data: Message[] }>>([]);
-  const [selectedChannels, setSelectChannels] = useState<string[]>([]);
+  const [selectedHashTags, setSelectedHashTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const dimension = useWindowDimensions();
-  const { channels, isLoading: isAppLoading, fetchMessagesByChannel } = useAppState();
+  const { hashTags, isLoading: isAppLoading, fetchMessagesByHashTag } = useAppState();
   const isLoadingShow = isLoading || isAppLoading;
 
   const handleOnImagePress = useCallback((image: string, aspectRatio?: number) => {
@@ -51,11 +51,11 @@ export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
     setIsLoading(true);
 
     const newMessages = await Promise.all(
-      selectedChannels.map(async chann => {
-        const { data } = await fetchMessagesByChannel(chann, undefined, 3);
+      selectedHashTags.map(async hashTag => {
+        const { data } = await fetchMessagesByHashTag(hashTag, undefined, 3);
 
         return {
-          title: chann,
+          title: hashTag,
           data,
         };
       })
@@ -65,12 +65,12 @@ export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
 
     setMessages(newMessages);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedChannels, messages]);
+  }, [selectedHashTags, messages]);
 
   useEffect(() => {
     // get first 5 channesl only
-    setSelectChannels(channels.slice(0, 6).map(c => c.name));
-  }, [channels]);
+    setSelectedHashTags(hashTags.slice(0, 6).map(c => c.name));
+  }, [hashTags]);
 
   useFocusEffect(
     useCallback(() => {
@@ -78,7 +78,7 @@ export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
         await fetchNewMessages();
       })();
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedChannels])
+    }, [selectedHashTags])
   );
 
   return (
