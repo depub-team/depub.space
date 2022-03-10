@@ -14,9 +14,11 @@ export const RootNavigator: FC = () => {
 
   // get channels
   useEffect(() => {
-    void fetchChannels();
+    void (async () => {
+      await fetchChannels();
 
-    setIsLoading(false);
+      setIsLoading(false);
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

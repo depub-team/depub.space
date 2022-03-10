@@ -75,7 +75,7 @@ export const Trends: FC<IVStackProps> = ({ ...props }) => {
               p={8}
               size="md"
             >
-              Trends for you
+              Trending
             </Heading>
           }
           renderItem={renderItem}
