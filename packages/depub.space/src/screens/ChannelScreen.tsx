@@ -86,12 +86,16 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
         return;
       }
 
+      // show loading
+      navigation.navigate('Loading');
+
       const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
       await waitAsync(100); // wait a bit
 
       setIsListReachedEnd(false); // reset
 
+      // force to reload
       window.location.href = `/user/${userHandle}`;
 
       if (txn) {
@@ -171,4 +175,4 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
   );
 };
 
-(ChannelScreen as any).whyDidYouRender = true;
+// (ChannelScreen as any).whyDidYouRender = true;

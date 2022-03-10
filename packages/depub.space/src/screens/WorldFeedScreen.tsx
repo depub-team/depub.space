@@ -22,7 +22,7 @@ export type WorldFeedScreenProps = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
-export const WorldFeedScreen: FC<WorldFeedScreenProps> = () => {
+export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
@@ -76,6 +76,9 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = () => {
 
         return;
       }
+
+      // show loading
+      navigation.navigate('Loading');
 
       const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
