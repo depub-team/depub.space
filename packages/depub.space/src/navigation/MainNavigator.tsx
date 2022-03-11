@@ -9,7 +9,7 @@ import update from 'immutability-helper';
 import { Box, HStack, Icon, IconButton, useBreakpointValue, useToken } from 'native-base';
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { DrawerActions, findFocusedRoute } from '@react-navigation/native';
+import { DrawerActions } from '@react-navigation/native';
 import { useAppState, useWallet } from '../hooks';
 import type { MainStackParamList } from './MainStackParamList';
 import { HomeScreen, ChannelScreen, UserScreen, WorldFeedScreen } from '../screens';
@@ -24,6 +24,9 @@ export type MainNavigatorProps = DrawerScreenProps<MainStackParamList>;
 const worldFeedOptions = {
   title: 'World Feed',
 };
+
+const emptySideMenuItems: SideMenuItemProps[] = [];
+
 const defaultMenuItem: SideMenuItemProps = {
   icon: <Feather />,
   iconName: 'globe',
@@ -38,14 +41,12 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   const isWideScreen = dimensions.width >= 768;
   const { disconnect, walletAddress, isLoading: isConnectLoading } = useWallet();
   const { profile, channels } = useAppState();
-  const [menuItems, setMenuItems] = useState<SideMenuItemProps[]>(() => []);
+  const [menuItems, setMenuItems] = useState<SideMenuItemProps[]>(emptySideMenuItems);
   const fontFamily = useToken('fonts', 'heading');
   const headerTitleLeftMargin = useBreakpointValue({
     base: 0,
     md: 16,
   });
-  const navigationState = navigation.getState();
-  const focusedRoute = findFocusedRoute(navigationState);
   const navigatorScreenOptions = useMemo<DrawerNavigationOptions>(
     () => ({
       drawerType: isWideScreen ? 'permanent' : 'slide',
@@ -90,7 +91,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
     [isWideScreen]
   );
 
-  const stackScreenOptions = useMemo(
+  const stackScreenOptions = useMemo<DrawerNavigationOptions>(
     () => ({
       headerLeft: renderDrawerMenuButton,
       headerTitleContainerStyle: {
@@ -115,9 +116,6 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
       }),
       {} as Record<string, string[]>
     );
-    const isHomeOrChannelScreen = focusedRoute?.name === 'Channel' || focusedRoute?.name === 'Home';
-    const isParamMatchesHashTag = (hashTag: string) =>
-      (focusedRoute?.params as any)?.name === hashTag;
 
     // compose the side menu items
     setMenuItems(items =>
@@ -129,7 +127,6 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
               name: hashTag,
               icon: <Feather />,
               iconName: 'hash',
-              active: isHomeOrChannelScreen && isParamMatchesHashTag(hashTag),
               routeParams: {
                 screen: 'Channel',
                 params: {
@@ -141,7 +138,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
           .concat(defaultMenuItem),
       })
     );
-  }, [channels, focusedRoute]);
+  }, [channels]);
 
   return (
     <HStack flex={1} overflow="hidden" safeArea>
@@ -169,3 +166,5 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
     </HStack>
   );
 };
+
+// (MainNavigator as any).whyDidYouRender = true;
