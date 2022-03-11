@@ -49,7 +49,7 @@ const linking: LinkingOptions<RootStackParamList> = {
         },
       },
       NotFound: '404',
-      Post: ':id',
+      Post: 'post/:id/:revision',
       ConnectWallet: 'connectWallet',
       Image: 'image',
     },

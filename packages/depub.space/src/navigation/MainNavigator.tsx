@@ -2,16 +2,17 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import {
   createDrawerNavigator,
   DrawerContentComponentProps,
+  DrawerNavigationOptions,
   DrawerScreenProps,
 } from '@react-navigation/drawer';
 import update from 'immutability-helper';
 import { Box, HStack, Icon, IconButton, useBreakpointValue, useToken } from 'native-base';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { DrawerActions, findFocusedRoute } from '@react-navigation/native';
 import { useAppState, useWallet } from '../hooks';
 import type { MainStackParamList } from './MainStackParamList';
-import { ChannelScreen, UserScreen, WorldFeedScreen } from '../screens';
+import { HomeScreen, ChannelScreen, UserScreen, WorldFeedScreen } from '../screens';
 import { Trends } from '../components/organisms/Trends';
 import { SideMenu } from '../components/organisms/SideMenu/SideMenu';
 import type { SideMenuItemProps } from '../components/organisms/SideMenu/SideMenuItem';
@@ -20,6 +21,9 @@ const MainStack = createDrawerNavigator<MainStackParamList>();
 
 export type MainNavigatorProps = DrawerScreenProps<MainStackParamList>;
 
+const worldFeedOptions = {
+  title: 'World Feed',
+};
 const defaultMenuItem: SideMenuItemProps = {
   icon: <Feather />,
   iconName: 'globe',
@@ -42,7 +46,19 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   });
   const navigationState = navigation.getState();
   const focusedRoute = findFocusedRoute(navigationState);
-  const [firstListItem] = channels;
+  const navigatorScreenOptions = useMemo<DrawerNavigationOptions>(
+    () => ({
+      drawerType: isWideScreen ? 'permanent' : 'slide',
+      drawerStyle: {
+        width: 320,
+      },
+      headerShown: true,
+      headerTitleStyle: {
+        fontFamily,
+      },
+    }),
+    [fontFamily, isWideScreen]
+  );
 
   const handleOnLogout = () => {
     void disconnect();
@@ -59,16 +75,30 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
     />
   );
 
-  const renderDrawerMenuButton = () =>
-    isWideScreen ? null : (
-      <IconButton
-        borderRadius="full"
-        icon={<Icon as={Ionicons} name="menu" size="md" />}
-        onPress={() => {
-          navigation.dispatch(DrawerActions.toggleDrawer());
-        }}
-      />
-    );
+  const renderDrawerMenuButton = useCallback(
+    () =>
+      isWideScreen ? null : (
+        <IconButton
+          borderRadius="full"
+          icon={<Icon as={Ionicons} name="menu" size="md" />}
+          onPress={() => {
+            navigation.dispatch(DrawerActions.toggleDrawer());
+          }}
+        />
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isWideScreen]
+  );
+
+  const stackScreenOptions = useMemo(
+    () => ({
+      headerLeft: renderDrawerMenuButton,
+      headerTitleContainerStyle: {
+        marginLeft: headerTitleLeftMargin,
+      },
+    }),
+    [headerTitleLeftMargin, renderDrawerMenuButton]
+  );
 
   useEffect(() => {
     const channelMap = channels.reduce(
@@ -107,53 +137,22 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   }, [channels, focusedRoute]);
 
   return (
-    <HStack flex={1} safeArea>
+    <HStack flex={1} overflow="hidden" safeArea>
       <Box flex={2}>
         <MainStack.Navigator
           drawerContent={renderDrawerContent}
-          screenOptions={{
-            drawerType: isWideScreen ? 'permanent' : 'slide',
-            drawerStyle: {
-              width: 320,
-            },
-            headerShown: true,
-            headerTitleStyle: {
-              fontFamily,
-            },
-          }}
+          screenOptions={navigatorScreenOptions}
         >
-          <MainStack.Group
-            screenOptions={{
-              headerLeft: renderDrawerMenuButton,
-              headerTitleContainerStyle: {
-                marginLeft: headerTitleLeftMargin,
-              },
-            }}
-          >
-            <MainStack.Screen
-              component={ChannelScreen}
-              initialParams={{
-                name: firstListItem.hashTag,
-              }}
-              name="Home"
-            />
+          <MainStack.Group screenOptions={stackScreenOptions}>
+            <MainStack.Screen component={HomeScreen} name="Home" />
             <MainStack.Screen
               component={WorldFeedScreen}
               name="WorldFeed"
-              options={{
-                title: 'World Feed',
-              }}
+              options={worldFeedOptions}
             />
           </MainStack.Group>
 
-          <MainStack.Group
-            screenOptions={{
-              headerLeft: renderDrawerMenuButton,
-              headerTitleContainerStyle: {
-                marginLeft: headerTitleLeftMargin,
-              },
-            }}
-          >
+          <MainStack.Group screenOptions={stackScreenOptions}>
             <MainStack.Screen component={UserScreen} name="User" />
             <MainStack.Screen component={ChannelScreen} name="Channel" />
           </MainStack.Group>

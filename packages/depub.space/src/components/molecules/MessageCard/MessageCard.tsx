@@ -56,9 +56,11 @@ export const MessageCard: FC<MessageCardProps> = memo(
     const { colorMode } = useColorMode();
     const navigation = useNavigation<HomeScreenNavigationProps>();
     const isDarkMode = colorMode === 'dark';
-    const iscnId = id.replace(new RegExp(`^${ISCN_SCHEME}/`), '');
+    const [iscnId, revision] = id.replace(new RegExp(`^${ISCN_SCHEME}/`), '').split('/');
     const [copyIconState, setCopyIconState] = useState<'copied' | 'normal'>('normal');
-    const shareableUrl = isDev ? `${APP_URL}/?id=${iscnId}` : `${APP_URL}/${iscnId}`;
+    const shareableUrl = isDev
+      ? `${APP_URL}/post?id=${iscnId}/${revision}`
+      : `${APP_URL}/post/${iscnId}/${revision}`;
     const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
     const dayFrom = dayjs(date).fromNow();
     const [linkPreivew, setLinkPreview] = useState<LinkPreviewItem | null>(null);
@@ -96,6 +98,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
     }, [onCopy, shareableUrl]);
 
     const handleOnPress = (e: any) => {
+      debug('handleOnPress(e: %O)', e);
+
       e.preventDefault();
 
       // handle content links
@@ -125,7 +129,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
         return;
       }
 
-      navigation.navigate('Post', { id: iscnId });
+      navigation.navigate('Post', { id: iscnId, revision });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     };
 

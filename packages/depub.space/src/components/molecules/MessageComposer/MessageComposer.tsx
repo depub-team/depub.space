@@ -199,7 +199,7 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
                       borderRadius={isCollapsed ? '3xl' : 'md'}
                       defaultValue={value}
                       fontSize={{
-                        base: 'sm',
+                        base: isCollapsed ? 'xs' : 'sm',
                         md: 'md',
                       }}
                       isReadOnly={isLoading}
