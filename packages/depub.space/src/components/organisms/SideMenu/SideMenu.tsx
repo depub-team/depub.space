@@ -64,9 +64,10 @@ export const SideMenu: FC<SideMenuProps> = ({
       contentContainerStyle={{ flex: 1 }}
       style={{ flexBasis: '100vh', flexGrow: 0 }}
     >
-      <VStack flex="1 0 100%" py={6} space={8}>
+      <VStack flex="1 0 100%" space={8}>
         <HStack
           justifyContent="flex-start"
+          pt={6}
           px={{
             base: 4,
             md: 8,
@@ -136,6 +137,7 @@ export const SideMenu: FC<SideMenuProps> = ({
             base: 4,
             md: 6,
           }}
+          py={4}
         >
           {isLogged ? (
             <VStack space={4}>

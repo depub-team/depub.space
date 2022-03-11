@@ -8,5 +8,6 @@ export type RootStackParamList = {
   };
   Post: {
     id: string;
+    revision: string;
   };
 };
