@@ -4,10 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from './RootStackParamList';
 
 export type MainStackParamList = {
-  Home: {
-    // share same component as Channel
-    name: string;
-  };
+  Home: undefined;
   WorldFeed: undefined;
   User: {
     account: string;

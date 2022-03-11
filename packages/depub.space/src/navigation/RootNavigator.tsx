@@ -20,16 +20,16 @@ export const RootNavigator: FC = () => {
     }
 
     const now = new Date().getTime();
-    const expectedTime = timeRef.current + 2 * 1000;
+    const expectedTime = timeRef.current + 3 * 1000;
 
-    // more than 2sec
+    // more than 3sec
     if (now >= expectedTime) {
       setIsLoading(false);
 
       return () => {};
     }
 
-    // less than 2sec then wait for a certain while
+    // less than 3sec then wait for a certain while
     const timeout = setTimeout(() => {
       setIsLoading(false);
     }, expectedTime - now);

@@ -20,9 +20,10 @@ export type PostScreenProps = CompositeScreenProps<
 export const PostScreen: FC<PostScreenProps> = ({ route, navigation }) => {
   const { fetchMessage } = useAppState();
   const [message, setMessage] = useState<Message | null>(null);
-  const { id } = route.params;
+  const id = decodeURIComponent(route.params.id);
+  const revision = decodeURIComponent(route.params.revision);
   const iscnScheme = isDev ? 'iscn://likecoin-chain-testnet' : 'iscn://likecoin-chain';
-  const iscnId = `${iscnScheme}/${id}`;
+  const iscnId = `${iscnScheme}/${id}/${revision}`;
   const messageBody = message?.message;
   const abbrvMessage =
     `${messageBody?.slice(0, 30)}${messageBody?.length || 0 > 30 ? '...' : ''}` || '';
@@ -35,7 +36,7 @@ export const PostScreen: FC<PostScreenProps> = ({ route, navigation }) => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      navigation.navigate('Home');
+      window.location.href = '/';
     }
   };
 
