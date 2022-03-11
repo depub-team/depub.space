@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react';
 import { Text, Box, HStack, Icon, Pressable, Collapse, VStack } from 'native-base';
-import { useNavigation } from '@react-navigation/native';
+import { findFocusedRoute, useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import type {
   HomeScreenNavigationProps,
@@ -23,7 +23,6 @@ export interface SideMenuItemProps {
   name?: string;
   routeParams?: RouteParams<any, any>;
   defaultCollapsed?: boolean;
-  active?: boolean;
   items?: SideMenuItemProps[];
   onPress?: () => void;
 }
@@ -37,10 +36,15 @@ export const SideMenuItem: FC<SideMenuItemProps> = ({
   collapsedIconName,
   name,
   children,
-  active,
   onPress,
 }) => {
   const navigation = useNavigation<HomeScreenNavigationProps>();
+  const navigationState = navigation.getState();
+  const focusedRoute = findFocusedRoute(navigationState);
+  const isScreenMatches = routeParams?.screen && focusedRoute?.name === routeParams?.screen;
+  const isParamMatches =
+    JSON.stringify(focusedRoute?.params as any) === JSON.stringify(routeParams?.params);
+  const isActive = isScreenMatches && isParamMatches;
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const defaultIconName = isCollapsed ? 'chevron-right' : 'chevron-down';
   const myIconName =
@@ -64,13 +68,13 @@ export const SideMenuItem: FC<SideMenuItemProps> = ({
           _hover: {
             bg: 'rgba(255,255,255,0.1)',
           },
-          bg: active ? 'primary.200:alpha.10' : undefined,
+          bg: isActive ? 'primary.200:alpha.10' : undefined,
         }}
         _light={{
           _hover: {
             bg: 'rgba(0,0,0,0.1)',
           },
-          bg: active ? 'primary.600:alpha.10' : undefined,
+          bg: isActive ? 'primary.600:alpha.10' : undefined,
         }}
         borderRadius="full"
         onPress={handleOnPress}

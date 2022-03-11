@@ -30,6 +30,21 @@ import { RootStackParamList } from './RootStackParamList';
 
 void SplashScreen.preventAutoHideAsync();
 
+const getSystemDarkMode = () => {
+  if (typeof window === 'undefined') {
+    return 'light';
+  }
+
+  const systemDarkMode =
+    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  if (systemDarkMode) {
+    return 'dark';
+  }
+
+  return 'light';
+};
+
 const nativeBaseConfig = {
   dependencies: {
     'linear-gradient': LinearGradient,
@@ -60,6 +75,12 @@ const colorModeManager: StorageManager = {
   get: async () => {
     try {
       const val = await AsyncStorage.getItem('@color-mode');
+
+      if (!val) {
+        const systemDarkMode = getSystemDarkMode();
+
+        return systemDarkMode;
+      }
 
       return val === 'dark' ? 'dark' : 'light';
     } catch (e) {

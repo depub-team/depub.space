@@ -90,6 +90,8 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
       [profile]
     );
 
+    console.log(profilePicSource);
+
     const pickImage = async () => {
       debug('pickImage()');
 
@@ -199,16 +201,20 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
                       borderRadius={isCollapsed ? '3xl' : 'md'}
                       defaultValue={value}
                       fontSize={{
-                        base: isCollapsed ? 'xs' : 'sm',
+                        base: 'sm',
                         md: 'md',
                       }}
                       isReadOnly={isLoading}
                       maxLength={MAX_CHAR_LIMIT}
+                      minW={0}
+                      overflow="hidden"
                       placeholder="Not your key, not your tweet. Be web3 native."
                       returnKeyType="done"
                       style={[textAreaStyle]}
+                      textOverflow="ellipsis"
                       totalLines={totalLines}
                       value={value}
+                      whiteSpace={isCollapsed ? 'nowrap' : 'normal'}
                       onBlur={handleOnBlur}
                       onChangeText={onChange}
                       onFocus={handleOnFocus}
