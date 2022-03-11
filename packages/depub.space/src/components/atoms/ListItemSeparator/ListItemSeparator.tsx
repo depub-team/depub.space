@@ -10,7 +10,6 @@ export const ListItemSeparator = () => (
     _light={{
       bg: 'gray.200',
     }}
-    my={4}
     w="100%"
   />
 );

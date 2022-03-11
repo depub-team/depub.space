@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAppState } from '../../../hooks';
 import { HashTag } from '../../../interfaces';
 import { ListLoading } from '../../atoms';
-import type { HomeScreenNavigationProps } from '../../../screens';
+import type { HomeScreenNavigationProps } from '../../../navigation';
 
 const MIN_W = 220;
 const MAX_W = 320;
@@ -60,7 +60,7 @@ export const Trends: FC<IVStackProps> = ({ ...props }) => {
         {...props}
       >
         <FlatList<HashTag>
-          data={hashTags}
+          data={hashTags.slice(0, 18)}
           h={dimension.height}
           keyExtractor={keyExtractor}
           ListFooterComponent={isLoadingShow ? <ListLoading /> : null}

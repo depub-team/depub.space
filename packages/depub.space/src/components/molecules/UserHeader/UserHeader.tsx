@@ -38,7 +38,11 @@ export const UserHeader: FC<UserHeaderProps> = memo(
           py={4}
           space={4}
         >
-          <Avatar mr={collapse ? 4 : 0} size={collapse ? 'md' : 'lg'} source={{ uri: profilePic }}>
+          <Avatar
+            mr={collapse ? 4 : 0}
+            size={collapse ? 'md' : 'lg'}
+            source={profilePic ? { uri: profilePic } : undefined}
+          >
             {abbrNickname}
           </Avatar>
           <VStack alignItems={collapse ? 'flex-start' : 'center'} space={1}>
@@ -58,3 +62,5 @@ export const UserHeader: FC<UserHeaderProps> = memo(
   },
   areEqual
 );
+
+(UserHeader as any).whyDidYouRender = true;

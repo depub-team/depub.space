@@ -17,6 +17,7 @@ import { RootStackParamList } from '../navigation/RootStackParamList';
 const debug = Debug('web:<UserScreen />');
 const SCROLL_THRESHOLD = 150;
 const stickyHeaderIndices = [0];
+const emptyMessages: Message[] = [];
 
 export type UserScreenProps = CompositeScreenProps<
   DrawerScreenProps<MainStackParamList, 'User'>,
@@ -24,15 +25,15 @@ export type UserScreenProps = CompositeScreenProps<
 >;
 
 export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
-  const [isReady, setIsReady] = useState(false);
   const { account } = route.params;
+  const [isReady, setIsReady] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isHeaderHide, setIsHeaderHide] = useState(false);
   const [userAccount, setUserAccount] = useState<string | null>(null);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(emptyMessages);
   const { walletAddress } = useWallet();
   const { isLoading, fetchMessagesByOwner } = useAppState();
   const profilePic = profile?.profilePic;
@@ -45,73 +46,53 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
   // only show messages when the account has linked to Likecoin
   const showMessagesList = isWalletAddress || likecoinWalletAddress || !isReady;
 
-  const fetchNewMessages = useCallback(
-    async (previousId?: string, refresh?: boolean) => {
-      debug('fetchNewMessages()');
+  const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
+    debug('fetchNewMessages()');
 
-      if (!account || isLoadingMore || isListReachedEnd) {
-        debug('fetchNewMessages() -> early return');
+    if (!account || isLoadingMore || isListReachedEnd) {
+      debug('fetchNewMessages() -> early return');
 
-        return;
+      return;
+    }
+
+    setIsLoadingMore(true);
+
+    const res = await fetchMessagesByOwner(account, previousId);
+
+    if (res) {
+      const newMessages = res.data?.messages || [];
+
+      if (!res.hasMore) {
+        setIsListReachedEnd(true);
       }
 
-      setIsLoadingMore(true);
-
-      const res = await fetchMessagesByOwner(account, previousId);
-
-      if (res) {
-        const newMessages = res.data?.messages || [];
-
-        if (!res.hasMore) {
-          setIsListReachedEnd(true);
-        }
-
-        if (newMessages) {
-          if (!refresh) {
-            setMessages(msgs => update(msgs, { $push: newMessages }));
-          } else {
-            if (res.data?.profile) {
-              setProfile(res.data.profile);
-            }
-
-            setMessages(msgs => update(msgs, { $set: newMessages }));
+      if (newMessages) {
+        if (!refresh) {
+          setMessages(msgs => update(msgs, { $push: newMessages }));
+        } else {
+          if (res.data?.profile) {
+            setProfile(res.data.profile);
           }
+
+          setMessages(msgs => update(msgs, { $set: newMessages }));
         }
-
-        setIsReady(true);
       }
 
-      setIsLoadingMore(false);
-    },
-    [account, fetchMessagesByOwner, isLoadingMore, isListReachedEnd]
-  );
+      setIsReady(true);
+    }
 
-  const handleOnScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const offsetY = event.nativeEvent.contentOffset.y;
+    setIsLoadingMore(false);
+  };
 
-      if (offsetY > SCROLL_THRESHOLD) {
-        setIsHeaderHide(true);
-      } else if (offsetY === 0) {
-        setIsHeaderHide(false);
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+  const handleOnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
 
-  const renderListHeaderComponent = useCallback(
-    () => (
-      <UserHeader
-        bio={bio}
-        collapse={isHeaderHide}
-        dtag={dtag}
-        nickname={nickname}
-        profilePic={profilePic}
-      />
-    ),
-    [bio, dtag, isHeaderHide, nickname, profilePic]
-  );
+    if (offsetY > SCROLL_THRESHOLD) {
+      setIsHeaderHide(true);
+    } else if (offsetY === 0) {
+      setIsHeaderHide(false);
+    }
+  };
 
   useEffect(() => {
     void (async () => {
@@ -131,7 +112,7 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
 
         setIsReady(false);
         setProfile(null);
-        setMessages([]);
+        setMessages(emptyMessages);
         setIsListReachedEnd(false);
         setUserAccount(account);
       }
@@ -146,7 +127,15 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
           data={messages}
           isLoading={isLoading}
           isLoadingMore={isLoadingMore}
-          ListHeaderComponent={renderListHeaderComponent}
+          ListHeaderComponent={
+            <UserHeader
+              bio={bio}
+              collapse={isHeaderHide}
+              dtag={dtag}
+              nickname={nickname}
+              profilePic={profilePic}
+            />
+          }
           stickyHeaderIndices={stickyHeaderIndices}
           onFetchData={fetchNewMessages}
           onScroll={handleOnScroll}

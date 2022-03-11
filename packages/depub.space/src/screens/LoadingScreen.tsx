@@ -58,7 +58,7 @@ export const LoadingScreen: FC = () => {
       <Animated.View style={[{ width: 200, height: 200 }, logoStyle]}>
         <DepubSpinner />
       </Animated.View>
-      <Animated.View style={[{ width: 200 }, textStyle]}>
+      <Animated.View style={[{ width: 200, height: 30 }, textStyle]}>
         <Text>
           <LogoText />
         </Text>

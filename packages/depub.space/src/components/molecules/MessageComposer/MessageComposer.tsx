@@ -142,13 +142,6 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
       };
     }, [isCollapsed]);
 
-    const avatarStyle = useAnimatedStyle(
-      () => ({
-        maxWidth: withSpring(isCollapsed ? 0 : 48),
-      }),
-      [isCollapsed]
-    );
-
     useEffect(() => {
       // reset state
       if (isSubmitted) {
@@ -171,35 +164,29 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
 
     return (
       <VStack borderRadius="lg" p={4} space={isCollapsed ? 0 : 4} {...props}>
-        <HStack flex={1} space={isCollapsed ? 0 : { base: 2, md: 4 }}>
-          <Animated.View style={[{ flex: 1, overflow: 'hidden' }, avatarStyle]}>
-            <Link
-              to={{
-                screen: 'User',
-                params: {
-                  account: handle,
-                },
-              }}
+        <HStack flex={1} space={{ base: 2, md: 4 }}>
+          <Link
+            to={{
+              screen: 'User',
+              params: {
+                account: handle,
+              },
+            }}
+          >
+            <Tooltip
+              label={
+                likecoinAddress
+                  ? 'This profile has linked to Likecoin'
+                  : 'This profile has not linked to Likecoin'
+              }
+              openDelay={250}
             >
-              <Tooltip
-                label={
-                  likecoinAddress
-                    ? 'This profile has linked to Likecoin'
-                    : 'This profile has not linked to Likecoin'
-                }
-                openDelay={250}
-              >
-                <Avatar
-                  borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
-                  borderWidth={2}
-                  size="md"
-                  source={profilePicSource}
-                >
-                  {abbrNickname}
-                </Avatar>
-              </Tooltip>
-            </Link>
-          </Animated.View>
+              <Avatar size={42} source={profilePicSource}>
+                {abbrNickname}
+              </Avatar>
+            </Tooltip>
+          </Link>
+
           <VStack flex={2}>
             <FormControl isInvalid={'message' in errors} isRequired>
               <Stack>

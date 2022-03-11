@@ -22,7 +22,6 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { Platform, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useNavigation } from '@react-navigation/native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
 import {
@@ -32,7 +31,7 @@ import {
   messageSanitizer,
   getLikecoinAddressByProfile,
 } from '../../../utils';
-import type { RootStackParamList } from '../../../navigation';
+import type { HomeScreenNavigationProps } from '../../../navigation';
 
 dayjs.extend(relativeTime);
 
@@ -55,7 +54,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
   ({ isLoading, message: messageItem, ...props }) => {
     const { id, from, date, profile, images = [], message = '' } = messageItem;
     const { colorMode } = useColorMode();
-    const navigation = useNavigation<NativeStackScreenProps<RootStackParamList>['navigation']>();
+    const navigation = useNavigation<HomeScreenNavigationProps>();
     const isDarkMode = colorMode === 'dark';
     const iscnId = id.replace(new RegExp(`^${ISCN_SCHEME}/`), '');
     const [copyIconState, setCopyIconState] = useState<'copied' | 'normal'>('normal');
@@ -67,7 +66,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
     const displayName = profile?.nickname || profile?.dtag || shortenAddress;
     const abbrNickname = getAbbrNickname(displayName);
     const { onCopy } = useClipboard();
-    const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>([]);
+    const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>(() => []);
     const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
     const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
     const isCopied = copyIconState === 'copied';
@@ -96,14 +95,39 @@ export const MessageCard: FC<MessageCardProps> = memo(
       return null;
     }, [onCopy, shareableUrl]);
 
-    const handleOnPress = useCallback((e: any) => {
-      if (e.target.tagName !== 'A') {
-        e.preventDefault();
+    const handleOnPress = (e: any) => {
+      e.preventDefault();
 
-        navigation.navigate('Post', { id: iscnId });
+      // handle content links
+      if (e.target.tagName === 'A') {
+        const link = e.target.getAttribute('href') as string;
+
+        if (/^\/channel/.test(link)) {
+          const execArr = /^\/channel\/(.+)$/.exec(link);
+
+          if (execArr && execArr[1]) {
+            navigation.navigate('Channel', {
+              name: execArr[1],
+            });
+          }
+        } else if (/^\/user/.test(link)) {
+          const execArr = /^\/user\/(.+)$/.exec(link);
+
+          if (execArr && execArr[1]) {
+            navigation.navigate('User', {
+              account: execArr[1],
+            });
+          }
+        } else {
+          window.location.href = link;
+        }
+
+        return;
       }
+
+      navigation.navigate('Post', { id: iscnId });
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    };
 
     const renderContent = useCallback(
       () =>
@@ -179,8 +203,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
       <HStack
         flex={1}
         minHeight="80px"
-        my={2}
         px={{ base: 3, md: 4 }}
+        py={{ base: 4, md: 6 }}
         space={{ base: 2, md: 4 }}
         w="100%"
         {...props}
