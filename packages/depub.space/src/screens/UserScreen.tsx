@@ -13,6 +13,7 @@ import { getLikecoinAddressByProfile } from '../utils';
 import { getShortenAddress } from '../utils/getShortenAddress';
 import { MainStackParamList } from '../navigation/MainStackParamList';
 import { RootStackParamList } from '../navigation/RootStackParamList';
+import { assertRouteParams } from '../utils/assertRouteParams';
 
 const debug = Debug('web:<UserScreen />');
 const SCROLL_THRESHOLD = 150;
@@ -24,7 +25,7 @@ export type UserScreenProps = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
-export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
+export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navigation }) => {
   const { account } = route.params;
   const [isReady, setIsReady] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -163,6 +164,6 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
       )}
     </Layout>
   ) : null;
-};
+});
 
 // (UserScreen as any).whyDidYouRender = true;

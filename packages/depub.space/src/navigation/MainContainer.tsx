@@ -27,23 +27,9 @@ import { AppStateProvider, WalletProvider } from '../hooks';
 import { AlertProvider } from '../components';
 import { RootNavigator } from './RootNavigator';
 import { RootStackParamList } from './RootStackParamList';
+import { getSystemDarkMode } from '../utils';
 
 void SplashScreen.preventAutoHideAsync();
-
-const getSystemDarkMode = () => {
-  if (typeof window === 'undefined') {
-    return 'light';
-  }
-
-  const systemDarkMode =
-    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-  if (systemDarkMode) {
-    return 'dark';
-  }
-
-  return 'light';
-};
 
 const nativeBaseConfig = {
   dependencies: {
