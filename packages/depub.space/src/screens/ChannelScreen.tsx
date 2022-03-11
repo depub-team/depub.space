@@ -11,7 +11,7 @@ import { Message } from '../interfaces';
 import { AppStateError, useAppState, useWallet } from '../hooks';
 import type { RootStackParamList, MainStackParamList } from '../navigation';
 import { NAV_HEADER_HEIGHT } from '../constants';
-import { dataUrlToFile, getLikecoinAddressByProfile, waitAsync } from '../utils';
+import { assertRouteParams, dataUrlToFile, getLikecoinAddressByProfile, waitAsync } from '../utils';
 
 const debug = Debug('web:<ChannelScreen />');
 
@@ -23,7 +23,7 @@ export type ChannelScreenProps = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
-export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => {
+export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ navigation, route }) => {
   const name = decodeURIComponent(route.params.name);
   const [messages, setMessages] = useState<Message[]>(emptyMessages);
   const [channelName, setChannelName] = useState<string | null>(null);
@@ -175,6 +175,6 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
       />
     </Layout>
   );
-};
+});
 
 // (ChannelScreen as any).whyDidYouRender = true;

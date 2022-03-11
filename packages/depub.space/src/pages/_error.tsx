@@ -7,6 +7,7 @@ import { theme } from '@depub/theme';
 import { ColorMode, NativeBaseProvider, StorageManager } from 'native-base';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Layout, NotFound } from '../components';
+import { getSystemDarkMode } from '../utils';
 
 type ErrorPageProps = {
   err: Error;
@@ -17,6 +18,12 @@ const colorModeManager: StorageManager = {
   get: async () => {
     try {
       const val = await AsyncStorage.getItem('@color-mode');
+
+      if (!val) {
+        const systemDarkMode = getSystemDarkMode();
+
+        return systemDarkMode;
+      }
 
       return val === 'dark' ? 'dark' : 'light';
     } catch (e) {
