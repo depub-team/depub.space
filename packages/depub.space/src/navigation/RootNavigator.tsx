@@ -69,3 +69,5 @@ export const RootNavigator: FC = () => {
     </RootStack.Navigator>
   );
 };
+
+(RootNavigator as any).whyDidYouRender = true;

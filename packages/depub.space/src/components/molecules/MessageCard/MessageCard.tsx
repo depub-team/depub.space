@@ -47,12 +47,15 @@ export interface MessageCardProps extends ComponentProps<typeof HStack> {
   isLoading?: boolean;
 }
 
+const emptyImageSizes: [w: number, h: number][] = [];
+const emptyImages: string[] = [];
+
 const areEqual = (prevProps: MessageCardProps, nextProps: MessageCardProps) =>
   prevProps.message.id === nextProps.message.id;
 
 export const MessageCard: FC<MessageCardProps> = memo(
   ({ isLoading, message: messageItem, ...props }) => {
-    const { id, from, date, profile, images = [], message = '' } = messageItem;
+    const { id, from, date, profile, message = '', images = emptyImages } = messageItem;
     const { colorMode } = useColorMode();
     const navigation = useNavigation<HomeScreenNavigationProps>();
     const isDarkMode = colorMode === 'dark';
@@ -68,7 +71,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
     const displayName = profile?.nickname || profile?.dtag || shortenAddress;
     const abbrNickname = getAbbrNickname(displayName);
     const { onCopy } = useClipboard();
-    const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>(() => []);
+    const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>(emptyImageSizes);
     const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
     const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
     const isCopied = copyIconState === 'copied';
@@ -122,8 +125,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
               account: execArr[1],
             });
           }
-        } else {
-          window.location.href = link;
+        } else if (typeof window !== 'undefined') {
+          window.open(link, '_blank', 'noopener noreferrer');
         }
 
         return;
@@ -277,8 +280,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
             </Skeleton.Text>
           </HStack>
 
-          <Pressable onPress={handleOnPress}>
-            <VStack>
+          <VStack flex={1} space={4}>
+            <Pressable onPress={handleOnPress}>
               <Skeleton.Text isLoaded={isLoaded} lines={2} space={2}>
                 <Text
                   fontFamily="text"
@@ -290,19 +293,20 @@ export const MessageCard: FC<MessageCardProps> = memo(
                   {renderContent()}
                 </Text>
               </Skeleton.Text>
+            </Pressable>
 
-              {linkPreivew ? <LinkPreview flex={1} preview={linkPreivew} /> : null}
+            {linkPreivew ? <LinkPreview flex={1} preview={linkPreivew} /> : null}
 
-              {images.length ? (
-                <VStack space={2}>
-                  {images.map((image, index) => {
-                    const aspectRatio = imageSizes[index]
-                      ? imageSizes[index][0] / imageSizes[index][1]
-                      : 1;
+            {images.length ? (
+              <VStack flex={1} space={2}>
+                {images.map((image, index) => {
+                  const aspectRatio = imageSizes[index]
+                    ? imageSizes[index][0] / imageSizes[index][1]
+                    : 1;
 
-                    return (
+                  return (
+                    <AspectRatio key={image} maxW="100%" ratio={aspectRatio}>
                       <Link
-                        key={image}
                         to={{
                           screen: 'Image',
                           params: {
@@ -311,24 +315,24 @@ export const MessageCard: FC<MessageCardProps> = memo(
                           },
                         }}
                       >
-                        <AspectRatio ratio={aspectRatio}>
-                          <Image
-                            alt={`Image ${index}`}
-                            borderColor="gray.200"
-                            borderWidth={1}
-                            resizeMode="cover"
-                            rounded="lg"
-                            source={imageSources[index]}
-                            textAlign="center"
-                          />
-                        </AspectRatio>
+                        <Image
+                          alt={`Image ${index}`}
+                          borderColor="gray.200"
+                          borderWidth={1}
+                          h="100%"
+                          resizeMode="cover"
+                          rounded="lg"
+                          source={imageSources[index]}
+                          textAlign="center"
+                          w="100%"
+                        />
                       </Link>
-                    );
-                  })}
-                </VStack>
-              ) : null}
-            </VStack>
-          </Pressable>
+                    </AspectRatio>
+                  );
+                })}
+              </VStack>
+            ) : null}
+          </VStack>
 
           <HStack alignItems="center" justifyContent="space-between" space={4}>
             <Box>

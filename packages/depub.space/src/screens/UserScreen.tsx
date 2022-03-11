@@ -164,3 +164,5 @@ export const UserScreen: FC<UserScreenProps> = ({ route, navigation }) => {
     </Layout>
   ) : null;
 };
+
+// (UserScreen as any).whyDidYouRender = true;
