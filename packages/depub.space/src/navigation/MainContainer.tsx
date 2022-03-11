@@ -43,9 +43,9 @@ const linking: LinkingOptions<RootStackParamList> = {
       Main: {
         screens: {
           Home: 'home',
-          WorldFeed: '/channels/all',
+          WorldFeed: '/channel/all',
           User: 'user/:account',
-          Channel: 'channels/:name',
+          Channel: 'channel/:name',
         },
       },
       NotFound: '404',

@@ -11,7 +11,7 @@ import { useWindowDimensions } from 'react-native';
 import { DrawerActions, findFocusedRoute } from '@react-navigation/native';
 import { useAppState, useWallet } from '../hooks';
 import type { MainStackParamList } from './MainStackParamList';
-import { ChannelScreen, HomeScreen, UserScreen, WorldFeedScreen } from '../screens';
+import { ChannelScreen, UserScreen, WorldFeedScreen } from '../screens';
 import { Trends } from '../components/organisms/Trends';
 import { SideMenu } from '../components/organisms/SideMenu/SideMenu';
 import type { SideMenuItemProps } from '../components/organisms/SideMenu/SideMenuItem';
@@ -34,7 +34,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   const isWideScreen = dimensions.width >= 768;
   const { disconnect, walletAddress, isLoading: isConnectLoading } = useWallet();
   const { profile, channels } = useAppState();
-  const [menuItems, setMenuItems] = useState<SideMenuItemProps[]>([]);
+  const [menuItems, setMenuItems] = useState<SideMenuItemProps[]>(() => []);
   const fontFamily = useToken('fonts', 'heading');
   const headerTitleLeftMargin = useBreakpointValue({
     base: 0,
@@ -42,6 +42,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   });
   const navigationState = navigation.getState();
   const focusedRoute = findFocusedRoute(navigationState);
+  const [firstListItem] = channels;
 
   const handleOnLogout = () => {
     void disconnect();
@@ -77,6 +78,9 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
       }),
       {} as Record<string, string[]>
     );
+    const isHomeOrChannelScreen = focusedRoute?.name === 'Channel' || focusedRoute?.name === 'Home';
+    const isParamMatchesHashTag = (hashTag: string) =>
+      (focusedRoute?.params as any)?.name === hashTag;
 
     // compose the side menu items
     setMenuItems(items =>
@@ -88,8 +92,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
               name: hashTag,
               icon: <Feather />,
               iconName: 'hash',
-              active:
-                focusedRoute?.name === 'Channel' && (focusedRoute?.params as any)?.name === hashTag,
+              active: isHomeOrChannelScreen && isParamMatchesHashTag(hashTag),
               routeParams: {
                 screen: 'Channel',
                 params: {
@@ -127,7 +130,13 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
               },
             }}
           >
-            <MainStack.Screen component={HomeScreen} name="Home" />
+            <MainStack.Screen
+              component={ChannelScreen}
+              initialParams={{
+                name: firstListItem.hashTag,
+              }}
+              name="Home"
+            />
             <MainStack.Screen
               component={WorldFeedScreen}
               name="WorldFeed"
