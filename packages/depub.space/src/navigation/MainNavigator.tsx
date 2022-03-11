@@ -95,6 +95,13 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
       headerLeft: renderDrawerMenuButton,
       headerTitleContainerStyle: {
         marginLeft: headerTitleLeftMargin,
+        flex: 1,
+      },
+      headerTitleStyle: {
+        minWidth: 0,
+        textOverflow: 'ellipsis',
+        overflow: 'hidden',
+        whiteSpace: 'nowrap',
       },
     }),
     [headerTitleLeftMargin, renderDrawerMenuButton]
