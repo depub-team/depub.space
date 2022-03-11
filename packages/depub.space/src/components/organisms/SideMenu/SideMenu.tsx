@@ -137,7 +137,10 @@ export const SideMenu: FC<SideMenuProps> = ({
             base: 4,
             md: 6,
           }}
-          py={4}
+          py={{
+            base: 6,
+            md: 8,
+          }}
         >
           {isLogged ? (
             <VStack space={4}>
