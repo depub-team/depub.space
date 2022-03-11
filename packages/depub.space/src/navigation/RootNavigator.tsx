@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { MainNavigator } from './MainNavigator';
 import { NotFoundScreen } from '../screens/NotFoundScreen';
@@ -9,15 +9,42 @@ import { useAppState } from '../hooks';
 const RootStack = createStackNavigator<RootStackParamList>();
 
 export const RootNavigator: FC = () => {
+  const timeRef = useRef(new Date().getTime());
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setisInitialized] = useState(false);
   const { fetchChannels } = useAppState();
+
+  useEffect(() => {
+    if (!isInitialized) {
+      return () => {}; // do nothing
+    }
+
+    const now = new Date().getTime();
+    const expectedTime = timeRef.current + 2 * 1000;
+
+    // more than 2sec
+    if (now >= expectedTime) {
+      setIsLoading(false);
+
+      return () => {};
+    }
+
+    // less than 2sec then wait for a certain while
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+    }, expectedTime - now);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [isInitialized]);
 
   // get channels
   useEffect(() => {
     void (async () => {
       await fetchChannels();
 
-      setIsLoading(false);
+      setisInitialized(true);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -1,4 +1,4 @@
-export interface ISCNChannel {
+export interface ISCNTrend {
   name: string;
   count: number;
 }

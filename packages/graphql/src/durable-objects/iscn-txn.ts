@@ -1,5 +1,5 @@
 import { ulidFactory } from 'ulid-workers';
-import { ISCNChannel, ISCNRecord } from '../interfaces';
+import { ISCNTrend, ISCNRecord } from '../interfaces';
 import { Bindings } from '../../bindings';
 
 const ulid = ulidFactory({ monotonic: false });
@@ -185,19 +185,29 @@ export class IscnTxn implements DurableObject {
     );
   }
 
-  public async getHashTags(request: Request) {
-    const url = new URL(request.url);
-    const from = url.searchParams.get('from');
-    const start = from !== null ? from : undefined;
-    const keyList = await this.state.storage.list<string>({
-      prefix: `${HASHTAG_KEY}:`,
-      start,
-    });
-    const keyListArr = Array.from(keyList.entries());
-    const lastKey = keyListArr.length ? keyListArr[keyListArr.length - 1][0] : undefined;
+  public async getHashTags() {
+    let lastKey: string | undefined;
+    let keyListArr: [string, string][] = [];
+    let lastBatchSize = -1;
 
-    if (lastKey === from) {
-      return new Response(JSON.stringify({ hashTags: [], lastKey }));
+    while (lastBatchSize !== 0) {
+      // eslint-disable-next-line no-await-in-loop
+      const keyList = await this.state.storage.list<string>({
+        prefix: `${HASHTAG_KEY}:`,
+        start: lastKey,
+        limit: 100,
+      });
+      const listArr = Array.from(keyList.entries());
+
+      lastBatchSize = listArr.length;
+      const newLastKey = listArr[listArr.length - 1][0];
+
+      if (newLastKey === lastKey) {
+        break;
+      }
+
+      lastKey = newLastKey;
+      keyListArr = keyListArr.concat(listArr);
     }
 
     const hashTagsWithCount = keyListArr.reduce((acc, [k]) => {
@@ -210,14 +220,14 @@ export class IscnTxn implements DurableObject {
       return acc;
     }, {} as Record<string, number>);
 
-    const hashTags: ISCNChannel[] = Object.keys(hashTagsWithCount)
+    const hashTags: ISCNTrend[] = Object.keys(hashTagsWithCount)
       .sort((a, b) => (hashTagsWithCount[a] > hashTagsWithCount[b] ? -1 : 1))
       .map(key => ({
         name: key,
         count: hashTagsWithCount[key],
       }));
 
-    return new Response(JSON.stringify({ hashTags, lastKey }));
+    return new Response(JSON.stringify({ hashTags }));
   }
 
   public async getSequence(_request: Request) {
@@ -267,7 +277,7 @@ export class IscnTxn implements DurableObject {
 
     if (url.pathname === '/hashTags') {
       if (request.method === 'GET') {
-        return this.getHashTags(request);
+        return this.getHashTags();
       }
     }
 

@@ -1,5 +1,13 @@
+import { DrawerScreenProps } from '@react-navigation/drawer';
+import { CompositeScreenProps } from '@react-navigation/native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from './RootStackParamList';
+
 export type MainStackParamList = {
-  Home: undefined;
+  Home: {
+    // share same component as Channel
+    name: string;
+  };
   WorldFeed: undefined;
   User: {
     account: string;
@@ -8,3 +16,11 @@ export type MainStackParamList = {
     name: string;
   };
 };
+
+export type HomeScreenProps = CompositeScreenProps<
+  DrawerScreenProps<MainStackParamList, 'Home'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
+
+export type HomeScreenNavigationProps = HomeScreenProps['navigation'];
+export type HomeScreenRouteProps = HomeScreenProps['route'];

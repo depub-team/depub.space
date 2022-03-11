@@ -16,6 +16,7 @@ import { NAV_HEADER_HEIGHT } from '../constants';
 
 const debug = Debug('web:<WorldFeedScreen />');
 const stickyHeaderIndices = [0];
+const emptyMessages: Message[] = [];
 
 export type WorldFeedScreenProps = CompositeScreenProps<
   DrawerScreenProps<MainStackParamList, 'WorldFeed'>,
@@ -23,7 +24,7 @@ export type WorldFeedScreenProps = CompositeScreenProps<
 >;
 
 export const WorldFeedScreen: FC<WorldFeedScreenProps> = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(emptyMessages);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
   const dimension = useWindowDimensions();
@@ -129,6 +130,7 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = () => {
     useCallback(() => {
       // reset
       setIsListReachedEnd(false);
+      setMessages(emptyMessages);
 
       void (async () => {
         await fetchNewMessages(undefined, true);

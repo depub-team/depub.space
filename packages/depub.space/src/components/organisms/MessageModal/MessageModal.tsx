@@ -10,9 +10,9 @@ export interface MessageModalProps extends ComponentProps<typeof Modal> {
 
 export const MessageModal: FC<MessageModalProps> = ({ message, ...props }) => (
   <Modal {...props}>
-    <Modal.Content maxH="100%" maxW={MAX_WIDTH} w="100%">
+    <Modal.Content maxH="100%" maxW={MAX_WIDTH} w="95%">
       <Modal.CloseButton />
-      <Modal.Body pt={8}>
+      <Modal.Body px={0}>
         <MessageCard message={message} />
       </Modal.Body>
     </Modal.Content>

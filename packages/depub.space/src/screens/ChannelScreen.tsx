@@ -16,6 +16,7 @@ import { dataUrlToFile, getLikecoinAddressByProfile, waitAsync } from '../utils'
 const debug = Debug('web:<ChannelScreen />');
 
 const stickyHeaderIndices = [0];
+const emptyMessages: Message[] = [];
 
 export type ChannelScreenProps = CompositeScreenProps<
   DrawerScreenProps<MainStackParamList, 'Channel'>,
@@ -24,7 +25,7 @@ export type ChannelScreenProps = CompositeScreenProps<
 
 export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => {
   const name = decodeURIComponent(route.params.name);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(emptyMessages);
   const [channelName, setChannelName] = useState<string | null>(null);
   const dimension = useWindowDimensions();
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
@@ -153,7 +154,7 @@ export const ChannelScreen: FC<ChannelScreenProps> = ({ navigation, route }) => 
         });
 
         setIsListReachedEnd(false);
-        setMessages(msgs => update(msgs, { $set: [] }));
+        setMessages(emptyMessages);
         setChannelName(name);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps

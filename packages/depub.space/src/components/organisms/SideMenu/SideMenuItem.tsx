@@ -2,8 +2,11 @@ import React, { FC, useState } from 'react';
 import { Text, Box, HStack, Icon, Pressable, Collapse, VStack } from 'native-base';
 import { useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
-import type { HomeScreenNavigationProps } from '../../../screens/HomeScreen';
-import type { MainStackParamList, RootStackParamList } from '../../../navigation';
+import type {
+  HomeScreenNavigationProps,
+  MainStackParamList,
+  RootStackParamList,
+} from '../../../navigation';
 
 export type RouteParams<
   ParamList extends MainStackParamList | RootStackParamList,

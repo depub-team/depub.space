@@ -2,11 +2,11 @@ import { ApolloError } from 'apollo-server-errors';
 import { Context } from '../context';
 import { InputMaybe, Message, Profile, Resolvers } from './generated_types';
 import { KVStore } from '../kv-store';
-import { DesmosProfileWithId, ISCNChannel, ISCNRecord } from '../interfaces';
+import { DesmosProfileWithId, ISCNTrend, ISCNRecord } from '../interfaces';
 
 const PAGING_LIMIT = 12;
 const PROFILE_KEY = 'profile';
-const HASHTAG_SEQUENCE_KEY = 'hashtag_sequence';
+const TREND_KEY = 'trend';
 const HASHTAG_RECORD_KEY = 'hashtag_record';
 
 export class ISCNError extends ApolloError {
@@ -58,7 +58,7 @@ interface GetUserProfileArgs {
 }
 
 interface GetChannelsResponse {
-  hashTags: ISCNChannel[];
+  hashTags: ISCNTrend[];
   list: Array<{
     name: string;
     hashTag: string;
@@ -294,66 +294,30 @@ const getUserProfile = async (args: GetUserProfileArgs, ctx: Context) => {
 const getChannels = async (_args: any, ctx: Context): Promise<GetChannelsResponse> => {
   const getChannelsFromDurableObject = async () => {
     // get latest key
-    const previousId = await ctx.env.WORKERS_GRAPHQL_CACHE.get(HASHTAG_SEQUENCE_KEY);
+    const cachedTrendData = await ctx.env.WORKERS_GRAPHQL_CACHE.get(TREND_KEY);
 
-    // get cached hashtag count
-    const cachedHashTagCountStr = await ctx.env.WORKERS_GRAPHQL_CACHE.get(HASHTAG_RECORD_KEY);
-
-    // convert to array
-    const cashedHashTagCount: ISCNChannel[] = cachedHashTagCountStr
-      ? JSON.parse(cachedHashTagCountStr)
-      : [];
-
-    // initialize durable object
-    const urlSearchParams = new URLSearchParams();
-
-    if (previousId) {
-      urlSearchParams.append('from', previousId);
+    if (cachedTrendData) {
+      return JSON.parse(cachedTrendData);
     }
 
+    // initialize durable object
     const durableObjId = ctx.env.ISCN_TXN.idFromName('iscn-txn');
     const stub = ctx.env.ISCN_TXN.get(durableObjId);
-    const getHashTagRequest = new Request(
-      `http://iscn-txn/hashTags?${urlSearchParams.toString()}`,
-      {
-        method: 'GET',
-      }
-    );
+    const getHashTagRequest = new Request(`http://iscn-txn/hashTags`, {
+      method: 'GET',
+    });
     const getHashTagResponse = await stub.fetch(getHashTagRequest);
-    const { hashTags, lastKey } = await getHashTagResponse.json<{
-      hashTags: ISCNChannel[];
+    const { hashTags } = await getHashTagResponse.json<{
+      hashTags: ISCNTrend[];
       lastKey: string;
     }>();
 
-    // list of hashtag name
-    const newHashTagNames = hashTags.map(ht => ht.name);
-    // list of hashtag count
-    const newHashTagCounts = hashTags.map(ht => ht.count);
-    // list of cached hashtag names
-    const cachedHashTagNames = cashedHashTagCount.map(ht => ht.name);
-
-    if (lastKey) {
-      // put last hashtag key into kv cache
-      await ctx.env.WORKERS_GRAPHQL_CACHE.put(HASHTAG_SEQUENCE_KEY, lastKey);
-    }
-
-    // update count regarding new getting key list
-    const mergedRecords: ISCNChannel[] = cashedHashTagCount.map(ht => {
-      const index = newHashTagNames.indexOf(ht.name);
-      const updatedCount = index !== -1 ? newHashTagCounts[index] : 0;
-      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-      const count = ht.count + updatedCount;
-
-      return { ...ht, count } as ISCNChannel;
-    });
-
-    // remove keys that already exists in cached key list
-    const filterNewRecords = hashTags.filter(ht => cachedHashTagNames.indexOf(ht.name) === -1);
-    const updatedRecords = [...mergedRecords, ...filterNewRecords];
-    const trimmedRecords = updatedRecords.slice(0, 30);
+    const trimmedRecords = hashTags.slice(0, 30);
 
     // put records into kv cache
-    await ctx.env.WORKERS_GRAPHQL_CACHE.put(HASHTAG_RECORD_KEY, JSON.stringify(updatedRecords));
+    await ctx.env.WORKERS_GRAPHQL_CACHE.put(HASHTAG_RECORD_KEY, JSON.stringify(trimmedRecords), {
+      expirationTtl: 10 * 60, // 10 minutes
+    });
 
     return trimmedRecords;
   };
