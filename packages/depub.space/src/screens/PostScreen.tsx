@@ -10,7 +10,7 @@ import { MainStackParamList } from '../navigation/MainStackParamList';
 import { getShortenAddress } from '../utils';
 
 const debug = Debug('web:<PostScreen />');
-const isDev = process.env.NODE_ENV !== 'production';
+const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
 
 export type PostScreenProps = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList, 'Post'>,
@@ -22,8 +22,7 @@ export const PostScreen: FC<PostScreenProps> = ({ route, navigation }) => {
   const [message, setMessage] = useState<Message | null>(null);
   const id = decodeURIComponent(route.params.id);
   const revision = decodeURIComponent(route.params.revision);
-  const iscnScheme = isDev ? 'iscn://likecoin-chain-testnet' : 'iscn://likecoin-chain';
-  const iscnId = `${iscnScheme}/${id}/${revision}`;
+  const iscnId = `${ISCN_SCHEME}/${id}/${revision}`;
   const messageBody = message?.message;
   const abbrvMessage =
     `${messageBody?.slice(0, 30)}${messageBody?.length || 0 > 30 ? '...' : ''}` || '';
