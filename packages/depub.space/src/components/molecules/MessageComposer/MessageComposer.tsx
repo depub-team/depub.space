@@ -90,8 +90,6 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
       [profile]
     );
 
-    console.log(profilePicSource);
-
     const pickImage = async () => {
       debug('pickImage()');
 
