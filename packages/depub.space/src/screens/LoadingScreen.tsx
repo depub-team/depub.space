@@ -8,9 +8,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LogoText, DepubSpinner } from '../components/atoms/icons';
 
-const spinningLogoStyle = { width: 200, height: 200 };
-const logoTextStyle = { width: 200, height: 30 };
-
 export const LoadingScreen: FC = () => {
   const spinningValue = useSharedValue(0);
   const opacityValue = useSharedValue(0);
@@ -58,10 +55,10 @@ export const LoadingScreen: FC = () => {
 
   return (
     <Flex alignItems="center" flex={1} justifyContent="center">
-      <Animated.View style={[spinningLogoStyle, logoStyle]}>
+      <Animated.View style={[{ width: 200, height: 200 }, logoStyle]}>
         <DepubSpinner />
       </Animated.View>
-      <Animated.View style={[logoTextStyle, textStyle]}>
+      <Animated.View style={[{ width: 200, height: 30 }, textStyle]}>
         <Text>
           <LogoText />
         </Text>

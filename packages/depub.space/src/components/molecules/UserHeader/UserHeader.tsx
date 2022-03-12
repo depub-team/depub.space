@@ -24,7 +24,7 @@ export const UserHeader: FC<UserHeaderProps> = memo(
     const abbrNickname = getAbbrNickname(nickname);
 
     return (
-      <Box flex={1} mb={collapse ? 4 : 8}>
+      <Box flex={1}>
         <Stack
           alignItems="center"
           flex={1}

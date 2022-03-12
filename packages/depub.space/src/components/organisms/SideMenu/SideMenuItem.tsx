@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { Text, Box, HStack, Icon, Pressable, Collapse, VStack } from 'native-base';
 import { findFocusedRoute, useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
@@ -7,19 +7,6 @@ import type {
   MainStackParamList,
   RootStackParamList,
 } from '../../../navigation';
-
-const stackStyle = {
-  alignItems: 'center',
-  px: {
-    base: 3,
-    md: 4,
-  },
-  py: {
-    base: 2,
-    md: 3,
-  },
-  space: 4,
-};
 
 export type RouteParams<
   ParamList extends MainStackParamList | RootStackParamList,
@@ -64,26 +51,7 @@ export const SideMenuItem: FC<SideMenuItemProps> = ({
     (isCollapsed && collapsedIconName ? collapsedIconName : iconName) || defaultIconName;
   const myIcon = icon || <Feather />;
 
-  const pressableStyle = useMemo(
-    () => ({
-      _dark: {
-        _hover: {
-          bg: 'rgba(255,255,255,0.1)',
-        },
-        bg: isActive ? 'primary.200:alpha.10' : undefined,
-      },
-      _light: {
-        _hover: {
-          bg: 'rgba(0,0,0,0.1)',
-        },
-        bg: isActive ? 'primary.600:alpha.10' : undefined,
-      },
-      borderRadius: 'full',
-    }),
-    [isActive]
-  );
-
-  const handleOnPress = () => {
+  const handleOnPress = useCallback(() => {
     if (onPress) {
       onPress();
     } else if (routeParams) {
@@ -91,12 +59,39 @@ export const SideMenuItem: FC<SideMenuItemProps> = ({
     } else if (items) {
       setIsCollapsed(collapsed => !collapsed);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, routeParams]);
 
   return (
     <VStack>
-      <Pressable {...pressableStyle} onPress={handleOnPress}>
-        <HStack {...stackStyle}>
+      <Pressable
+        _dark={{
+          _hover: {
+            bg: 'rgba(255,255,255,0.1)',
+          },
+          bg: isActive ? 'primary.200:alpha.10' : undefined,
+        }}
+        _light={{
+          _hover: {
+            bg: 'rgba(0,0,0,0.1)',
+          },
+          bg: isActive ? 'primary.600:alpha.10' : undefined,
+        }}
+        borderRadius="full"
+        onPress={handleOnPress}
+      >
+        <HStack
+          alignItems="center"
+          px={{
+            base: 3,
+            md: 4,
+          }}
+          py={{
+            base: 2,
+            md: 3,
+          }}
+          space={4}
+        >
           {myIcon && myIconName ? (
             <Box w={8}>
               <Icon as={myIcon} name={myIconName} size="sm" />
