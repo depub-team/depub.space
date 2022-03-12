@@ -6,7 +6,7 @@ import { Link as NBLink, Box, VStack, Text } from 'native-base';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { Layout, MessageList, UserHeader } from '../components';
+import { Layout, ListHeaderContainer, MessageList, UserHeader } from '../components';
 import { Message, DesmosProfile } from '../interfaces';
 import { useAppState, useWallet } from '../hooks';
 import { getLikecoinAddressByProfile } from '../utils';
@@ -95,6 +95,18 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
     }
   };
 
+  const renderListHeader = () => (
+    <ListHeaderContainer>
+      <UserHeader
+        bio={bio}
+        collapse={isHeaderHide}
+        dtag={dtag}
+        nickname={nickname}
+        profilePic={profilePic}
+      />
+    </ListHeaderContainer>
+  );
+
   useEffect(() => {
     void (async () => {
       await fetchNewMessages(undefined, true);
@@ -128,15 +140,7 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
           data={messages}
           isLoading={isLoading}
           isLoadingMore={isLoadingMore}
-          ListHeaderComponent={
-            <UserHeader
-              bio={bio}
-              collapse={isHeaderHide}
-              dtag={dtag}
-              nickname={nickname}
-              profilePic={profilePic}
-            />
-          }
+          ListHeaderComponent={renderListHeader}
           stickyHeaderIndices={stickyHeaderIndices}
           onFetchData={fetchNewMessages}
           onScroll={handleOnScroll}

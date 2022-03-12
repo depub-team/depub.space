@@ -49,7 +49,7 @@ const linking: LinkingOptions<RootStackParamList> = {
           Channel: 'channel/:name',
         },
       },
-      NotFound: '404',
+      NotFound: '*',
       Post: 'post/:id/:revision',
       ConnectWallet: 'connectWallet',
       Image: 'image',
@@ -181,5 +181,7 @@ const MainContainer = () => {
     </SafeAreaProvider>
   );
 };
+
+(MainContainer as any).whyDidYouRender = true;
 
 export default MainContainer;

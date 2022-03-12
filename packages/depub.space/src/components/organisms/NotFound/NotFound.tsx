@@ -3,7 +3,18 @@ import React, { FC } from 'react';
 import { LogoIconText } from '@depub/theme';
 
 export const NotFound: FC = () => (
-  <View alignItems="center" flex={1} justifyContent="center" pt={8}>
+  <View
+    _dark={{
+      bg: 'darkBlue.900',
+    }}
+    _light={{
+      bg: 'white',
+    }}
+    alignItems="center"
+    flex={1}
+    justifyContent="center"
+    pt={8}
+  >
     <VStack alignItems="center" space={8}>
       <Text>
         <LogoIconText height={120} width={120} />

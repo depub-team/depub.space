@@ -31,6 +31,42 @@ export interface SideMenuProps extends DrawerContentComponentProps {
   profile: DesmosProfile | null;
 }
 
+const FadeOut: FC<{ direction?: 'up' | 'down' }> = ({ direction = 'up' }) => {
+  const isUp = direction === 'up';
+  const sortDirection = () => (isUp ? 1 : -1);
+
+  return (
+    <Box
+      _dark={{
+        bg: {
+          linearGradient: {
+            colors: ['rgba(0,14,33,0)', 'rgba(0,14,33,1)'].sort(sortDirection),
+            start: [0, 0],
+            end: [0, 1],
+          },
+        },
+      }}
+      _light={{
+        bg: {
+          linearGradient: {
+            colors: ['rgba(255,255,255,0)', 'rgba(255,255,255,1)'].sort(sortDirection),
+            start: [0, 0],
+            end: [0, 1],
+          },
+        },
+      }}
+      bottom={isUp ? 0 : undefined}
+      h={8}
+      left={0}
+      pointerEvents="none"
+      position="sticky"
+      top={!isUp ? 0 : undefined}
+      w="100%"
+      zIndex={1}
+    />
+  );
+};
+
 export const SideMenu: FC<SideMenuProps> = ({
   onLogout,
   isLoading,
@@ -69,8 +105,9 @@ export const SideMenu: FC<SideMenuProps> = ({
           justifyContent="flex-start"
           pt={6}
           px={{
-            base: 4,
-            md: 8,
+            base: 3,
+            md: 4,
+            lg: 6,
           }}
           space={4}
         >
@@ -88,7 +125,8 @@ export const SideMenu: FC<SideMenuProps> = ({
         </HStack>
 
         <ScrollView position="relative">
-          <VStack flex={1} px={4} space={2}>
+          <FadeOut direction="down" />
+          <VStack flex={1} px={{ base: 3, md: 4, lg: 6 }} space={2}>
             {menuItems.map(menuItemProps => (
               <SideMenuItem key={menuItemProps.name} {...menuItemProps} />
             ))}
@@ -104,42 +142,18 @@ export const SideMenu: FC<SideMenuProps> = ({
               </HStack>
             </SideMenuItem>
           </VStack>
-          <Box
-            _dark={{
-              bg: {
-                linearGradient: {
-                  colors: ['rgba(0,14,33,0)', 'rgba(0,14,33,1)'],
-                  start: [0, 0],
-                  end: [0, 1],
-                },
-              },
-            }}
-            _light={{
-              bg: {
-                linearGradient: {
-                  colors: ['rgba(255,255,255,0)', 'rgba(255,255,255,1)'],
-                  start: [0, 0],
-                  end: [0, 1],
-                },
-              },
-            }}
-            bottom={0}
-            h={8}
-            left={0}
-            pointerEvents="none"
-            position="sticky"
-            w="100%"
-          />
+          <FadeOut />
         </ScrollView>
 
         <Box
           px={{
-            base: 4,
-            md: 6,
+            base: 3,
+            md: 4,
+            lg: 6,
           }}
           py={{
             base: 6,
-            md: 8,
+            lg: 8,
           }}
         >
           {isLogged ? (

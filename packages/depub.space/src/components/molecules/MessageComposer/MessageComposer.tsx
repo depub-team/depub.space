@@ -163,7 +163,16 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     );
 
     return (
-      <VStack borderRadius="lg" p={4} space={isCollapsed ? 0 : 4} {...props}>
+      <VStack
+        borderRadius="lg"
+        px={{
+          base: 4,
+          lg: 6,
+        }}
+        py={4}
+        space={isCollapsed ? 0 : 4}
+        {...props}
+      >
         <HStack flex={1} space={{ base: 2, md: 4 }}>
           <Link
             to={{
