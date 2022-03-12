@@ -14,6 +14,10 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   );
 
   whyDidYouRender(React);
+
+  // whyDidYouRender(React, {
+  //   trackAllPureComponents: true,
+  // });
 }
 
 export default {};

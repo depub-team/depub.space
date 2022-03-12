@@ -1,4 +1,4 @@
-import React, { ComponentProps, FC } from 'react';
+import React, { ComponentProps, FC, useMemo } from 'react';
 import { Text, Button, Image, VStack, Modal, Heading } from 'native-base';
 
 interface ConnectWalletModalProps extends ComponentProps<typeof Modal> {
@@ -10,35 +10,45 @@ interface ConnectButtonProps extends ComponentProps<typeof Button> {
   title: string;
   description: string;
 }
-const ConnectButton: FC<ConnectButtonProps> = ({ icon, title, description, ...props }) => (
-  <Button
-    _dark={{
-      _hover: { bg: 'gray.800', borderColor: 'gray.300' },
-    }}
-    _light={{
-      _hover: { bg: 'gray.100', borderColor: 'gray.200' },
-    }}
-    _stack={{
-      alignItems: 'center',
-      space: 3,
-      direction: 'row',
-      w: '100%',
-    }}
-    borderColor="gray.200"
-    borderWidth={1}
-    rounded="lg"
-    startIcon={<Image alt="start icon" h={12} source={{ uri: icon }} w={12} />}
-    variant="unstyled"
-    {...props}
-  >
-    <Heading _dark={{ color: 'white' }} _light={{ color: 'black' }} mb={0} size="md">
-      {title}
-    </Heading>
-    <Text color="gray.400" fontSize="sm">
-      {description}
-    </Text>
-  </Button>
-);
+
+const headingStyle = {
+  _dark: { color: 'white' },
+  _light: { color: 'black' },
+  mb: 0,
+  size: 'md',
+};
+
+const ConnectButton: FC<ConnectButtonProps> = ({ icon, title, description, ...props }) => {
+  const iconSource = useMemo(() => ({ uri: icon }), [icon]);
+
+  return (
+    <Button
+      _dark={{
+        _hover: { bg: 'gray.800', borderColor: 'gray.300' },
+      }}
+      _light={{
+        _hover: { bg: 'gray.100', borderColor: 'gray.200' },
+      }}
+      _stack={{
+        alignItems: 'center',
+        space: 3,
+        direction: 'row',
+        w: '100%',
+      }}
+      borderColor="gray.200"
+      borderWidth={1}
+      rounded="lg"
+      startIcon={<Image alt="start icon" h={12} source={iconSource} w={12} />}
+      variant="unstyled"
+      {...props}
+    >
+      <Heading {...headingStyle}>{title}</Heading>
+      <Text color="gray.400" fontSize="sm">
+        {description}
+      </Text>
+    </Button>
+  );
+};
 
 export const ConnectWalletModal: FC<ConnectWalletModalProps> = ({
   onPressWalletConnect,

@@ -20,6 +20,10 @@ export interface AlertProps extends IAlertProps {
   onClose?: () => void;
 }
 
+const textColor = {
+  color: 'coolGray.600',
+};
+
 export const Alert: FC<AlertProps> = ({
   title,
   content,
@@ -46,12 +50,7 @@ export const Alert: FC<AlertProps> = ({
           />
         </HStack>
         {content && (
-          <Box
-            _text={{
-              color: 'coolGray.600',
-            }}
-            pl="6"
-          >
+          <Box _text={textColor} pl="6">
             {content}
           </Box>
         )}

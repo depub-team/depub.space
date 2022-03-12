@@ -4,18 +4,20 @@ import React, { FC } from 'react';
 
 export type ListLoadingProps = IHStackProps;
 
+const style = {
+  _dark: {
+    borderTopColor: 'gray.800',
+  },
+  _light: {
+    borderTopColor: 'gray.200',
+  },
+  justifyContent: 'center',
+  py: 24,
+  space: 8,
+};
+
 export const ListLoading: FC<ListLoadingProps> = () => (
-  <HStack
-    _dark={{
-      borderTopColor: 'gray.800',
-    }}
-    _light={{
-      borderTopColor: 'gray.200',
-    }}
-    justifyContent="center"
-    py={24}
-    space={8}
-  >
+  <HStack {...style}>
     <Spinner accessibilityLabel="Loading messages" size="lg" />
   </HStack>
 );

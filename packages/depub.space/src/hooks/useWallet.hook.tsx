@@ -1,4 +1,12 @@
-import React, { createContext, FC, Reducer, useContext, useEffect, useReducer } from 'react';
+import React, {
+  useMemo,
+  createContext,
+  FC,
+  Reducer,
+  useContext,
+  useEffect,
+  useReducer,
+} from 'react';
 import update from 'immutability-helper';
 import WalletConnect from '@walletconnect/client';
 import QRCodeModal from '@walletconnect/qrcode-modal';
@@ -442,12 +450,17 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
         // suggest likechain
         await suggestChain();
 
-        await initKepr();
+        const connected = await initKepr();
+
+        if (!connected) {
+          setError('Cannot connect, please try again later.');
+        }
       } catch (ex) {
         setError(ex.message);
       }
 
       setIsLoading(false);
+      setIsWalletModalOpen(false);
     },
     connectWalletConnect: async () => {
       debug('connectWalletConnect()');
@@ -455,12 +468,17 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
       setIsLoading(true);
 
       try {
-        await initWalletConnect();
+        const connected = await initWalletConnect();
+
+        if (!connected) {
+          setError('Cannot connect, please try again later.');
+        }
       } catch (ex) {
         setError(ex.message);
       }
 
       setIsLoading(false);
+      setIsWalletModalOpen(false);
     },
     disconnect,
     showWalletModal: () => {
@@ -498,13 +516,19 @@ export const WalletProvider: FC = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const contextValue = useMemo(
+    () => ({
+      ...state,
+      ...actions,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state]
+  );
+
   return (
     <WalletContext.Provider
       // eslint-disable-next-line react/jsx-no-constructed-context-values
-      value={{
-        ...state,
-        ...actions,
-      }}
+      value={contextValue}
     >
       {children}
       <ConnectWalletModal

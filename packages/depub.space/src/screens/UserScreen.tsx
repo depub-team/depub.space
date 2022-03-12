@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import update from 'immutability-helper';
 import Debug from 'debug';
@@ -42,6 +42,10 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   const bio = profile?.bio;
   const dtag = profile?.dtag;
   const likecoinWalletAddress = profile && getLikecoinAddressByProfile(profile);
+  const layoutMetadata = useMemo(
+    () => ({ title: `${nickname || walletAddress} on depub.SPACE` }),
+    [nickname, walletAddress]
+  );
 
   // only show messages when the account has linked to Likecoin
   const showMessagesList = isWalletAddress || likecoinWalletAddress || !isReady;
@@ -132,7 +136,7 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   );
 
   return account ? (
-    <Layout metadata={{ title: `${nickname || walletAddress} on depub.SPACE` }}>
+    <Layout metadata={layoutMetadata}>
       {showMessagesList ? (
         <MessageList
           data={messages}
