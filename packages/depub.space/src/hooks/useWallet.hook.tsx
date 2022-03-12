@@ -1,12 +1,5 @@
-import React, {
-  createContext,
-  FC,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { createContext, FC, Reducer, useContext, useEffect, useReducer } from 'react';
+import update from 'immutability-helper';
 import WalletConnect from '@walletconnect/client';
 import QRCodeModal from '@walletconnect/qrcode-modal';
 import Debug from 'debug';
@@ -14,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { payloadId } from '@walletconnect/utils';
 import { AccountData, OfflineSigner } from '@cosmjs/proto-signing';
 import { SignDoc } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
+import { ConnectWalletModal } from '../components/organisms/ConnectWalletModal';
 
 const debug = Debug('web:useSigningCosmWasmClient');
 const PUBLIC_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID || '';
@@ -24,15 +18,71 @@ const isTestnet = /testnet/.test(PUBLIC_CHAIN_ID);
 
 type ConnectedWalletType = 'keplr' | 'likerland_app';
 
+export class WalletStateError extends Error {}
 export interface WalletContextProps {
   walletAddress: string | null;
   offlineSigner: OfflineSigner | null;
+  connector: WalletConnect | null;
   isLoading: boolean;
   error: string | null;
+  isWalletModalOpen: boolean;
+  showWalletModal: () => void;
+  closeWalletModal: () => void;
   connectKeplr: () => Promise<void>;
   connectWalletConnect: () => Promise<void>;
   disconnect: () => Promise<void>;
 }
+
+const enum ActionType {
+  SET_WALLET_ADDRESS = 'SET_WALLET_ADDRESS',
+  SET_CONNECTOR = 'SET_CONNECTOR',
+  SET_OFFLINE_SIGNER = 'SET_OFFLINE_SIGNER',
+  SET_IS_LOADING = 'SET_IS_LOADING',
+  SET_ERROR = 'SET_ERROR',
+  SET_IS_WALLET_MODAL_OPEN = 'SET_IS_WALLET_MODAL_OPEN',
+}
+
+type Action =
+  | { type: ActionType.SET_WALLET_ADDRESS; walletAddress: string | null }
+  | { type: ActionType.SET_OFFLINE_SIGNER; offlineSigner: OfflineSigner | null }
+  | { type: ActionType.SET_CONNECTOR; connector: WalletConnect | null }
+  | { type: ActionType.SET_IS_LOADING; isLoading: boolean }
+  | { type: ActionType.SET_ERROR; error: string | null }
+  | { type: ActionType.SET_IS_WALLET_MODAL_OPEN; isWalletModalOpen: boolean };
+
+const reducer: Reducer<WalletContextProps, Action> = (state, action) => {
+  debug('reducer: %O', action);
+
+  switch (action.type) {
+    case ActionType.SET_CONNECTOR:
+      return update(state, {
+        connector: { $set: action.connector },
+      });
+    case ActionType.SET_WALLET_ADDRESS:
+      return update(state, {
+        walletAddress: { $set: action.walletAddress },
+      });
+    case ActionType.SET_OFFLINE_SIGNER:
+      return update(state, {
+        offlineSigner: { $set: action.offlineSigner },
+      });
+    case ActionType.SET_IS_LOADING:
+      return update(state, {
+        isLoading: { $set: action.isLoading },
+      });
+    case ActionType.SET_ERROR:
+      return update(state, {
+        isLoading: { $set: false },
+        error: { $set: action.error },
+      });
+    case ActionType.SET_IS_WALLET_MODAL_OPEN:
+      return update(state, {
+        isWalletModalOpen: { $set: action.isWalletModalOpen },
+      });
+    default:
+      throw new WalletStateError(`Cannot match action type ${(action as any).type}`);
+  }
+};
 
 export const getChainInfo = () => {
   const mainnet = {
@@ -133,15 +183,21 @@ export const getChainInfo = () => {
   return isTestnet ? testnet : mainnet;
 };
 
-export const WalletContext = createContext<WalletContextProps>({
+const initialState = {
   walletAddress: null,
   offlineSigner: null,
   isLoading: false,
+  isWalletModalOpen: false,
+  connector: null,
   error: null,
+  showWalletModal: null as never,
+  closeWalletModal: null as never,
   connectKeplr: null as never,
   connectWalletConnect: null as never,
   disconnect: null as never,
-});
+};
+
+export const WalletContext = createContext<WalletContextProps>(initialState);
 
 export const useWallet = () => {
   const ctx = useContext(WalletContext);
@@ -149,12 +205,23 @@ export const useWallet = () => {
   return ctx;
 };
 
-export const WalletProvider: FC = ({ children }) => {
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [offlineSigner, setOfflineSigner] = useState<OfflineSigner | null>(null);
-  const [connector, setConnector] = useState<WalletConnect | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export const useWalletActions = (state: WalletContextProps, dispatch: React.Dispatch<Action>) => {
+  const setIsLoading = (isLoading: boolean) =>
+    dispatch({ type: ActionType.SET_IS_LOADING, isLoading });
+
+  const setError = (error: string | null) => dispatch({ type: ActionType.SET_ERROR, error });
+
+  const setWalletAddress = (walletAddress: string | null) =>
+    dispatch({ type: ActionType.SET_WALLET_ADDRESS, walletAddress });
+
+  const setOfflineSigner = (offlineSigner: OfflineSigner | null) =>
+    dispatch({ type: ActionType.SET_OFFLINE_SIGNER, offlineSigner });
+
+  const setIsWalletModalOpen = (isWalletModalOpen: boolean) =>
+    dispatch({ type: ActionType.SET_IS_WALLET_MODAL_OPEN, isWalletModalOpen });
+
+  const setConnector = (connector: WalletConnect | null) =>
+    dispatch({ type: ActionType.SET_CONNECTOR, connector });
 
   const suggestChain = async () => {
     if (typeof (window as any).keplr === 'undefined') {
@@ -171,33 +238,6 @@ export const WalletProvider: FC = ({ children }) => {
 
     setIsLoading(false);
   };
-
-  const disconnect = useCallback(async () => {
-    debug('disconnect()');
-
-    const keys = await AsyncStorage.getAllKeys();
-    const accountKeys = keys.filter(key =>
-      new RegExp(`^${KEY_WALLET_CONNECT_ACCOUNT_PREFIX}`).test(key)
-    );
-
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    accountKeys.forEach(async key => {
-      await AsyncStorage.removeItem(key);
-    });
-
-    await AsyncStorage.removeItem(KEY_CONNECTED_WALLET_TYPE);
-    await AsyncStorage.removeItem(KEY_WALLET_CONNECT);
-
-    if (connector?.connected) {
-      void connector.killSession();
-      setConnector(null);
-    }
-
-    setWalletAddress(null);
-    setOfflineSigner(null);
-    setIsLoading(false);
-    setError(null);
-  }, [connector]);
 
   const initKepr = async () => {
     // enable website to access kepler
@@ -217,10 +257,39 @@ export const WalletProvider: FC = ({ children }) => {
 
     await AsyncStorage.setItem(KEY_CONNECTED_WALLET_TYPE, 'keplr');
 
+    setIsWalletModalOpen(false); // close modal
+
     return true;
   };
 
-  const initWalletConnect = useCallback(async () => {
+  const disconnect = async () => {
+    debug('disconnect()');
+
+    const keys = await AsyncStorage.getAllKeys();
+    const accountKeys = keys.filter(key =>
+      new RegExp(`^${KEY_WALLET_CONNECT_ACCOUNT_PREFIX}`).test(key)
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    accountKeys.forEach(async key => {
+      await AsyncStorage.removeItem(key);
+    });
+
+    await AsyncStorage.removeItem(KEY_CONNECTED_WALLET_TYPE);
+    await AsyncStorage.removeItem(KEY_WALLET_CONNECT);
+
+    if (state.connector?.connected) {
+      void state.connector.killSession();
+      setConnector(null);
+    }
+
+    setWalletAddress(null);
+    setOfflineSigner(null);
+    setIsLoading(false);
+    setError(null);
+  };
+
+  const initWalletConnect = async () => {
     let account: any;
     let newConnector = new WalletConnect({
       bridge: 'https://bridge.walletconnect.org',
@@ -257,16 +326,12 @@ export const WalletProvider: FC = ({ children }) => {
 
       await newConnector.connect();
 
-      const accounts = await newConnector.sendCustomRequest({
+      [account] = await newConnector.sendCustomRequest({
         id: payloadId(),
         jsonrpc: '2.0',
         method: 'cosmos_getAccounts',
         params: [PUBLIC_CHAIN_ID],
       });
-
-      console.log(accounts);
-
-      [account] = accounts;
 
       debug('initWalletConnect() -> account: %O', account);
 
@@ -293,6 +358,8 @@ export const WalletProvider: FC = ({ children }) => {
     if (!account) return false;
 
     const { bech32Address: address, algo, pubKey: pubKeyInHex } = account;
+
+    setIsWalletModalOpen(false); // close modal
 
     if (!address || !algo || !pubKeyInHex) return false;
 
@@ -322,7 +389,7 @@ export const WalletProvider: FC = ({ children }) => {
     await AsyncStorage.setItem(KEY_CONNECTED_WALLET_TYPE, 'likerland_app');
 
     return true;
-  }, [disconnect]);
+  };
 
   const setupAccount = async () => {
     if (typeof (window as any).keplr === 'undefined') {
@@ -356,52 +423,68 @@ export const WalletProvider: FC = ({ children }) => {
     setIsLoading(false);
   };
 
-  const connectWalletConnect = useCallback(async () => {
-    debug('connectWalletConnect()');
+  return {
+    setupAccount,
+    initKepr,
+    initWalletConnect,
+    connectKeplr: async () => {
+      debug('connectKeplr()');
 
-    setIsLoading(true);
+      if (typeof (window as any).keplr === 'undefined') {
+        setError('Keplr is not available');
 
-    try {
-      await initWalletConnect();
-    } catch (ex) {
-      setError(ex.message);
-    }
+        return;
+      }
 
-    setIsLoading(false);
-  }, [initWalletConnect]);
+      setIsLoading(true);
 
-  const connectKeplr = useCallback(async () => {
-    debug('connectKeplr()');
+      try {
+        // suggest likechain
+        await suggestChain();
 
-    if (typeof (window as any).keplr === 'undefined') {
-      setError('Keplr is not available');
+        await initKepr();
+      } catch (ex) {
+        setError(ex.message);
+      }
 
-      return;
-    }
+      setIsLoading(false);
+    },
+    connectWalletConnect: async () => {
+      debug('connectWalletConnect()');
 
-    setIsLoading(true);
+      setIsLoading(true);
 
-    try {
-      // suggest likechain
-      await suggestChain();
+      try {
+        await initWalletConnect();
+      } catch (ex) {
+        setError(ex.message);
+      }
 
-      await initKepr();
-    } catch (ex) {
-      setError(ex.message);
-    }
+      setIsLoading(false);
+    },
+    disconnect,
+    showWalletModal: () => {
+      setIsWalletModalOpen(true);
+    },
+    closeWalletModal: () => {
+      setIsWalletModalOpen(false);
+    },
+  };
+};
 
-    setIsLoading(false);
-  }, []);
+export const WalletProvider: FC = ({ children }) => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const actions = useWalletActions(state, dispatch);
 
   useEffect(() => {
-    void setupAccount();
+    void actions.setupAccount();
 
     const keystoreChangeHandler = () => {
       void AsyncStorage.getItem(KEY_CONNECTED_WALLET_TYPE).then(
         (connectedWalletType: ConnectedWalletType) => {
           // eslint-disable-next-line promise/always-return
           if (connectedWalletType === 'keplr') {
-            void initKepr();
+            void actions.initKepr();
           }
         }
       );
@@ -415,18 +498,23 @@ export const WalletProvider: FC = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const value = useMemo(
-    () => ({
-      walletAddress,
-      isLoading,
-      error,
-      offlineSigner,
-      connectKeplr,
-      connectWalletConnect,
-      disconnect,
-    }),
-    [walletAddress, isLoading, error, offlineSigner, connectKeplr, connectWalletConnect, disconnect]
+  return (
+    <WalletContext.Provider
+      // eslint-disable-next-line react/jsx-no-constructed-context-values
+      value={{
+        ...state,
+        ...actions,
+      }}
+    >
+      {children}
+      <ConnectWalletModal
+        isOpen={state.isWalletModalOpen}
+        onClose={actions.closeWalletModal}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onPressKeplr={actions.connectKeplr}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onPressWalletConnect={actions.connectWalletConnect}
+      />
+    </WalletContext.Provider>
   );
-
-  return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 };

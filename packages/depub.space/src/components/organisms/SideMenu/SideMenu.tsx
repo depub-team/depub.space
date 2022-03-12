@@ -15,16 +15,15 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
 import { HLogoText } from '@depub/theme';
-import { useNavigation } from '@react-navigation/native';
 import type { SideMenuItemProps } from './SideMenuItem';
 import { SideMenuItem } from './SideMenuItem';
 import { ConnectWalletButton } from '../../atoms/ConnectWalletButton';
 import type { DesmosProfile } from '../../../interfaces';
 import { getAbbrNickname, getLikecoinAddressByProfile, getShortenAddress } from '../../../utils';
-import type { HomeScreenNavigationProps } from '../../../navigation/MainStackParamList';
 
 export interface SideMenuProps extends DrawerContentComponentProps {
   onLogout?: () => void;
+  onConnectWallet?: () => void;
   isLoading?: boolean;
   walletAddress: string | null;
   menuItems: SideMenuItemProps[];
@@ -72,12 +71,12 @@ export const SideMenu: FC<SideMenuProps> = ({
   isLoading,
   walletAddress,
   menuItems,
+  onConnectWallet,
   profile,
   ...props
 }) => {
   const isLogged = Boolean(walletAddress);
   const { colorMode, toggleColorMode } = useColorMode();
-  const navigation = useNavigation<HomeScreenNavigationProps>();
   const isDarkMode = colorMode === 'dark';
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const shortenAddress =
@@ -91,7 +90,7 @@ export const SideMenu: FC<SideMenuProps> = ({
   );
 
   const handleOnConnect = () => {
-    navigation.navigate('ConnectWallet');
+    if (onConnectWallet) onConnectWallet();
   };
 
   return (
@@ -100,7 +99,7 @@ export const SideMenu: FC<SideMenuProps> = ({
       contentContainerStyle={{ flex: 1 }}
       style={{ flexBasis: '100vh', flexGrow: 0 }}
     >
-      <VStack flex="1 0 100%" space={8}>
+      <VStack flex="1 0 100%">
         <HStack
           justifyContent="flex-start"
           pt={6}
@@ -126,7 +125,7 @@ export const SideMenu: FC<SideMenuProps> = ({
 
         <ScrollView position="relative">
           <FadeOut direction="down" />
-          <VStack flex={1} px={{ base: 3, md: 4, lg: 6 }} space={2}>
+          <VStack flex={1} px={{ base: 3, md: 4, lg: 6 }} space={1}>
             {menuItems.map(menuItemProps => (
               <SideMenuItem key={menuItemProps.name} {...menuItemProps} />
             ))}

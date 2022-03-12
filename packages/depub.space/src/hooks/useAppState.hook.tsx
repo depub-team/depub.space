@@ -1,15 +1,6 @@
-import React, {
-  createContext,
-  FC,
-  Reducer,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  useState,
-} from 'react';
+import React, { createContext, FC, Reducer, useContext, useEffect, useReducer } from 'react';
 import * as Sentry from '@sentry/nextjs';
+import update from 'immutability-helper';
 import * as Crypto from 'expo-crypto';
 import { OfflineSigner } from '@cosmjs/proto-signing';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
@@ -38,6 +29,7 @@ export class AppStateError extends Error {}
 
 export interface AppStateContextProps {
   isLoading: boolean;
+  isLoadingModalOpen: boolean;
   error: string | null;
   profile: DesmosProfile | null;
   channels: List[];
@@ -69,6 +61,7 @@ const initialState: AppStateContextProps = {
   hashTags: [],
   error: null,
   isLoading: false,
+  isLoadingModalOpen: false,
   profile: null,
   fetchUser: null as never,
   showLoading: null as never,
@@ -91,6 +84,7 @@ const enum ActionType {
   SET_PROFILE = 'SET_PROFILE',
   SET_CHANNELS = 'SET_CHANNELS',
   SET_HASHTAGS = 'SET_HASHTAGS',
+  SET_IS_LOADING_MODAL_OPEN = 'SET_IS_LOADING_MODAL_OPEN',
 }
 
 type Action =
@@ -98,38 +92,38 @@ type Action =
   | { type: ActionType.SET_ERROR; error: string | null }
   | { type: ActionType.SET_PROFILE; profile: DesmosProfile | null }
   | { type: ActionType.SET_CHANNELS; channels: List[] }
-  | { type: ActionType.SET_HASHTAGS; hashTags: HashTag[] };
+  | { type: ActionType.SET_HASHTAGS; hashTags: HashTag[] }
+  | { type: ActionType.SET_IS_LOADING_MODAL_OPEN; isLoadingModalOpen: boolean };
 
 const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
   debug('reducer: %O', action);
 
   switch (action.type) {
     case ActionType.SET_IS_LOADING:
-      return {
-        ...state,
-        isLoading: action.isLoading,
-      };
+      return update(state, {
+        isLoading: { $set: action.isLoading },
+      });
     case ActionType.SET_ERROR:
-      return {
-        ...state,
-        isLoading: false,
-        error: action.error,
-      };
+      return update(state, {
+        isLoading: { $set: false },
+        error: { $set: action.error },
+      });
     case ActionType.SET_PROFILE:
-      return {
-        ...state,
-        profile: action.profile,
-      };
+      return update(state, {
+        profile: { $set: action.profile },
+      });
     case ActionType.SET_HASHTAGS:
-      return {
-        ...state,
-        hashTags: action.hashTags,
-      };
+      return update(state, {
+        hashTags: { $set: action.hashTags },
+      });
     case ActionType.SET_CHANNELS:
-      return {
-        ...state,
-        channels: action.channels,
-      };
+      return update(state, {
+        channels: { $set: action.channels },
+      });
+    case ActionType.SET_IS_LOADING_MODAL_OPEN:
+      return update(state, {
+        isLoadingModalOpen: { $set: action.isLoadingModalOpen },
+      });
     default:
       throw new AppStateError(`Cannot match action type ${(action as any).type}`);
   }
@@ -137,13 +131,81 @@ const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
 
 export const useAppState = () => useContext(AppStateContext);
 
-export const AppStateProvider: FC = ({ children }) => {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const [isLoadingModalOpen, setIsLoadingModalOpen] = useState(false);
-  const alert = useAlert();
-  const { walletAddress, error: connectError } = useWallet();
+const useAppActions = (dispatch: React.Dispatch<Action>) => ({
+  postMessage: async (offlineSigner: OfflineSigner, message: string, files?: string | File[]) => {
+    debug('postMessage() -> message: %s, files: %O', message, files);
 
-  const fetchUser = useCallback(async (dtagOrAddress: string): Promise<User | null> => {
+    dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
+
+    try {
+      const [wallet] = await offlineSigner.getAccounts();
+      const recordTimestamp = new Date().toISOString();
+      const datePublished = recordTimestamp.split('T')[0];
+      const messageSha256Hash = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        message
+      );
+      const payload = {
+        contentFingerprints: [ISCN_FINGERPRINT, `hash://sha256/${messageSha256Hash}`],
+        recordTimestamp,
+        datePublished,
+        stakeholders: [
+          {
+            entity: {
+              '@id': wallet.address,
+              name: wallet.address,
+            },
+            contributionType: 'http://schema.org/author',
+            rewardProportion: 0.975,
+          },
+          {
+            entity: {
+              '@id': 'https://depub.SPACE',
+              name: 'depub.SPACE',
+            },
+            contributionType: 'http://schema.org/publisher',
+            rewardProportion: 0.025,
+          },
+        ],
+        name: `depub.space-${recordTimestamp}`,
+        recordNotes: 'A Message posted on depub.SPACE',
+        type: 'Article',
+        author: wallet.address,
+        description: message,
+        version: 1,
+        usageInfo: 'https://creativecommons.org/licenses/by/4.0',
+      };
+
+      debug('postMessage() -> payload: %O', payload);
+
+      let txn: TxRaw | BroadcastTxSuccess;
+
+      if (files) {
+        txn = await submitToArweaveAndISCN(files, payload, offlineSigner, wallet.address);
+      } else {
+        txn = await signISCN(payload, offlineSigner, wallet.address);
+      }
+
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+
+      return txn;
+    } catch (ex) {
+      debug('postMessage() -> error: %O', ex);
+
+      if (/^Account does not exist on chain/.test(ex.message)) {
+        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+
+        throw new AppStateError(ex.message);
+      }
+
+      Sentry.captureException(ex);
+    }
+
+    dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+
+    throw new AppStateError('Failed to post your message, please try it again later.');
+  },
+  fetchUser: async (dtagOrAddress: string): Promise<User | null> => {
     debug('fetchUser(dtagOrAddress: %s)', dtagOrAddress);
 
     dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
@@ -166,40 +228,59 @@ export const AppStateProvider: FC = ({ children }) => {
     }
 
     return null;
-  }, []);
+  },
+  fetchMessages: async (previousId?: string): Promise<PaginatedResponse<Message[]>> => {
+    debug('fetchMessages(previousId: %s)', previousId);
 
-  const fetchMessagesByOwner = useCallback(
-    async (
-      owner: string,
-      previousId?: string
-    ): Promise<PaginatedResponse<GetUserWithMessagesResponse | null> | null> => {
-      debug('fetchMessagesByOwner(owner: %s, previousId: %s)', owner, previousId);
+    dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
-      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
+    try {
+      const messages = await getMessages(previousId);
 
-      try {
-        const messagesByOwner = await getMessagesByOwner(owner, previousId);
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+      return messages;
+    } catch (ex) {
+      debug('fetchMessages() -> error: %O', ex);
 
-        return messagesByOwner;
-      } catch (ex) {
-        debug('fetchMessagesByOwner() -> error: %O', ex);
+      dispatch({
+        type: ActionType.SET_ERROR,
+        error: 'Fail to fetch messages, please try again later.',
+      });
 
-        dispatch({
-          type: ActionType.SET_ERROR,
-          error: 'Fail to fetch messages, please try again later.',
-        });
+      Sentry.captureException(ex);
+    }
 
-        Sentry.captureException(ex);
-      }
+    return {
+      data: [],
+      hasMore: false,
+    };
+  },
+  fetchMessage: async (iscnId: string): Promise<Message | null> => {
+    debug('fetchMessage(iscnId: %s)', iscnId);
 
-      return null;
-    },
-    []
-  );
+    dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
-  const fetchChannels = useCallback(async (): Promise<GetChannelsResponse> => {
+    try {
+      const message = await getMessageById(iscnId);
+
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+
+      return message;
+    } catch (ex) {
+      debug('fetchMessage() -> error: %O', ex);
+
+      dispatch({
+        type: ActionType.SET_ERROR,
+        error: `Fail to fetch message(${iscnId}), please try again later.`,
+      });
+
+      Sentry.captureException(ex);
+    }
+
+    return null;
+  },
+  fetchChannels: async (): Promise<GetChannelsResponse> => {
     debug('fetchChannels()');
 
     dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
@@ -224,197 +305,91 @@ export const AppStateProvider: FC = ({ children }) => {
     }
 
     return { list: [], hashTags: [] };
-  }, []);
-
-  const fetchMessages = useCallback(
-    async (previousId?: string): Promise<PaginatedResponse<Message[]>> => {
-      debug('fetchMessages(previousId: %s)', previousId);
-
-      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
-
-      try {
-        const messages = await getMessages(previousId);
-
-        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
-
-        return messages;
-      } catch (ex) {
-        debug('fetchMessages() -> error: %O', ex);
-
-        dispatch({
-          type: ActionType.SET_ERROR,
-          error: 'Fail to fetch messages, please try again later.',
-        });
-
-        Sentry.captureException(ex);
-      }
-
-      return {
-        data: [],
-        hasMore: false,
-      };
-    },
-    []
-  );
-
-  const fetchMessage = useCallback(async (iscnId: string): Promise<Message | null> => {
-    debug('fetchMessage(iscnId: %s)', iscnId);
+  },
+  fetchMessagesByHashTag: async (
+    tag: string,
+    previousId?: string,
+    limit?: number
+  ): Promise<PaginatedResponse<Message[]>> => {
+    debug('fetchMessagesByHashTag(tag: %s, previousId: %s)', tag, previousId);
 
     dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
 
     try {
-      const message = await getMessageById(iscnId);
+      const messages = await getMessagesByHashTag(tag, previousId, limit);
 
       dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-      return message;
+      return messages;
     } catch (ex) {
-      debug('fetchMessage() -> error: %O', ex);
+      debug('fetchMessagesByHashTag() -> error: %O', ex);
 
       dispatch({
         type: ActionType.SET_ERROR,
-        error: `Fail to fetch message(${iscnId}), please try again later.`,
+        error: 'Fail to fetch messages, please try again later.',
+      });
+
+      Sentry.captureException(ex);
+    }
+
+    return {
+      data: [],
+      hasMore: false,
+    };
+  },
+  fetchMessagesByOwner: async (
+    owner: string,
+    previousId?: string
+  ): Promise<PaginatedResponse<GetUserWithMessagesResponse | null> | null> => {
+    debug('fetchMessagesByOwner(owner: %s, previousId: %s)', owner, previousId);
+
+    dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
+
+    try {
+      const messagesByOwner = await getMessagesByOwner(owner, previousId);
+
+      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+
+      return messagesByOwner;
+    } catch (ex) {
+      debug('fetchMessagesByOwner() -> error: %O', ex);
+
+      dispatch({
+        type: ActionType.SET_ERROR,
+        error: 'Fail to fetch messages, please try again later.',
       });
 
       Sentry.captureException(ex);
     }
 
     return null;
-  }, []);
+  },
+  showLoading: () => {
+    dispatch({ type: ActionType.SET_IS_LOADING_MODAL_OPEN, isLoadingModalOpen: true });
+  },
+  closeLoading: () => {
+    dispatch({ type: ActionType.SET_IS_LOADING_MODAL_OPEN, isLoadingModalOpen: false });
+  },
+});
 
-  const fetchMessagesByHashTag = useCallback(
-    async (
-      tag: string,
-      previousId?: string,
-      limit?: number
-    ): Promise<PaginatedResponse<Message[]>> => {
-      debug('fetchMessagesByHashTag(tag: %s, previousId: %s)', tag, previousId);
-
-      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
-
-      try {
-        const messages = await getMessagesByHashTag(tag, previousId, limit);
-
-        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
-
-        return messages;
-      } catch (ex) {
-        debug('fetchMessagesByHashTag() -> error: %O', ex);
-
-        dispatch({
-          type: ActionType.SET_ERROR,
-          error: 'Fail to fetch messages, please try again later.',
-        });
-
-        Sentry.captureException(ex);
-      }
-
-      return {
-        data: [],
-        hasMore: false,
-      };
-    },
-    []
-  );
-
-  const postMessage = useCallback(
-    async (offlineSigner: OfflineSigner, message: string, files?: string | File[]) => {
-      debug('postMessage() -> message: %s, files: %O', message, files);
-
-      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: true });
-
-      try {
-        const [wallet] = await offlineSigner.getAccounts();
-        const recordTimestamp = new Date().toISOString();
-        const datePublished = recordTimestamp.split('T')[0];
-        const messageSha256Hash = await Crypto.digestStringAsync(
-          Crypto.CryptoDigestAlgorithm.SHA256,
-          message
-        );
-        const payload = {
-          contentFingerprints: [ISCN_FINGERPRINT, `hash://sha256/${messageSha256Hash}`],
-          recordTimestamp,
-          datePublished,
-          stakeholders: [
-            {
-              entity: {
-                '@id': wallet.address,
-                name: wallet.address,
-              },
-              contributionType: 'http://schema.org/author',
-              rewardProportion: 0.975,
-            },
-            {
-              entity: {
-                '@id': 'https://depub.SPACE',
-                name: 'depub.SPACE',
-              },
-              contributionType: 'http://schema.org/publisher',
-              rewardProportion: 0.025,
-            },
-          ],
-          name: `depub.space-${recordTimestamp}`,
-          recordNotes: 'A Message posted on depub.SPACE',
-          type: 'Article',
-          author: wallet.address,
-          description: message,
-          version: 1,
-          usageInfo: 'https://creativecommons.org/licenses/by/4.0',
-        };
-
-        debug('postMessage() -> payload: %O', payload);
-
-        let txn: TxRaw | BroadcastTxSuccess;
-
-        if (files) {
-          txn = await submitToArweaveAndISCN(files, payload, offlineSigner, wallet.address);
-        } else {
-          txn = await signISCN(payload, offlineSigner, wallet.address);
-        }
-
-        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
-
-        return txn;
-      } catch (ex) {
-        debug('postMessage() -> error: %O', ex);
-
-        if (/^Account does not exist on chain/.test(ex.message)) {
-          dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
-
-          throw new AppStateError(ex.message);
-        }
-
-        Sentry.captureException(ex);
-      }
-
-      dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
-
-      throw new AppStateError('Failed to post your message, please try it again later.');
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fetchMessages]
-  );
-
-  const showLoading = useCallback(() => {
-    setIsLoadingModalOpen(true);
-  }, []);
-
-  const closeLoading = useCallback(() => {
-    setIsLoadingModalOpen(false);
-  }, []);
+export const AppStateProvider: FC = ({ children }) => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const alert = useAlert();
+  const { walletAddress, error: connectError } = useWallet();
+  const actions = useAppActions(dispatch);
 
   useEffect(() => {
-    // eslint-disable-next-line func-names
-    void (async function () {
+    void (async () => {
       if (walletAddress) {
-        const user = await fetchUser(walletAddress);
+        const user = await actions.fetchUser(walletAddress);
 
         if (user && user.profile) {
           dispatch({ type: ActionType.SET_PROFILE, profile: user.profile });
         }
       }
     })();
-  }, [walletAddress, fetchUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walletAddress]);
 
   useEffect(() => {
     if (connectError) {
@@ -428,38 +403,18 @@ export const AppStateProvider: FC = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectError]);
 
-  const memoValue = useMemo(
-    () => ({
-      ...state,
-      postMessage,
-      fetchUser,
-      fetchMessages,
-      fetchMessage,
-      fetchChannels,
-      fetchMessagesByHashTag,
-      fetchMessagesByOwner,
-      showLoading,
-      closeLoading,
-    }),
-    [
-      state,
-      fetchUser,
-      postMessage,
-      fetchMessage,
-      fetchChannels,
-      fetchMessagesByHashTag,
-      fetchMessages,
-      fetchMessagesByOwner,
-      showLoading,
-      closeLoading,
-    ]
-  );
-
   return (
-    <AppStateContext.Provider value={memoValue}>
+    <AppStateContext.Provider
+      // eslint-disable-next-line react/jsx-no-constructed-context-values
+      value={{
+        ...state,
+        ...actions,
+      }}
+    >
       {children}
-
-      <LoadingModal isOpen={isLoadingModalOpen} />
+      <LoadingModal isOpen={state.isLoadingModalOpen} />
     </AppStateContext.Provider>
   );
 };
+
+// (AppStateProvider as any).whyDidYouRender = true;

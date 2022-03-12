@@ -3,7 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { MainNavigator } from './MainNavigator';
 import { NotFoundScreen } from '../screens/NotFoundScreen';
 import { RootStackParamList } from './RootStackParamList';
-import { ConnectWalletScreen, ImageScreen, PostScreen, LoadingScreen } from '../screens';
+import { PostScreen, LoadingScreen } from '../screens';
 import { useAppState } from '../hooks';
 
 const RootStack = createStackNavigator<RootStackParamList>();
@@ -42,12 +42,16 @@ export const RootNavigator: FC = () => {
   // get channels
   useEffect(() => {
     void (async () => {
+      if (isInitialized) {
+        return;
+      }
+
       await fetchChannels();
 
       setisInitialized(true);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isInitialized]);
 
   return isLoading ? (
     <LoadingScreen />
@@ -62,8 +66,6 @@ export const RootNavigator: FC = () => {
       <RootStack.Screen component={NotFoundScreen} name="NotFound" />
 
       <RootStack.Group screenOptions={{ presentation: 'transparentModal', headerShown: false }}>
-        <RootStack.Screen component={ConnectWalletScreen} name="ConnectWallet" />
-        <RootStack.Screen component={ImageScreen} name="Image" />
         <RootStack.Screen component={PostScreen} name="Post" />
       </RootStack.Group>
     </RootStack.Navigator>
