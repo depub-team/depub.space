@@ -23,7 +23,7 @@ export type WorldFeedScreenProps = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
-export const WorldFeedScreen: FC<WorldFeedScreenProps> = () => {
+export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
   const [messages, setMessages] = useState<Message[]>(emptyMessages);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
@@ -86,23 +86,24 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = () => {
 
       await waitAsync(500); // wait a bit
 
-      window.location.href = `/user/${userHandle}`;
-
       if (txn) {
         alert.show({
           title: 'Post created successfully!',
           status: 'success',
         });
       }
-    } catch (ex: any) {
-      closeLoading(); // back from loading
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      navigation.navigate('User', { account: userHandle! });
+    } catch (ex: any) {
       alert.show({
         title:
           ex instanceof AppStateError ? ex.message : 'Something went wrong, please try again later',
         status: 'error',
       });
     }
+
+    closeLoading();
   };
 
   const renderListHeaderComponent = () =>
