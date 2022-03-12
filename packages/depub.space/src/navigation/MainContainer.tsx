@@ -39,15 +39,6 @@ const nativeBaseConfig = {
 
 const navgiationDocumentTitle = { enabled: false };
 
-const containerStyle = {
-  _web: {
-    maxW: '1440px',
-  },
-  alignSelf: 'center',
-  flex: 1,
-  w: '100%',
-};
-
 const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [Linking.createURL('/')],
   config: {
@@ -170,7 +161,14 @@ const MainContainer = () => {
               <WalletProvider>
                 <AppStateProvider>
                   <NavigationThemeProvider>
-                    <View {...containerStyle}>
+                    <View
+                      _web={{
+                        maxW: '1440px',
+                      }}
+                      alignSelf="center"
+                      flex={1}
+                      w="100%"
+                    >
                       <RootNavigator />
                     </View>
                   </NavigationThemeProvider>

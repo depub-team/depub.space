@@ -11,13 +11,6 @@ interface ConnectButtonProps extends ComponentProps<typeof Button> {
   description: string;
 }
 
-const headingStyle = {
-  _dark: { color: 'white' },
-  _light: { color: 'black' },
-  mb: 0,
-  size: 'md',
-};
-
 const ConnectButton: FC<ConnectButtonProps> = ({ icon, title, description, ...props }) => {
   const iconSource = useMemo(() => ({ uri: icon }), [icon]);
 
@@ -42,7 +35,9 @@ const ConnectButton: FC<ConnectButtonProps> = ({ icon, title, description, ...pr
       variant="unstyled"
       {...props}
     >
-      <Heading {...headingStyle}>{title}</Heading>
+      <Heading _dark={{ color: 'white' }} _light={{ color: 'black' }} mb={0} size="md">
+        {title}
+      </Heading>
       <Text color="gray.400" fontSize="sm">
         {description}
       </Text>

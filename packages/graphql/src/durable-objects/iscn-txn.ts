@@ -211,7 +211,7 @@ export class IscnTxn implements DurableObject {
     }
 
     const hashTagsWithCount = keyListArr.reduce((acc, [k]) => {
-      const key = k.split(':')[1];
+      const key = k.toLowerCase().split(':')[1];
       const count = acc[key] || 0;
 
       // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
