@@ -85,26 +85,6 @@ export const MessageCard: FC<MessageCardProps> = memo(
     );
     const imageSources = useMemo(() => images.map(image => ({ uri: image })), [images]);
 
-    const copyIconButtonStyle = useMemo(
-      () => ({
-        _icon: {
-          color: isCopied ? 'primary.500' : 'gray.400',
-          size: 'sm',
-        },
-        _pressed: {
-          bg: 'transparent',
-        },
-        borderRadius: 'full',
-        icon: (
-          <Icon
-            as={MaterialCommunityIcons}
-            name={isCopied ? 'link-variant-plus' : 'link-variant'}
-          />
-        ),
-      }),
-      [isCopied]
-    );
-
     const iscnBadgeSource = useMemo(
       () => ({
         uri: `${ISCN_BADGE_URL}/${id}.svg?dark=${isDarkMode ? '1' : '0'}&responsive=0&width=120`,
@@ -337,7 +317,20 @@ export const MessageCard: FC<MessageCardProps> = memo(
                   openDelay={250}
                 >
                   <IconButton
-                    {...copyIconButtonStyle}
+                    _icon={{
+                      color: isCopied ? 'primary.500' : 'gray.400',
+                      size: 'sm',
+                    }}
+                    _pressed={{
+                      bg: 'transparent',
+                    }}
+                    borderRadius="full"
+                    icon={
+                      <Icon
+                        as={MaterialCommunityIcons}
+                        name={isCopied ? 'link-variant-plus' : 'link-variant'}
+                      />
+                    }
                     // eslint-disable-next-line  @typescript-eslint/no-misused-promises
                     onPress={copyUrl}
                   />
