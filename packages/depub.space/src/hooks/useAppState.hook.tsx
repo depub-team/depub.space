@@ -36,7 +36,7 @@ export interface MessagesQueryResponse {
 }
 
 export interface MessagesByTagQueryResponse {
-  messagesByTag: Message[];
+  messagesByHashTag: Message[];
 }
 
 export interface MessagesByOwnerResponse {
@@ -321,8 +321,8 @@ export const AppStateProvider: FC = ({ children }) => {
 
         dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
-        if (data && data.data.messagesByTag) {
-          return data.data.messagesByTag;
+        if (data && data.data.messagesByHashTag) {
+          return data.data.messagesByHashTag;
         }
       } catch (ex) {
         debug('fetchMessagesByTag() -> error: %O', ex);
