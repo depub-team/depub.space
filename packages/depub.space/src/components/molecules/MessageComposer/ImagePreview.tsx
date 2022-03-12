@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 import { AspectRatio, Box, HStack, Image, Tooltip } from 'native-base';
 import { getSizeAsync } from '../../../utils';
 import { CloseButton } from '../../atoms';
@@ -8,6 +8,7 @@ export const ImagePreview: FC<{ image: string; onRemoveImage: () => void }> = ({
   onRemoveImage,
 }) => {
   const [imageAspect, setImageAspect] = useState(1);
+  const imageSource = useMemo(() => ({ uri: image }), [image]);
 
   useEffect(() => {
     // eslint-disable-next-line func-names
@@ -32,7 +33,7 @@ export const ImagePreview: FC<{ image: string; onRemoveImage: () => void }> = ({
             borderWidth={1}
             resizeMode="cover"
             rounded="lg"
-            source={{ uri: image }}
+            source={imageSource}
             textAlign="center"
           />
         </AspectRatio>

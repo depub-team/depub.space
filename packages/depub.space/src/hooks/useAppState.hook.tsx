@@ -1,4 +1,12 @@
-import React, { createContext, FC, Reducer, useContext, useEffect, useReducer } from 'react';
+import React, {
+  useMemo,
+  createContext,
+  FC,
+  Reducer,
+  useContext,
+  useEffect,
+  useReducer,
+} from 'react';
 import * as Sentry from '@sentry/nextjs';
 import update from 'immutability-helper';
 import * as Crypto from 'expo-crypto';
@@ -33,9 +41,14 @@ export interface AppStateContextProps {
   error: string | null;
   profile: DesmosProfile | null;
   channels: List[];
+  isImageModalOpen: boolean;
+  image: string | null; // image modal
+  imageAspectRatio: number | null; // image modal
   hashTags: HashTag[];
   showLoading: () => void;
   closeLoading: () => void;
+  showImageModal: (image: string, aspectRatio: number) => void;
+  closeImageModal: () => void;
   fetchUser: (dtagOrAddress: string) => Promise<User | null>;
   fetchChannels: () => Promise<GetChannelsResponse>;
   fetchMessage: (iscnId: string) => Promise<Message | null>;
@@ -59,6 +72,9 @@ export interface AppStateContextProps {
 const initialState: AppStateContextProps = {
   channels: [],
   hashTags: [],
+  isImageModalOpen: false,
+  image: null,
+  imageAspectRatio: null,
   error: null,
   isLoading: false,
   isLoadingModalOpen: false,
@@ -66,6 +82,8 @@ const initialState: AppStateContextProps = {
   fetchUser: null as never,
   showLoading: null as never,
   closeLoading: null as never,
+  showImageModal: null as never,
+  closeImageModal: null as never,
   fetchChannels: null as never,
   fetchMessages: null as never,
   fetchMessage: null as never,
@@ -85,6 +103,7 @@ const enum ActionType {
   SET_CHANNELS = 'SET_CHANNELS',
   SET_HASHTAGS = 'SET_HASHTAGS',
   SET_IS_LOADING_MODAL_OPEN = 'SET_IS_LOADING_MODAL_OPEN',
+  SET_IS_IMAGE_MODAL_OPEN = 'SET_IS_IMAGE_MODAL_OPEN',
 }
 
 type Action =
@@ -93,6 +112,12 @@ type Action =
   | { type: ActionType.SET_PROFILE; profile: DesmosProfile | null }
   | { type: ActionType.SET_CHANNELS; channels: List[] }
   | { type: ActionType.SET_HASHTAGS; hashTags: HashTag[] }
+  | {
+      type: ActionType.SET_IS_IMAGE_MODAL_OPEN;
+      isImageModalOpen: boolean;
+      image: string | null;
+      aspectRatio: number | null;
+    }
   | { type: ActionType.SET_IS_LOADING_MODAL_OPEN; isLoadingModalOpen: boolean };
 
 const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
@@ -123,6 +148,12 @@ const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
     case ActionType.SET_IS_LOADING_MODAL_OPEN:
       return update(state, {
         isLoadingModalOpen: { $set: action.isLoadingModalOpen },
+      });
+    case ActionType.SET_IS_IMAGE_MODAL_OPEN:
+      return update(state, {
+        isImageModalOpen: { $set: action.isImageModalOpen },
+        image: { $set: action.image },
+        imageAspectRatio: { $set: action.aspectRatio },
       });
     default:
       throw new AppStateError(`Cannot match action type ${(action as any).type}`);
@@ -196,6 +227,10 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
         dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
 
         throw new AppStateError(ex.message);
+      } else if (ex.message === 'Request rejected') {
+        dispatch({ type: ActionType.SET_IS_LOADING, isLoading: false });
+
+        throw new AppStateError('Request rejected');
       }
 
       Sentry.captureException(ex);
@@ -370,6 +405,22 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
   closeLoading: () => {
     dispatch({ type: ActionType.SET_IS_LOADING_MODAL_OPEN, isLoadingModalOpen: false });
   },
+  showImageModal: (image: string, aspectRatio: number) => {
+    dispatch({
+      type: ActionType.SET_IS_IMAGE_MODAL_OPEN,
+      isImageModalOpen: true,
+      image,
+      aspectRatio,
+    });
+  },
+  closeImageModal: () => {
+    dispatch({
+      type: ActionType.SET_IS_IMAGE_MODAL_OPEN,
+      isImageModalOpen: false,
+      image: null,
+      aspectRatio: null,
+    });
+  },
 });
 
 export const AppStateProvider: FC = ({ children }) => {
@@ -403,14 +454,17 @@ export const AppStateProvider: FC = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectError]);
 
+  const contextValue = useMemo(
+    () => ({
+      ...state,
+      ...actions,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state]
+  );
+
   return (
-    <AppStateContext.Provider
-      // eslint-disable-next-line react/jsx-no-constructed-context-values
-      value={{
-        ...state,
-        ...actions,
-      }}
-    >
+    <AppStateContext.Provider value={contextValue}>
       {children}
       <LoadingModal isOpen={state.isLoadingModalOpen} />
     </AppStateContext.Provider>

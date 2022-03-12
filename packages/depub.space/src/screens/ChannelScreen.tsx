@@ -1,4 +1,4 @@
-import React, { FC, useState, useCallback, useEffect } from 'react';
+import React, { FC, useState, useCallback, useEffect, useMemo } from 'react';
 import update from 'immutability-helper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Debug from 'debug';
@@ -43,6 +43,7 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const userHandle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const alert = useAlert();
+  const layoutMetadata = useMemo(() => ({ title: `#${name}` || undefined }), [name]);
 
   const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
     debug(
@@ -121,17 +122,21 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
     closeLoading();
   };
 
-  const renderListHeader = () =>
-    isLoggedIn ? (
-      <ListHeaderContainer>
-        <MessageComposer
-          isLoading={isLoading}
-          profile={profile}
-          walletAddress={walletAddress}
-          onSubmit={handleOnSubmit}
-        />
-      </ListHeaderContainer>
-    ) : null;
+  const renderListHeader = useMemo(
+    () =>
+      isLoggedIn ? (
+        <ListHeaderContainer>
+          <MessageComposer
+            isLoading={isLoading}
+            profile={profile}
+            walletAddress={walletAddress}
+            onSubmit={handleOnSubmit}
+          />
+        </ListHeaderContainer>
+      ) : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isLoading, isLoggedIn, profile, walletAddress]
+  );
 
   useEffect(() => {
     void (async () => {
@@ -159,7 +164,7 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
   );
 
   return (
-    <Layout metadata={{ title: `#${name}` || undefined }}>
+    <Layout metadata={layoutMetadata}>
       <MessageList
         data={messages}
         h={dimension.height - NAV_HEADER_HEIGHT}

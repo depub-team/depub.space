@@ -62,18 +62,22 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
     [fontFamily, isWideScreen]
   );
 
-  const renderDrawerContent = (props: DrawerContentComponentProps) => (
-    <SideMenu
-      isLoading={isConnectLoading}
-      menuItems={menuItems}
-      profile={profile}
-      walletAddress={walletAddress}
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onLogout={disconnect}
-      // eslint-disable-next-line react/jsx-sort-props
-      onConnectWallet={showWalletModal}
-      {...props}
-    />
+  const renderDrawerContent = useCallback(
+    (props: DrawerContentComponentProps) => (
+      <SideMenu
+        isLoading={isConnectLoading}
+        menuItems={menuItems}
+        profile={profile}
+        walletAddress={walletAddress}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onLogout={disconnect}
+        // eslint-disable-next-line react/jsx-sort-props
+        onConnectWallet={showWalletModal}
+        {...props}
+      />
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isConnectLoading, menuItems, profile, showWalletModal, walletAddress]
   );
 
   const renderDrawerMenuButton = useCallback(

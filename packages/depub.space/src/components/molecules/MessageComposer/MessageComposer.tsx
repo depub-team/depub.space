@@ -32,11 +32,18 @@ import {
 import { MAX_CHAR_LIMIT } from '../../../constants';
 import { ImagePreview } from './ImagePreview';
 import { DesmosProfile } from '../../../interfaces';
+import { MessageComposerContainer } from './MessageComposerContainer';
 
 const debug = Debug('web:<MessageComposer />');
 const LINE_HEIGHT = 24;
 const TEXTAREA_PADDING = 19;
 const AnimatedTextArea = Animated.createAnimatedComponent(TextArea);
+const stackSpacing = { base: 2, md: 4 };
+const textAreaFontSize = {
+  base: 'sm',
+  md: 'md',
+};
+const iconColor = { color: 'primary.500' };
 
 export interface MessageFormType {
   message: string;
@@ -88,6 +95,15 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     const profilePicSource = useMemo(
       () => (profile ? { uri: profile?.profilePic } : undefined),
       [profile]
+    );
+    const toUserRoute = useMemo(
+      () => ({
+        screen: 'User',
+        params: {
+          account: handle,
+        },
+      }),
+      [handle]
     );
 
     const pickImage = async () => {
@@ -163,25 +179,9 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     );
 
     return (
-      <VStack
-        borderRadius="lg"
-        px={{
-          base: 4,
-          lg: 6,
-        }}
-        py={4}
-        space={isCollapsed ? 0 : 4}
-        {...props}
-      >
-        <HStack flex={1} space={{ base: 2, md: 4 }}>
-          <Link
-            to={{
-              screen: 'User',
-              params: {
-                account: handle,
-              },
-            }}
-          >
+      <MessageComposerContainer isCollapsed={isCollapsed} {...props}>
+        <HStack flex={1} space={stackSpacing}>
+          <Link to={toUserRoute}>
             <Tooltip
               label={
                 likecoinAddress
@@ -207,17 +207,14 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
                     <AnimatedTextArea
                       borderRadius={isCollapsed ? '3xl' : 'md'}
                       defaultValue={value}
-                      fontSize={{
-                        base: 'sm',
-                        md: 'md',
-                      }}
+                      fontSize={textAreaFontSize}
                       isReadOnly={isLoading}
                       maxLength={MAX_CHAR_LIMIT}
                       minW={0}
                       overflow="hidden"
                       placeholder="Not your key, not your tweet. Be web3 native."
                       returnKeyType="done"
-                      style={[textAreaStyle]}
+                      style={textAreaStyle}
                       textOverflow="ellipsis"
                       totalLines={totalLines}
                       value={value}
@@ -245,7 +242,7 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
             <Box w={12} />
             <Tooltip label="Upload Image" openDelay={250}>
               <IconButton
-                _icon={{ color: 'primary.500' }}
+                _icon={iconColor}
                 borderRadius="full"
                 icon={<Icon as={Ionicons} name="image-outline" />}
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -266,7 +263,7 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
             </Button>
           </HStack>
         </Collapse>
-      </VStack>
+      </MessageComposerContainer>
     );
   },
   areEqual

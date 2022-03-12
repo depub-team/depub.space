@@ -37,6 +37,17 @@ const nativeBaseConfig = {
   },
 };
 
+const navgiationDocumentTitle = { enabled: false };
+
+const containerStyle = {
+  _web: {
+    maxW: '1440px',
+  },
+  alignSelf: 'center',
+  flex: 1,
+  w: '100%',
+};
+
 const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [Linking.createURL('/')],
   config: {
@@ -140,46 +151,39 @@ const MainContainer = () => {
     <AppLoading />
   ) : (
     <SafeAreaProvider>
-      <NavigationContainer documentTitle={{ enabled: false }} linking={linking}>
+      <NavigationContainer documentTitle={navgiationDocumentTitle} linking={linking}>
         <NativeBaseProvider
           colorModeManager={colorModeManager}
           config={nativeBaseConfig}
           theme={theme}
         >
-          <NavigationThemeProvider>
-            <View
-              _dark={{
-                bg: 'darkBlue.900',
-              }}
-              _light={{
-                bg: 'white',
-              }}
-              flex={1}
-            >
-              <AlertProvider>
-                <WalletProvider>
-                  <AppStateProvider>
-                    <View
-                      _web={{
-                        maxW: '1440px',
-                      }}
-                      alignSelf="center"
-                      flex={1}
-                      w="100%"
-                    >
+          <View
+            _dark={{
+              bg: 'darkBlue.900',
+            }}
+            _light={{
+              bg: 'white',
+            }}
+            flex={1}
+          >
+            <AlertProvider>
+              <WalletProvider>
+                <AppStateProvider>
+                  <NavigationThemeProvider>
+                    <View {...containerStyle}>
                       <RootNavigator />
                     </View>
-                  </AppStateProvider>
-                </WalletProvider>
-              </AlertProvider>
-            </View>
-          </NavigationThemeProvider>
+                  </NavigationThemeProvider>
+                </AppStateProvider>
+              </WalletProvider>
+            </AlertProvider>
+          </View>
         </NativeBaseProvider>
       </NavigationContainer>
     </SafeAreaProvider>
   );
 };
 
-(MainContainer as any).whyDidYouRender = true;
+// (MainContainer as any).whyDidYouRender = true;
 
 export default MainContainer;

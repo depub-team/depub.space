@@ -19,7 +19,7 @@ import {
 import dayjs from 'dayjs';
 import Debug from 'debug';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { Platform, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useNavigation } from '@react-navigation/native';
 import { LinkPreviewItem, Message } from '../../../interfaces';
@@ -28,10 +28,12 @@ import {
   getUrlFromContent,
   getAbbrNickname,
   getShortenAddress,
-  messageSanitizer,
   getLikecoinAddressByProfile,
 } from '../../../utils';
 import type { HomeScreenNavigationProps } from '../../../navigation';
+import { MessageCardContainer } from './MessageCardContainer';
+import { MessageContent } from './MessageContent';
+import { useAppState } from '../../../hooks';
 
 dayjs.extend(relativeTime);
 
@@ -71,6 +73,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
     const displayName = profile?.nickname || profile?.dtag || shortenAddress;
     const abbrNickname = getAbbrNickname(displayName);
     const { onCopy } = useClipboard();
+    const { showImageModal } = useAppState();
     const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>(emptyImageSizes);
     const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
     const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
@@ -81,12 +84,47 @@ export const MessageCard: FC<MessageCardProps> = memo(
       [profile]
     );
     const imageSources = useMemo(() => images.map(image => ({ uri: image })), [images]);
+
+    const copyIconButtonStyle = useMemo(
+      () => ({
+        _icon: {
+          color: isCopied ? 'primary.500' : 'gray.400',
+          size: 'sm',
+        },
+        _pressed: {
+          bg: 'transparent',
+        },
+        borderRadius: 'full',
+        icon: (
+          <Icon
+            as={MaterialCommunityIcons}
+            name={isCopied ? 'link-variant-plus' : 'link-variant'}
+          />
+        ),
+      }),
+      [isCopied]
+    );
+
     const iscnBadgeSource = useMemo(
       () => ({
         uri: `${ISCN_BADGE_URL}/${id}.svg?dark=${isDarkMode ? '1' : '0'}&responsive=0&width=120`,
       }),
       [id, isDarkMode]
     );
+
+    const toUserRoute = useMemo(
+      () => ({
+        screen: 'User',
+        params: {
+          account: handle,
+        },
+      }),
+      [handle]
+    );
+
+    const handleOnImagePress = (image: string, aspectRatio: number) => () => {
+      showImageModal(image, aspectRatio);
+    };
 
     const copyUrl = useCallback(async () => {
       await onCopy(shareableUrl);
@@ -135,28 +173,6 @@ export const MessageCard: FC<MessageCardProps> = memo(
       navigation.navigate('Post', { id: iscnId, revision });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     };
-
-    const renderContent = useCallback(
-      () =>
-        Platform.OS === 'web' ? (
-          <>
-            <style jsx>{`
-              .MessageCard__content {
-                font-weight: 500;
-              }
-              .MessageCard__content > :global(a) {
-                color: #07d6a0;
-              }
-            `}</style>
-            <div
-              className="MessageCard__content"
-              // eslint-disable-next-line react/no-danger
-              dangerouslySetInnerHTML={{ __html: messageSanitizer(message) }}
-            />
-          </>
-        ) : null,
-      [message]
-    );
 
     useEffect(() => {
       if (!isMessageContainsUrl) {
@@ -207,24 +223,10 @@ export const MessageCard: FC<MessageCardProps> = memo(
     }, [images]);
 
     return (
-      <HStack
-        flex={1}
-        minHeight="80px"
-        p={{ base: 3, md: 4, lg: 6 }}
-        space={{ base: 2, md: 4 }}
-        w="100%"
-        {...props}
-      >
+      <MessageCardContainer {...props}>
         <Box alignSelf="flex-start">
           <Skeleton isLoaded={isLoaded} rounded="full" size="12">
-            <Link
-              to={{
-                screen: 'User',
-                params: {
-                  account: handle,
-                },
-              }}
-            >
+            <Link to={toUserRoute}>
               <Tooltip
                 label={
                   likecoinAddress
@@ -250,14 +252,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
           <HStack alignItems="center" justifyContent="space-between">
             <Skeleton.Text flex={1} isLoaded={isLoaded} lines={2}>
               <VStack flex={1}>
-                <Link
-                  to={{
-                    screen: 'User',
-                    params: {
-                      account: handle,
-                    },
-                  }}
-                >
+                <Link to={toUserRoute}>
                   <Text color="primary.500" fontSize="md" fontWeight="bold">
                     {displayName}
                   </Text>
@@ -282,15 +277,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
           <VStack flex={1} space={4}>
             <Pressable onPress={handleOnPress}>
               <Skeleton.Text isLoaded={isLoaded} lines={2} space={2}>
-                <Text
-                  fontFamily="text"
-                  fontSize={{ base: 'md', md: 'lg' }}
-                  fontWeight="500"
-                  py={4}
-                  whiteSpace="pre-wrap"
-                >
-                  {renderContent()}
-                </Text>
+                <MessageContent content={message} />
               </Skeleton.Text>
             </Pressable>
 
@@ -305,15 +292,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
 
                   return (
                     <AspectRatio key={image} maxW="100%" ratio={aspectRatio}>
-                      <Link
-                        to={{
-                          screen: 'Image',
-                          params: {
-                            image,
-                            aspectRatio,
-                          },
-                        }}
-                      >
+                      <Pressable onPress={handleOnImagePress(image, aspectRatio)}>
                         <Image
                           alt={`Image ${index}`}
                           borderColor="gray.200"
@@ -325,7 +304,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
                           textAlign="center"
                           w="100%"
                         />
-                      </Link>
+                      </Pressable>
                     </AspectRatio>
                   );
                 })}
@@ -358,21 +337,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
                   openDelay={250}
                 >
                   <IconButton
-                    _icon={{
-                      color: isCopied ? 'primary.500' : 'gray.400',
-                      size: 'sm',
-                    }}
-                    _pressed={{
-                      bg: 'transparent',
-                    }}
-                    borderRadius="full"
-                    icon={
-                      <Icon
-                        as={MaterialCommunityIcons}
-                        name={isCopied ? 'link-variant-plus' : 'link-variant'}
-                      />
-                    }
-                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                    {...copyIconButtonStyle}
+                    // eslint-disable-next-line  @typescript-eslint/no-misused-promises
                     onPress={copyUrl}
                   />
                 </Tooltip>
@@ -380,7 +346,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
             </HStack>
           </HStack>
         </VStack>
-      </HStack>
+      </MessageCardContainer>
     );
   },
   areEqual
