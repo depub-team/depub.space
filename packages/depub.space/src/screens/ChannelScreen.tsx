@@ -46,16 +46,11 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
   const layoutMetadata = useMemo(() => ({ title: `#${name}` || undefined }), [name]);
 
   const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
-    debug(
-      'fetchNewMessages(previousId: %s, refresh: %O, name: %s, isListReachedEnd: %O, isLoadingMore: %O)',
-      previousId,
-      refresh,
-      name,
-      isListReachedEnd,
-      isLoadingMore
-    );
+    debug('fetchNewMessages(previousId: %s, refresh: %O', previousId, refresh);
 
     if (isLoadingMore || isListReachedEnd) {
+      debug('fetchNewMessages() -> early return');
+
       return;
     }
 
@@ -143,7 +138,7 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
       await fetchNewMessages(undefined, true);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channelName, setIsListReachedEnd]);
+  }, [channelName]);
 
   useFocusEffect(
     useCallback(() => {
