@@ -5,7 +5,7 @@ import { ListRenderItemInfo, useWindowDimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppState } from '../../../hooks';
 import { HashTag } from '../../../interfaces';
-import { ListLoading } from '../../atoms';
+import { ListHeaderContainer, ListLoading } from '../../atoms';
 import type { HomeScreenNavigationProps } from '../../../navigation';
 
 const MIN_W = 220;
@@ -21,7 +21,17 @@ const ChannelItem: FC<{ name: string; count: number }> = ({ name, count }) => {
         navgiation.navigate('Channel', { name });
       }}
     >
-      <HStack flex={1} justifyContent="center" mb={4} px={8} space={4}>
+      <HStack
+        flex={1}
+        justifyContent="center"
+        mb={4}
+        px={{
+          base: 3,
+          md: 4,
+          lg: 6,
+        }}
+        space={4}
+      >
         <Text flex={1} minW={0} overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
           #{name}
         </Text>
@@ -65,18 +75,11 @@ export const Trends: FC<IVStackProps> = ({ ...props }) => {
           keyExtractor={keyExtractor}
           ListFooterComponent={isLoadingShow ? <ListLoading /> : null}
           ListHeaderComponent={
-            <Heading
-              _dark={{
-                bg: 'darkBlue.900',
-              }}
-              _light={{
-                bg: 'white',
-              }}
-              p={8}
-              size="md"
-            >
-              Trending
-            </Heading>
+            <ListHeaderContainer>
+              <Heading p={{ base: 3, md: 4, lg: 6 }} size="md">
+                Trending
+              </Heading>
+            </ListHeaderContainer>
           }
           renderItem={renderItem}
           stickyHeaderIndices={stickyHeaderIndices}

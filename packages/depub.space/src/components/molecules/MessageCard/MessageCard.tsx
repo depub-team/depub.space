@@ -210,8 +210,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
       <HStack
         flex={1}
         minHeight="80px"
-        px={{ base: 3, md: 4 }}
-        py={{ base: 4, md: 6 }}
+        p={{ base: 3, md: 4, lg: 6 }}
         space={{ base: 2, md: 4 }}
         w="100%"
         {...props}
