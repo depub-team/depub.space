@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
 import { MainNavigator } from './MainNavigator';
 import { NotFoundScreen } from '../screens/NotFoundScreen';
 import { RootStackParamList } from './RootStackParamList';
@@ -7,6 +7,16 @@ import { PostScreen, LoadingScreen } from '../screens';
 import { useAppState } from '../hooks';
 
 const RootStack = createStackNavigator<RootStackParamList>();
+
+const modalScreenOptions: StackNavigationOptions = {
+  presentation: 'transparentModal',
+  headerShown: false,
+};
+
+const navigatorScreenOptions: StackNavigationOptions = {
+  headerShown: false,
+  headerLeft: () => null,
+};
 
 export const RootNavigator: FC = () => {
   const timeRef = useRef(new Date().getTime());
@@ -56,20 +66,15 @@ export const RootNavigator: FC = () => {
   return isLoading ? (
     <LoadingScreen />
   ) : (
-    <RootStack.Navigator
-      screenOptions={{
-        headerShown: false,
-        headerLeft: () => null,
-      }}
-    >
+    <RootStack.Navigator screenOptions={navigatorScreenOptions}>
       <RootStack.Screen component={MainNavigator} name="Main" />
       <RootStack.Screen component={NotFoundScreen} name="NotFound" />
 
-      <RootStack.Group screenOptions={{ presentation: 'transparentModal', headerShown: false }}>
+      <RootStack.Group screenOptions={modalScreenOptions}>
         <RootStack.Screen component={PostScreen} name="Post" />
       </RootStack.Group>
     </RootStack.Navigator>
   );
 };
 
-(RootNavigator as any).whyDidYouRender = true;
+// (RootNavigator as any).whyDidYouRender = true;

@@ -1,4 +1,4 @@
-import React, { FC, useState, useCallback } from 'react';
+import React, { FC, useState, useCallback, useMemo } from 'react';
 import update from 'immutability-helper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Debug from 'debug';
@@ -17,6 +17,9 @@ import { ListHeaderContainer } from '../components';
 const debug = Debug('web:<WorldFeedScreen />');
 const stickyHeaderIndices = [0];
 const emptyMessages: Message[] = [];
+const layoutMetadata = {
+  title: 'World Feed',
+};
 
 export type WorldFeedScreenProps = CompositeScreenProps<
   DrawerScreenProps<MainStackParamList, 'WorldFeed'>,
@@ -106,17 +109,21 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
     closeLoading();
   };
 
-  const renderListHeaderComponent = () =>
-    isLoggedIn ? (
-      <ListHeaderContainer>
-        <MessageComposer
-          isLoading={isLoading}
-          profile={profile}
-          walletAddress={walletAddress}
-          onSubmit={handleOnSubmit}
-        />
-      </ListHeaderContainer>
-    ) : null;
+  const renderListHeaderComponent = useMemo(
+    () =>
+      isLoggedIn ? (
+        <ListHeaderContainer>
+          <MessageComposer
+            isLoading={isLoading}
+            profile={profile}
+            walletAddress={walletAddress}
+            onSubmit={handleOnSubmit}
+          />
+        </ListHeaderContainer>
+      ) : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isLoading, isLoggedIn, profile, walletAddress]
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -132,11 +139,7 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
   );
 
   return (
-    <Layout
-      metadata={{
-        title: 'World Feed',
-      }}
-    >
+    <Layout metadata={layoutMetadata}>
       <MessageList
         data={messages}
         h={dimension.height - NAV_HEADER_HEIGHT}

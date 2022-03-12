@@ -57,5 +57,3 @@ export const UserHeader: FC<UserHeaderProps> = memo(
   },
   areEqual
 );
-
-(UserHeader as any).whyDidYouRender = true;
