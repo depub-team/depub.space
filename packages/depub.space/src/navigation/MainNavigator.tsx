@@ -39,7 +39,7 @@ const defaultMenuItem: SideMenuItemProps = {
 export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   const dimensions = useWindowDimensions();
   const isWideScreen = dimensions.width >= 768;
-  const { disconnect, walletAddress, isLoading: isConnectLoading } = useWallet();
+  const { showWalletModal, disconnect, walletAddress, isLoading: isConnectLoading } = useWallet();
   const { profile, channels } = useAppState();
   const [menuItems, setMenuItems] = useState<SideMenuItemProps[]>(emptySideMenuItems);
   const fontFamily = useToken('fonts', 'heading');
@@ -62,17 +62,16 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
     [fontFamily, isWideScreen]
   );
 
-  const handleOnLogout = () => {
-    void disconnect();
-  };
-
   const renderDrawerContent = (props: DrawerContentComponentProps) => (
     <SideMenu
       isLoading={isConnectLoading}
       menuItems={menuItems}
       profile={profile}
       walletAddress={walletAddress}
-      onLogout={handleOnLogout}
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onLogout={disconnect}
+      // eslint-disable-next-line react/jsx-sort-props
+      onConnectWallet={showWalletModal}
       {...props}
     />
   );

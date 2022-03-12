@@ -30,7 +30,6 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   const [isReady, setIsReady] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isHeaderHide, setIsHeaderHide] = useState(false);
-  const [userAccount, setUserAccount] = useState<string | null>(null);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
@@ -108,29 +107,28 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   );
 
   useEffect(() => {
-    void (async () => {
-      await fetchNewMessages(undefined, true);
-    })();
-
+    if (!isReady) {
+      void (async () => {
+        await fetchNewMessages(undefined, true);
+      })();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userAccount]);
+  }, [isReady]);
 
   useFocusEffect(
     useCallback(() => {
       // reset
-      if (userAccount !== account) {
-        navigation.setOptions({
-          title: account,
-        });
+      navigation.setOptions({
+        title: account,
+      });
 
-        setIsReady(false);
-        setProfile(null);
-        setMessages(emptyMessages);
-        setIsListReachedEnd(false);
-        setUserAccount(account);
-      }
+      setIsReady(false);
+      setProfile(null);
+      setMessages(emptyMessages);
+      setIsListReachedEnd(false);
+
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [account, userAccount])
+    }, [account])
   );
 
   return account ? (
