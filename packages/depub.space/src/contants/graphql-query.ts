@@ -57,7 +57,7 @@ export const GRAPHQL_QUERY_GET_MESSAGE = `
 `;
 
 export const GRAPHQL_QUERY_MESSAGES_BY_TAG = `
-  query MessagesByTag($tag: String!, $previousId: String, $limit: Int) {
-    messagesByTag(tag: $tag, previousId: $previousId, limit: $limit) ${GRAPHQL_TYPE_MESSAGE}
+  query MessagesByHashTag($tag: String!, $previousId: String, $limit: Int) {
+    messagesByHashTag(tag: $tag, previousId: $previousId, limit: $limit) ${GRAPHQL_TYPE_MESSAGE}
   }
 `;
