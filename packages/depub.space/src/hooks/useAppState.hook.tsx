@@ -436,6 +436,8 @@ export const AppStateProvider: FC = ({ children }) => {
 
         if (user && user.profile) {
           dispatch({ type: ActionType.SET_PROFILE, profile: user.profile });
+        } else {
+          dispatch({ type: ActionType.SET_PROFILE, profile: null });
         }
       }
     })();

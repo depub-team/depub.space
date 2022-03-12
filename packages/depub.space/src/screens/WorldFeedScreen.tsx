@@ -1,9 +1,9 @@
-import React, { FC, useState, useCallback, useMemo } from 'react';
+import React, { FC, useState, useEffect, useMemo } from 'react';
 import update from 'immutability-helper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Debug from 'debug';
 import { useWindowDimensions } from 'react-native';
-import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
+import { CompositeScreenProps } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { Message } from '../interfaces';
 import { AppStateError, useAppState, useWallet } from '../hooks';
@@ -43,6 +43,8 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
     debug('fetchNewMessages(previousId: %s, refresh: %O)', previousId, refresh);
 
     if (isLoadingMore || isListReachedEnd) {
+      debug('fetchNewMessages() -> early return');
+
       return;
     }
 
@@ -125,18 +127,16 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
     [isLoading, isLoggedIn, profile, walletAddress]
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      // reset
-      setIsListReachedEnd(false);
-      setMessages(emptyMessages);
+  useEffect(() => {
+    // reset
+    setIsListReachedEnd(false);
+    setMessages(emptyMessages);
 
-      void (async () => {
-        await fetchNewMessages(undefined, true);
-      })();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
-  );
+    void (async () => {
+      await fetchNewMessages(undefined, true);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Layout metadata={layoutMetadata}>

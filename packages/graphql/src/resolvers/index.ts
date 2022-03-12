@@ -6,8 +6,8 @@ import { DesmosProfileWithId, ISCNTrend, ISCNRecord } from '../interfaces';
 
 const PAGING_LIMIT = 12;
 const PROFILE_KEY = 'profile';
+const LIST_KEY = 'list';
 const TREND_KEY = 'trend';
-const HASHTAG_RECORD_KEY = 'hashtag_record';
 
 export class ISCNError extends ApolloError {
   constructor(message: string) {
@@ -293,7 +293,7 @@ const getUserProfile = async (args: GetUserProfileArgs, ctx: Context) => {
 
 const getChannels = async (_args: any, ctx: Context): Promise<GetChannelsResponse> => {
   const getChannelsFromDurableObject = async () => {
-    // get latest key
+    // get cached data
     const cachedTrendData = await ctx.env.WORKERS_GRAPHQL_CACHE.get(TREND_KEY);
 
     if (cachedTrendData) {
@@ -315,16 +315,34 @@ const getChannels = async (_args: any, ctx: Context): Promise<GetChannelsRespons
     const trimmedRecords = hashTags.slice(0, 30);
 
     // put records into kv cache
-    await ctx.env.WORKERS_GRAPHQL_CACHE.put(HASHTAG_RECORD_KEY, JSON.stringify(trimmedRecords), {
+    await ctx.env.WORKERS_GRAPHQL_CACHE.put(TREND_KEY, JSON.stringify(trimmedRecords), {
       expirationTtl: 10 * 60, // 10 minutes
     });
 
     return trimmedRecords;
   };
 
+  const getListFromNotionAPI = async () => {
+    // get cached data
+    const cachedListData = await ctx.env.WORKERS_GRAPHQL_CACHE.get(LIST_KEY);
+
+    if (cachedListData) {
+      return JSON.parse(cachedListData);
+    }
+
+    const list = ctx.dataSources.notionAPI.getList();
+
+    // put records into kv cache
+    await ctx.env.WORKERS_GRAPHQL_CACHE.put(LIST_KEY, JSON.stringify(list), {
+      expirationTtl: 1 * 60, // 1 minute
+    });
+
+    return list;
+  };
+
   try {
     const hashTags = await getChannelsFromDurableObject();
-    const list = await ctx.dataSources.notionAPI.getList();
+    const list = await getListFromNotionAPI();
 
     return { hashTags, list };
   } catch (ex: any) {

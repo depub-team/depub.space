@@ -35,6 +35,11 @@ export class NotionAPI extends DataSource {
         'Channel(#)': TitleType;
       }>
     >();
+
+    if (!data.results) {
+      return [];
+    }
+
     const list = data.results.map(r => {
       const listNameProperty = r.properties['List Name'];
       const channelProperty = r.properties['Channel(#)'];

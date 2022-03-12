@@ -23,12 +23,17 @@ export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
 
       debug('useFocusEffect() -> firstItem: %O', firstItem);
 
-      // eslint-disable-next-line promise/always-return
-      void waitAsync(10).then(() => {
+      if (!firstItem) {
+        return;
+      }
+
+      void (async () => {
+        await waitAsync(10);
+
         navigation.navigate('Channel', {
           name: firstItem.hashTag,
         });
-      });
+      })();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [channels])
   );
