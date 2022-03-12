@@ -5,8 +5,14 @@ import Debug from 'debug';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { useWindowDimensions } from 'react-native';
-import { VStack } from 'native-base';
-import { Layout, MessageComposer, MessageFormType, MessageList, useAlert } from '../components';
+import {
+  Layout,
+  ListHeaderContainer,
+  MessageComposer,
+  MessageFormType,
+  MessageList,
+  useAlert,
+} from '../components';
 import { Message } from '../interfaces';
 import { AppStateError, useAppState, useWallet } from '../hooks';
 import type { RootStackParamList, MainStackParamList } from '../navigation';
@@ -117,23 +123,14 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
 
   const renderListHeader = () =>
     isLoggedIn ? (
-      <VStack
-        _dark={{
-          bg: 'darkBlue.900',
-          shadow: 'dark',
-        }}
-        _light={{ bg: 'white', shadow: 'light' }}
-        mb={4}
-        space={4}
-        w="100%"
-      >
+      <ListHeaderContainer>
         <MessageComposer
           isLoading={isLoading}
           profile={profile}
           walletAddress={walletAddress}
           onSubmit={handleOnSubmit}
         />
-      </VStack>
+      </ListHeaderContainer>
     ) : null;
 
   useEffect(() => {

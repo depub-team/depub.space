@@ -2,7 +2,6 @@ import React, { FC, useState, useCallback } from 'react';
 import update from 'immutability-helper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Debug from 'debug';
-import { VStack } from 'native-base';
 import { useWindowDimensions } from 'react-native';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
@@ -13,6 +12,7 @@ import { waitAsync, dataUrlToFile, getLikecoinAddressByProfile } from '../utils'
 import { Layout } from '../components/templates';
 import type { MainStackParamList, RootStackParamList } from '../navigation';
 import { NAV_HEADER_HEIGHT } from '../constants';
+import { ListHeaderContainer } from '../components';
 
 const debug = Debug('web:<WorldFeedScreen />');
 const stickyHeaderIndices = [0];
@@ -107,23 +107,14 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = () => {
 
   const renderListHeaderComponent = () =>
     isLoggedIn ? (
-      <VStack
-        _dark={{
-          bg: 'darkBlue.900',
-          shadow: 'dark',
-        }}
-        _light={{ bg: 'white', shadow: 'light' }}
-        mb={4}
-        space={4}
-        w="100%"
-      >
+      <ListHeaderContainer>
         <MessageComposer
           isLoading={isLoading}
           profile={profile}
           walletAddress={walletAddress}
           onSubmit={handleOnSubmit}
         />
-      </VStack>
+      </ListHeaderContainer>
     ) : null;
 
   useFocusEffect(

@@ -257,12 +257,16 @@ export const WalletProvider: FC = ({ children }) => {
 
       await newConnector.connect();
 
-      [account] = await newConnector.sendCustomRequest({
+      const accounts = await newConnector.sendCustomRequest({
         id: payloadId(),
         jsonrpc: '2.0',
         method: 'cosmos_getAccounts',
         params: [PUBLIC_CHAIN_ID],
       });
+
+      console.log(accounts);
+
+      [account] = accounts;
 
       debug('initWalletConnect() -> account: %O', account);
 

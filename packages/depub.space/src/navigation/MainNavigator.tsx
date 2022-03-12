@@ -46,6 +46,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   const headerTitleLeftMargin = useBreakpointValue({
     base: 0,
     md: 16,
+    lg: 24,
   });
   const navigatorScreenOptions = useMemo<DrawerNavigationOptions>(
     () => ({

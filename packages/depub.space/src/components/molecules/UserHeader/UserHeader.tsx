@@ -26,11 +26,6 @@ export const UserHeader: FC<UserHeaderProps> = memo(
     return (
       <Box flex={1} mb={collapse ? 4 : 8}>
         <Stack
-          _dark={{
-            bg: 'darkBlue.900',
-            shadow: 'dark',
-          }}
-          _light={{ bg: 'white', shadow: 'light' }}
           alignItems="center"
           flex={1}
           flexDirection={collapse ? 'row' : 'column'}
@@ -62,5 +57,3 @@ export const UserHeader: FC<UserHeaderProps> = memo(
   },
   areEqual
 );
-
-(UserHeader as any).whyDidYouRender = true;
