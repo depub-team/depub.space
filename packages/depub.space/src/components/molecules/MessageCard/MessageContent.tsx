@@ -3,6 +3,13 @@ import { ITextProps, Text } from 'native-base';
 import { Platform } from 'react-native';
 import { messageSanitizer } from '../../../utils';
 
+declare module 'react' {
+  interface StyleHTMLAttributes<T> extends React.HTMLAttributes<T> {
+    jsx?: boolean;
+    global?: boolean;
+  }
+}
+
 const getInnerHTML = (content: string) => ({ __html: messageSanitizer(content) });
 
 const style: ITextProps = {

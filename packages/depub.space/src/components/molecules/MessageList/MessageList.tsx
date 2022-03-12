@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useState } from 'react';
 import Debug from 'debug';
 import { FlatList } from 'native-base';
-import { ListRenderItemInfo, RefreshControl } from 'react-native';
+import { ListRenderItemInfo } from 'react-native';
 import { IFlatListProps } from 'native-base/lib/typescript/components/basic/FlatList';
 import { Message } from '../../../interfaces';
 import { MessageCard } from '../MessageCard';
@@ -10,11 +10,15 @@ import { ListLoading, ListEmpty, ListItemSeparator } from '../../atoms';
 
 const debug = Debug('web:<MessageList />');
 
+const renderItem = (info: ListRenderItemInfo<Message>) => <MessageCard message={info.item} />;
+
+const keyExtractor = ({ id }: Message) => id;
+
 export interface MessageListProps extends Omit<IFlatListProps<Message>, 'data' | 'renderItem'> {
   data: Message[];
   isLoading?: boolean;
   isLoadingMore?: boolean;
-  onFetchData?: (previousId?: string) => Promise<void>;
+  onFetchData?: (previousId?: string, refresh?: boolean) => Promise<void>;
 }
 
 export const MessageList: FC<MessageListProps> = ({
@@ -24,16 +28,8 @@ export const MessageList: FC<MessageListProps> = ({
   data,
   ...props
 }) => {
-  const [refreshing, setRefreshing] = useState(false);
-  const isLoadingShow = isLoadingMore || (isLoading && refreshing);
-
-  const keyExtractor = useCallback(({ id }: Message) => id, []);
-
-  const renderItem = useCallback(
-    (info: ListRenderItemInfo<Message>) => <MessageCard message={info.item} />,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+  const isLoadingShow = isLoadingMore || isLoading;
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleOnEndReached = useCallback(
     async ({ distanceFromEnd }: { distanceFromEnd: number }) => {
@@ -43,10 +39,12 @@ export const MessageList: FC<MessageListProps> = ({
         data.length
       );
       if (distanceFromEnd < 0 || !data.length || isLoading || isLoadingMore) {
+        debug('handleOnEndReached() -> early return');
+
         return;
       }
 
-      if (data.length > 0 && onFetchData) {
+      if (onFetchData) {
         await onFetchData(data[data.length - 1].id);
       }
     },
@@ -55,19 +53,16 @@ export const MessageList: FC<MessageListProps> = ({
   );
 
   const handleOnRefresh = useCallback(async () => {
-    setRefreshing(true);
-
-    try {
-      if (onFetchData) {
-        await onFetchData();
-      }
-    } catch (ex) {
-      debug('handleOnRefresh() -> error: %O', ex);
+    if (isRefreshing) {
+      return;
     }
 
-    setRefreshing(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (onFetchData) {
+      await onFetchData(undefined, true);
+    }
+
+    setIsRefreshing(false);
+  }, [isRefreshing, onFetchData]);
 
   // reference: https://gist.github.com/r0b0t3d/db629f5f4e249c7a5b6a3c211f2b8aa8
   return (
@@ -78,12 +73,13 @@ export const MessageList: FC<MessageListProps> = ({
       keyExtractor={keyExtractor}
       ListEmptyComponent={!isLoadingShow ? <ListEmpty /> : null}
       ListFooterComponent={isLoadingShow ? <ListLoading /> : null}
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleOnRefresh} />}
+      refreshing={isRefreshing}
       renderItem={renderItem}
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onEndReached={handleOnEndReached}
       onEndReachedThreshold={END_REACHED_THRESHOLD}
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onRefresh={handleOnRefresh}
       {...props}
     />
   );
