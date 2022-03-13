@@ -330,7 +330,7 @@ const getChannels = async (_args: any, ctx: Context): Promise<GetChannelsRespons
       return JSON.parse(cachedListData);
     }
 
-    const list = ctx.dataSources.notionAPI.getList();
+    const list = await ctx.dataSources.notionAPI.getList();
 
     // put records into kv cache
     await ctx.env.WORKERS_GRAPHQL_CACHE.put(LIST_KEY, JSON.stringify(list), {

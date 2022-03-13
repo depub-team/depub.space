@@ -36,7 +36,7 @@ export class NotionAPI extends DataSource {
       }>
     >();
 
-    if (!data.results) {
+    if (!data || !data.results) {
       return [];
     }
 
