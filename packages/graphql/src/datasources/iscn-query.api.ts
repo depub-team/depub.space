@@ -26,4 +26,12 @@ export class ISCNQueryAPI extends DataSource {
       nextSequence: json.next_sequence,
     };
   }
+
+  public async getRecord(iscnId: string): Promise<ISCNRecord | null> {
+    const res = await fetch(`${this.nodeUrl}iscn/records/id?iscn_id=${encodeURIComponent(iscnId)}`);
+
+    const json = await res.json<{ records: ISCNRecord[]; next_sequence: number }>();
+
+    return json.records[0] || null;
+  }
 }

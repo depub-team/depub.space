@@ -207,7 +207,17 @@ const getMessage = async (args: GetMessageArgs, ctx: Context) => {
   try {
     const durableObjId = ctx.env.ISCN_TXN.idFromName('iscn-txn');
     const stub = ctx.env.ISCN_TXN.get(durableObjId);
-    const transaction = await getTransaction(stub, args.iscnId);
+    let transaction = await getTransaction(stub, args.iscnId);
+
+    // get the iscn record directly on likecoin chain if not found in durable object storage
+    if (!transaction) {
+      transaction = await ctx.dataSources.iscnQueryAPI.getRecord(args.iscnId);
+
+      // save it into durable object storage
+      if (transaction) {
+        await addTransactions([transaction], stub);
+      }
+    }
 
     if (!transaction) {
       throw new ISCNError('Not found');
