@@ -2,12 +2,11 @@ import Debug from 'debug';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { FC, useEffect, useState } from 'react';
 import { CompositeScreenProps } from '@react-navigation/native';
-import { Layout, MessageModal } from '../components';
-import { useAppState } from '../hooks';
+import { Layout, MessageModal, useAlert } from '../components';
 import { Message } from '../interfaces';
 import { RootStackParamList } from '../navigation/RootStackParamList';
 import { MainStackParamList } from '../navigation/MainStackParamList';
-import { getShortenAddress } from '../utils';
+import { getMessageById, getShortenAddress } from '../utils';
 
 const debug = Debug('web:<PostScreen />');
 const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
@@ -18,8 +17,8 @@ export type PostScreenProps = CompositeScreenProps<
 >;
 
 export const PostScreen: FC<PostScreenProps> = ({ route, navigation }) => {
-  const { fetchMessage } = useAppState();
   const [message, setMessage] = useState<Message | null>(null);
+  const alert = useAlert();
   const id = decodeURIComponent(route.params.id);
   const revision = decodeURIComponent(route.params.revision);
   const iscnId = `${ISCN_SCHEME}/${id}/${revision}`;
@@ -43,12 +42,19 @@ export const PostScreen: FC<PostScreenProps> = ({ route, navigation }) => {
     debug('useEffect() -> iscnId: %s', iscnId);
 
     void (async () => {
-      const newMessage = await fetchMessage(iscnId);
+      try {
+        const newMessage = await getMessageById(iscnId);
 
-      if (newMessage) {
-        setMessage(newMessage);
-      } else {
-        navigation.navigate('NotFound');
+        if (newMessage) {
+          setMessage(newMessage);
+        } else {
+          navigation.navigate('NotFound');
+        }
+      } catch (ex) {
+        alert.show({
+          title: 'Failed to get the data, please try again later.',
+          status: 'error',
+        });
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

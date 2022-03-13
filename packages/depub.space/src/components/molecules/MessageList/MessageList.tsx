@@ -17,18 +17,10 @@ const keyExtractor = ({ id }: Message) => id;
 export interface MessageListProps extends Omit<IFlatListProps<Message>, 'data' | 'renderItem'> {
   data: Message[];
   isLoading?: boolean;
-  isLoadingMore?: boolean;
   onFetchData?: (previousId?: string, refresh?: boolean) => Promise<void>;
 }
 
-export const MessageList: FC<MessageListProps> = ({
-  onFetchData,
-  isLoading,
-  isLoadingMore,
-  data,
-  ...props
-}) => {
-  const isLoadingShow = isLoadingMore || isLoading;
+export const MessageList: FC<MessageListProps> = ({ onFetchData, isLoading, data, ...props }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleOnEndReached = useCallback(
@@ -38,7 +30,7 @@ export const MessageList: FC<MessageListProps> = ({
         distanceFromEnd,
         data.length
       );
-      if (distanceFromEnd < 0 || !data.length || isLoading || isLoadingMore) {
+      if (distanceFromEnd < 0 || !data.length || isLoading) {
         debug('handleOnEndReached() -> early return');
 
         return;
@@ -49,7 +41,7 @@ export const MessageList: FC<MessageListProps> = ({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, isLoading, isLoadingMore]
+    [data, isLoading]
   );
 
   const handleOnRefresh = useCallback(async () => {
@@ -67,12 +59,11 @@ export const MessageList: FC<MessageListProps> = ({
   // reference: https://gist.github.com/r0b0t3d/db629f5f4e249c7a5b6a3c211f2b8aa8
   return (
     <FlatList
-      contentInsetAdjustmentBehavior="automatic" // refereance: https://reactnavigation.org/docs/native-stack-navigator/#headerlargetitle
       data={data}
       ItemSeparatorComponent={ListItemSeparator}
       keyExtractor={keyExtractor}
-      ListEmptyComponent={!isLoadingShow ? <ListEmpty /> : null}
-      ListFooterComponent={isLoadingShow ? <ListLoading /> : null}
+      ListEmptyComponent={!isLoading ? <ListEmpty /> : null}
+      ListFooterComponent={isLoading ? <ListLoading /> : null}
       refreshing={isRefreshing}
       renderItem={renderItem}
       // eslint-disable-next-line @typescript-eslint/no-misused-promises

@@ -18,9 +18,9 @@ const renderItem = ({ item: { name, count } }: ListRenderItemInfo<HashTag>) => (
 );
 
 export const Trends: FC<IVStackProps> = ({ ...props }) => {
-  const { hashTags, isLoading } = useAppState();
+  const { hashTags } = useAppState();
   const dimension = useWindowDimensions();
-  const isLoadingShow = !hashTags.length && isLoading;
+  const isLoadingShow = !hashTags.length;
   const data = useMemo(() => hashTags.slice(0, 18), [hashTags]);
 
   return (

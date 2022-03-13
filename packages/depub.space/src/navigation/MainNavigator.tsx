@@ -40,7 +40,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   const dimensions = useWindowDimensions();
   const isWideScreen = dimensions.width >= 768;
   const { showWalletModal, disconnect, walletAddress, isLoading: isConnectLoading } = useWallet();
-  const { profile, channels } = useAppState();
+  const { profile, list } = useAppState();
   const [menuItems, setMenuItems] = useState<SideMenuItemProps[]>(emptySideMenuItems);
   const fontFamily = useToken('fonts', 'heading');
   const headerTitleLeftMargin = useBreakpointValue({
@@ -113,7 +113,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   );
 
   useEffect(() => {
-    const channelMap = channels.reduce(
+    const channelMap = list.reduce(
       (obj, { name, hashTag }) => ({
         ...obj,
         [name]: (obj[name] || []).concat(hashTag),
@@ -142,7 +142,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
           .concat(defaultMenuItem),
       })
     );
-  }, [channels]);
+  }, [list]);
 
   return (
     <HStack flex={1} overflow="hidden" safeArea>

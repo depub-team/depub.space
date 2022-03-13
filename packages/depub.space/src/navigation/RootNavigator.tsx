@@ -5,6 +5,7 @@ import { NotFoundScreen } from '../screens/NotFoundScreen';
 import { RootStackParamList } from './RootStackParamList';
 import { PostScreen, LoadingScreen } from '../screens';
 import { useAppState } from '../hooks';
+import { getChannels } from '../utils';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 
@@ -22,7 +23,7 @@ export const RootNavigator: FC = () => {
   const timeRef = useRef(new Date().getTime());
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setisInitialized] = useState(false);
-  const { fetchChannels } = useAppState();
+  const { setHashTags, setList } = useAppState();
 
   useEffect(() => {
     if (!isInitialized) {
@@ -56,7 +57,14 @@ export const RootNavigator: FC = () => {
         return;
       }
 
-      await fetchChannels();
+      const channels = await getChannels();
+
+      if (channels) {
+        const { hashTags, list } = channels;
+
+        setHashTags(hashTags);
+        setList(list);
+      }
 
       setisInitialized(true);
     })();
