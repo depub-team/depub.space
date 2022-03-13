@@ -24,7 +24,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppStateProvider, WalletProvider } from '../hooks';
-import { AlertProvider } from '../components';
+import { AlertProvider, Meta } from '../components';
 import { RootNavigator } from './RootNavigator';
 import { RootStackParamList } from './RootStackParamList';
 import { getSystemDarkMode } from '../utils';
@@ -138,47 +138,53 @@ const MainContainer = () => {
     })();
   }, []);
 
-  return isLoading && process.browser ? (
-    <AppLoading />
-  ) : (
-    <SafeAreaProvider>
-      <NavigationContainer documentTitle={navgiationDocumentTitle} linking={linking}>
-        <NativeBaseProvider
-          colorModeManager={colorModeManager}
-          config={nativeBaseConfig}
-          theme={theme}
-        >
-          <View
-            _dark={{
-              bg: 'darkBlue.900',
-            }}
-            _light={{
-              bg: 'white',
-            }}
-            flex={1}
-          >
-            <AlertProvider>
-              <WalletProvider>
-                <AppStateProvider>
-                  <NavigationThemeProvider>
-                    <View
-                      _web={{
-                        maxW: '1440px',
-                      }}
-                      alignSelf="center"
-                      flex={1}
-                      w="100%"
-                    >
-                      <RootNavigator />
-                    </View>
-                  </NavigationThemeProvider>
-                </AppStateProvider>
-              </WalletProvider>
-            </AlertProvider>
-          </View>
-        </NativeBaseProvider>
-      </NavigationContainer>
-    </SafeAreaProvider>
+  return (
+    <>
+      <Meta />
+
+      {isLoading && process.browser ? (
+        <AppLoading />
+      ) : (
+        <SafeAreaProvider>
+          <NavigationContainer documentTitle={navgiationDocumentTitle} linking={linking}>
+            <NativeBaseProvider
+              colorModeManager={colorModeManager}
+              config={nativeBaseConfig}
+              theme={theme}
+            >
+              <View
+                _dark={{
+                  bg: 'darkBlue.900',
+                }}
+                _light={{
+                  bg: 'white',
+                }}
+                flex={1}
+              >
+                <AlertProvider>
+                  <WalletProvider>
+                    <AppStateProvider>
+                      <NavigationThemeProvider>
+                        <View
+                          _web={{
+                            maxW: '1440px',
+                          }}
+                          alignSelf="center"
+                          flex={1}
+                          w="100%"
+                        >
+                          <RootNavigator />
+                        </View>
+                      </NavigationThemeProvider>
+                    </AppStateProvider>
+                  </WalletProvider>
+                </AlertProvider>
+              </View>
+            </NativeBaseProvider>
+          </NavigationContainer>
+        </SafeAreaProvider>
+      )}
+    </>
   );
 };
 

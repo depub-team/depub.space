@@ -15,11 +15,11 @@ export type HomeScreenProps = CompositeScreenProps<
 >;
 
 export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
-  const { channels } = useAppState();
+  const { list } = useAppState();
 
   useFocusEffect(
     useCallback(() => {
-      const [firstItem] = channels;
+      const [firstItem] = list;
 
       debug('useFocusEffect() -> firstItem: %O', firstItem);
 
@@ -35,7 +35,7 @@ export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
         });
       })();
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [channels])
+    }, [list])
   );
 
   return null;

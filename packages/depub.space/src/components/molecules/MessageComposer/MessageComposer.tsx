@@ -196,7 +196,7 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
             </Tooltip>
           </Link>
 
-          <VStack flex={2}>
+          <VStack flex={2} space={4}>
             <FormControl isInvalid={'message' in errors} isRequired>
               <Stack>
                 <Controller
