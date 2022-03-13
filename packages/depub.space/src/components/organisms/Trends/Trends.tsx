@@ -2,8 +2,7 @@ import React, { FC, useMemo } from 'react';
 import { FlatList, Heading, Hidden, Box } from 'native-base';
 import { IVStackProps } from 'native-base/lib/typescript/components/primitives/Stack/VStack';
 import { ListRenderItemInfo, useWindowDimensions } from 'react-native';
-import { useAppState } from '../../../hooks';
-import { HashTag } from '../../../interfaces';
+import type { HashTag } from '../../../interfaces';
 import { ListHeaderContainer, ListLoading } from '../../atoms';
 import { TrendItem } from './TrendItem';
 
@@ -17,8 +16,11 @@ const renderItem = ({ item: { name, count } }: ListRenderItemInfo<HashTag>) => (
   <TrendItem count={count} name={name} />
 );
 
-export const Trends: FC<IVStackProps> = ({ ...props }) => {
-  const { hashTags } = useAppState();
+export interface TrendProps extends IVStackProps {
+  hashTags: HashTag[];
+}
+
+export const Trends: FC<TrendProps> = ({ hashTags, ...props }) => {
   const dimension = useWindowDimensions();
   const isLoadingShow = !hashTags.length;
   const data = useMemo(() => hashTags.slice(0, 18), [hashTags]);

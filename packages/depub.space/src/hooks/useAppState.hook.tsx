@@ -16,6 +16,7 @@ import { useWallet } from './useWallet.hook';
 import { getUserByDTagOrAddress } from '../utils';
 import { getLikeCoinBalance } from '../utils/likecoin';
 import { LoadingModal } from '../components/organisms/LoadingModal';
+import { ImageModal } from '../components/organisms/ImageModal';
 
 const debug = Debug('web:useAppState');
 
@@ -125,7 +126,7 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
   closeLoading: () => {
     dispatch({ type: ActionType.SET_IS_LOADING_MODAL_OPEN, isLoadingModalOpen: false });
   },
-  showImageModal: (image: string, aspectRatio: number) => {
+  showImageModal: (image: string, aspectRatio: number | null) => {
     dispatch({
       type: ActionType.SET_IS_IMAGE_MODAL_OPEN,
       isImageModalOpen: true,
@@ -160,6 +161,10 @@ export const AppStateProvider: FC = ({ children }) => {
   const alert = useAlert();
   const { walletAddress, error: connectError } = useWallet();
   const actions = useAppActions(dispatch);
+  const imageModalSoure = useMemo(
+    () => (state.image ? { uri: state.image } : undefined),
+    [state.image]
+  );
 
   useEffect(() => {
     let showModalTimeout = 0;
@@ -213,6 +218,12 @@ export const AppStateProvider: FC = ({ children }) => {
   return (
     <AppStateContext.Provider value={contextValue}>
       {children}
+      <ImageModal
+        aspectRatio={state.imageAspectRatio || 1}
+        isOpen={state.isImageModalOpen}
+        source={imageModalSoure}
+        onClose={actions.closeImageModal}
+      />
       <LoadingModal isOpen={state.isLoadingModalOpen} />
       <NoBalanceModal isOpen={state.isNoBalanceModalShow} onClose={actions.closeNoBalanceModal} />
     </AppStateContext.Provider>

@@ -125,7 +125,7 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
           });
         }
 
-        await waitAsync(200); // wait a bit
+        await waitAsync(500); // wait a bit
 
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         navigation.navigate('User', { account: userHandle! });
