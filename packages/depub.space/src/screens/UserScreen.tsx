@@ -6,10 +6,10 @@ import { Link as NBLink, Box, VStack, Text } from 'native-base';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { Layout, ListHeaderContainer, MessageList, UserHeader } from '../components';
+import { Layout, ListHeaderContainer, MessageList, useAlert, UserHeader } from '../components';
 import { Message, DesmosProfile } from '../interfaces';
-import { useAppState, useWallet } from '../hooks';
-import { getLikecoinAddressByProfile } from '../utils';
+import { useWallet } from '../hooks';
+import { getLikecoinAddressByProfile, getMessagesByOwner } from '../utils';
 import { getShortenAddress } from '../utils/getShortenAddress';
 import { MainStackParamList } from '../navigation/MainStackParamList';
 import { RootStackParamList } from '../navigation/RootStackParamList';
@@ -17,6 +17,8 @@ import { assertRouteParams } from '../utils/assertRouteParams';
 
 const debug = Debug('web:<UserScreen />');
 const SCROLL_THRESHOLD = 150;
+
+// hoisted props
 const stickyHeaderIndices = [0];
 const emptyMessages: Message[] = [];
 
@@ -28,15 +30,15 @@ export type UserScreenProps = CompositeScreenProps<
 export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navigation }) => {
   const { account } = route.params;
   const [isReady, setIsReady] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isHeaderHide, setIsHeaderHide] = useState(false);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
   const [profile, setProfile] = useState<DesmosProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
   const [messages, setMessages] = useState<Message[]>(emptyMessages);
+  const alert = useAlert();
   const { walletAddress, isLoading: isConnectLoading } = useWallet();
   const isLoggedIn = Boolean(walletAddress && !isConnectLoading);
-  const { isLoading, fetchMessagesByOwner } = useAppState();
   const profilePic = profile?.profilePic;
   const nickname = profile?.nickname || shortenAccount;
   const isWalletAddress = /^(cosmos1|like1)/.test(account);
@@ -54,39 +56,45 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
     debug('fetchNewMessages()');
 
-    if (!account || isLoadingMore || isListReachedEnd) {
+    if (!account || isLoading || isListReachedEnd) {
       debug('fetchNewMessages() -> early return');
 
       return;
     }
 
-    setIsLoadingMore(true);
+    setIsLoading(true);
 
-    const res = await fetchMessagesByOwner(account, previousId);
+    try {
+      const res = await getMessagesByOwner(account, previousId);
 
-    if (res) {
-      const newMessages = res.data?.messages || [];
+      if (res) {
+        const newMessages = res.data?.messages || [];
 
-      if (!res.hasMore) {
-        setIsListReachedEnd(true);
-      }
+        if (!res.hasMore) {
+          setIsListReachedEnd(true);
+        }
 
-      if (newMessages) {
-        if (!refresh) {
-          setMessages(msgs => update(msgs, { $push: newMessages }));
-        } else {
-          if (res.data?.profile) {
-            setProfile(res.data.profile);
+        if (newMessages) {
+          if (!refresh) {
+            setMessages(msgs => update(msgs, { $push: newMessages }));
+          } else {
+            if (res.data?.profile) {
+              setProfile(res.data.profile);
+            }
+
+            setMessages(msgs => update(msgs, { $set: newMessages }));
           }
-
-          setMessages(msgs => update(msgs, { $set: newMessages }));
         }
       }
-
-      setIsReady(true);
+    } catch (ex) {
+      alert.show({
+        title: 'Failed to get data, please try again later.',
+        status: 'error',
+      });
     }
 
-    setIsLoadingMore(false);
+    setIsReady(true);
+    setIsLoading(false);
   };
 
   const handleOnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -142,7 +150,6 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
         <MessageList
           data={messages}
           isLoading={isLoading}
-          isLoadingMore={isLoadingMore}
           ListHeaderComponent={renderListHeader}
           stickyHeaderIndices={isLoggedIn ? stickyHeaderIndices : undefined} // sticky message composer if logged in
           onFetchData={fetchNewMessages}

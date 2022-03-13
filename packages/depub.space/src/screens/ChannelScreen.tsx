@@ -1,5 +1,6 @@
 import React, { FC, useState, useCallback, useEffect, useMemo } from 'react';
 import update from 'immutability-helper';
+import * as Sentry from '@sentry/nextjs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Debug from 'debug';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
@@ -14,10 +15,17 @@ import {
   useAlert,
 } from '../components';
 import { Message } from '../interfaces';
-import { AppStateError, useAppState, useWallet } from '../hooks';
+import { useAppState, useWallet } from '../hooks';
 import type { RootStackParamList, MainStackParamList } from '../navigation';
 import { NAV_HEADER_HEIGHT } from '../constants';
-import { assertRouteParams, dataUrlToFile, getLikecoinAddressByProfile, waitAsync } from '../utils';
+import {
+  assertRouteParams,
+  dataUrlToFile,
+  getLikecoinAddressByProfile,
+  getMessagesByHashTag,
+  postMessage,
+  waitAsync,
+} from '../utils';
 
 const debug = Debug('web:<ChannelScreen />');
 
@@ -36,45 +44,55 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
   const dimension = useWindowDimensions();
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
   const { isLoading: isConnectLoading, walletAddress, offlineSigner } = useWallet();
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const { profile, postMessage, isLoading, fetchMessagesByHashTag, showLoading, closeLoading } =
-    useAppState();
+  const [isLoading, setIsLoading] = useState(false);
+  const { profile, showLoading, closeLoading } = useAppState();
   const isLoggedIn = Boolean(walletAddress && !isConnectLoading);
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const userHandle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const alert = useAlert();
   const layoutMetadata = useMemo(() => ({ title: `#${name}` || undefined }), [name]);
 
-  const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
-    debug('fetchNewMessages(previousId: %s, refresh: %O', previousId, refresh);
+  const fetchNewMessages = useCallback(
+    async (previousId?: string, refresh?: boolean) => {
+      debug('fetchNewMessages(previousId: %s, refresh: %O', previousId, refresh);
 
-    if (isLoadingMore || isListReachedEnd) {
-      debug('fetchNewMessages() -> early return');
+      if (isLoading || isListReachedEnd) {
+        debug('fetchNewMessages() -> early return');
 
-      return;
-    }
-
-    setIsLoadingMore(true);
-
-    const { data: newMessages, hasMore } = await fetchMessagesByHashTag(name, previousId);
-
-    if (!hasMore) {
-      setIsListReachedEnd(true);
-    }
-
-    if (newMessages) {
-      if (!refresh) {
-        setMessages(update(messages, { $push: newMessages }));
-      } else {
-        setMessages(update(messages, { $set: newMessages }));
+        return;
       }
-    }
 
-    setIsLoadingMore(false);
-  };
+      setIsLoading(true);
 
-  const handleOnSubmit = async (data: MessageFormType, image?: string | null) => {
-    try {
+      try {
+        const { data: newMessages, hasMore } = await getMessagesByHashTag(name, previousId);
+
+        if (!hasMore) {
+          setIsListReachedEnd(true);
+        }
+
+        if (newMessages) {
+          if (!refresh) {
+            setMessages(update(messages, { $push: newMessages }));
+          } else {
+            setMessages(update(messages, { $set: newMessages }));
+          }
+        }
+      } catch (ex) {
+        alert.show({
+          title: 'Failed to get data, please try again later.',
+          status: 'error',
+        });
+      }
+
+      setIsLoading(false);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isListReachedEnd, isLoading, messages, name]
+  );
+
+  const handleOnSubmit = useCallback(
+    async (data: MessageFormType, image?: string | null) => {
       let file: File | undefined;
 
       if (image) {
@@ -93,29 +111,47 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
       // show loading
       showLoading();
 
-      const txn = await postMessage(offlineSigner, data.message, file && [file]);
+      try {
+        const txn = await postMessage(offlineSigner, data.message, file && [file]);
 
-      await waitAsync(500); // wait a bit
+        closeLoading();
 
-      if (txn) {
+        await waitAsync(100); // wait a bit
+
+        if (txn) {
+          alert.show({
+            title: 'Post created successfully!',
+            status: 'success',
+          });
+        }
+
+        await waitAsync(200); // wait a bit
+
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        navigation.navigate('User', { account: userHandle! });
+      } catch (ex) {
+        debug('postMessage() -> error: %O', ex);
+        let errorMessage = 'Failed to post message! please try again later.';
+
+        if (/^Account does not exist on chain/.test(ex.message)) {
+          errorMessage = ex.message;
+        } else if (ex.message === 'Request rejected') {
+          errorMessage = ex.message;
+        }
+
+        closeLoading();
+
         alert.show({
-          title: 'Post created successfully!',
-          status: 'success',
+          title: errorMessage,
+          status: 'error',
         });
+
+        Sentry.captureException(ex);
       }
-
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      navigation.navigate('User', { account: userHandle! });
-    } catch (ex: any) {
-      alert.show({
-        title:
-          ex instanceof AppStateError ? ex.message : 'Something went wrong, please try again later',
-        status: 'error',
-      });
-    }
-
-    closeLoading();
-  };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [offlineSigner, userHandle]
+  );
 
   const renderListHeader = useMemo(
     () =>
@@ -164,7 +200,6 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
         data={messages}
         h={dimension.height - NAV_HEADER_HEIGHT}
         isLoading={isLoading}
-        isLoadingMore={isLoadingMore}
         ListHeaderComponent={renderListHeader}
         scrollEventThrottle={100}
         stickyHeaderIndices={stickyHeaderIndices}
@@ -173,5 +208,3 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
     </Layout>
   );
 });
-
-// (ChannelScreen as any).whyDidYouRender = true;

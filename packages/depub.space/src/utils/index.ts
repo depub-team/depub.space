@@ -1,6 +1,7 @@
 export * from './arweave';
 export * from './desmos';
 export * from './iscn';
+export * from './likecoin';
 export * from './messageSanitizer';
 export * from './assertRouteParams';
 export * from './dataUrlToFile';
@@ -15,5 +16,6 @@ export * from './getSystemDarkMode';
 export * from './getUrlFromContent';
 export * from './getUserByDTagOrAddress';
 export * from './image';
-export * from './sendLike';
+export * from './postMessage';
 export * from './waitAsync';
+// export * from './wdyr';
