@@ -45,8 +45,9 @@ export class IscnTxn implements DurableObject {
     // put into persistence storage
     await records
       .map(record => async () => {
+        const iscnId = record.data['@id'];
         const { description } = record.data.contentMetadata;
-        const recordKey = await this.state.storage.get(`${RECORD_KEY_KEY}:${record.data['@id']}`);
+        const recordKey = await this.state.storage.get(`${RECORD_KEY_KEY}:${iscnId}`);
         const author = record.data.stakeholders.find(
           stakeholder => stakeholder.contributionType === 'http://schema.org/author'
         );
@@ -71,7 +72,7 @@ export class IscnTxn implements DurableObject {
 
           await this.state.storage.put(transactionKey, record); // storing the message key
           await this.state.storage.put(authorTransactionKey, transactionKey);
-          await this.state.storage.put(`${RECORD_KEY_KEY}:${record.data['@id']}`, {
+          await this.state.storage.put(`${RECORD_KEY_KEY}:${iscnId}`, {
             transactionKey,
             authorTransactionKey,
             hashtagKeys,
