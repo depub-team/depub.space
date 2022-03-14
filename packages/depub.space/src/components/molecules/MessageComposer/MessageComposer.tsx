@@ -1,4 +1,4 @@
-import React, { FC, memo, useEffect, useMemo, useRef, useState } from 'react';
+import React, { FC, useCallback, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
@@ -96,17 +96,8 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
       () => (profile ? { uri: profile?.profilePic } : undefined),
       [profile]
     );
-    const toUserRoute = useMemo(
-      () => ({
-        screen: 'User',
-        params: {
-          account: handle,
-        },
-      }),
-      [handle]
-    );
 
-    const pickImage = async () => {
+    const pickImage = useCallback(async () => {
       debug('pickImage()');
 
       clearTimeout(blurTimeout.current);
@@ -122,9 +113,9 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
       } catch (ex) {
         debug('pickImage() -> error: %O', ex);
       }
-    };
+    }, []);
 
-    const handleOnSubmit = async () => {
+    const handleOnSubmit = useCallback(async () => {
       debug('handleOnSubmit()');
 
       clearTimeout(blurTimeout.current); // avoid goes to collapse state
@@ -134,19 +125,20 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
 
         setIsSubmitted(true);
       })();
-    };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [image, onSubmit]);
 
-    const handleOnFocus = () => {
+    const handleOnFocus = useCallback(() => {
       setIsCollapsed(false);
       if (onFocus) onFocus();
-    };
+    }, [onFocus]);
 
-    const handleOnBlur = () => {
+    const handleOnBlur = useCallback(() => {
       blurTimeout.current = setTimeout(() => {
         setIsCollapsed(true);
         if (onBlur) onBlur();
       }, 500) as unknown as number;
-    };
+    }, [onBlur]);
 
     const textAreaStyle = useAnimatedStyle(() => {
       const lineHeight = isCollapsed ? 1 : 4;
@@ -181,7 +173,7 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     return (
       <MessageComposerContainer isCollapsed={isCollapsed} {...props}>
         <HStack flex={1} space={stackSpacing}>
-          <Link to={toUserRoute}>
+          <Link to={`/user${handle}`}>
             <Tooltip
               label={
                 likecoinAddress
