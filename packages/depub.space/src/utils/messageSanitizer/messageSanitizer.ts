@@ -22,7 +22,7 @@ export const replaceTagToAnchor = (content: string): string => {
 
   return content.replace(hashTagRegex, hashTag => {
     const hashtag = hashTag.replace(/^#/, '');
-    const hashLink = `/channel/${hashtag}`;
+    const hashLink = `/hashtag/${hashtag}`;
 
     return `<a href="${hashLink}">${hashTag}</a>`;
   });
