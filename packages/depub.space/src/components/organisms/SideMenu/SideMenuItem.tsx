@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useState } from 'react';
 import { Text, Box, HStack, Icon, Pressable, Collapse, VStack } from 'native-base';
-import { findFocusedRoute, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import type {
   HomeScreenNavigationProps,
@@ -24,6 +24,7 @@ export interface SideMenuItemProps {
   routeParams?: RouteParams<any, any>;
   defaultCollapsed?: boolean;
   items?: SideMenuItemProps[];
+  isActive?: boolean;
   onPress?: () => void;
 }
 
@@ -33,18 +34,13 @@ export const SideMenuItem: FC<SideMenuItemProps> = ({
   defaultCollapsed = false,
   icon,
   iconName,
+  isActive,
   collapsedIconName,
   name,
   children,
   onPress,
 }) => {
   const navigation = useNavigation<HomeScreenNavigationProps>();
-  const navigationState = navigation.getState();
-  const focusedRoute = findFocusedRoute(navigationState);
-  const isScreenMatches = routeParams?.screen && focusedRoute?.name === routeParams?.screen;
-  const isParamMatches =
-    JSON.stringify(focusedRoute?.params as any) === JSON.stringify(routeParams?.params);
-  const isActive = isScreenMatches && isParamMatches;
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const defaultIconName = isCollapsed ? 'chevron-right' : 'chevron-down';
   const myIconName =
