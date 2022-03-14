@@ -53,49 +53,53 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   // only show messages when the account has linked to Likecoin
   const showMessagesList = isWalletAddress || likecoinWalletAddress || !isReady;
 
-  const fetchNewMessages = async (previousId?: string, refresh?: boolean) => {
-    debug('fetchNewMessages()');
+  const fetchNewMessages = useCallback(
+    async (previousId?: string, refresh?: boolean) => {
+      debug('fetchNewMessages(previousId: %s, refresh: %O', previousId, refresh);
 
-    if (!account || isLoading || isListReachedEnd) {
-      debug('fetchNewMessages() -> early return');
+      if (!account || isLoading || isListReachedEnd) {
+        debug('fetchNewMessages() -> early return');
 
-      return;
-    }
+        return;
+      }
 
-    setIsLoading(true);
+      setIsLoading(true);
 
-    try {
-      const res = await getMessagesByOwner(account, previousId);
+      try {
+        const res = await getMessagesByOwner(account, previousId);
 
-      if (res) {
-        const newMessages = res.data?.messages || [];
+        if (res) {
+          const newMessages = res.data?.messages || [];
 
-        if (!res.hasMore) {
-          setIsListReachedEnd(true);
-        }
+          if (!res.hasMore) {
+            setIsListReachedEnd(true);
+          }
 
-        if (newMessages) {
-          if (!refresh) {
-            setMessages(msgs => update(msgs, { $push: newMessages }));
-          } else {
-            if (res.data?.profile) {
-              setProfile(res.data.profile);
+          if (newMessages) {
+            if (!refresh) {
+              setMessages(msgs => update(msgs, { $push: newMessages }));
+            } else {
+              if (res.data?.profile) {
+                setProfile(res.data.profile);
+              }
+
+              setMessages(msgs => update(msgs, { $set: newMessages }));
             }
-
-            setMessages(msgs => update(msgs, { $set: newMessages }));
           }
         }
+      } catch (ex) {
+        alert.show({
+          title: 'Failed to get data, please try again later.',
+          status: 'error',
+        });
       }
-    } catch (ex) {
-      alert.show({
-        title: 'Failed to get data, please try again later.',
-        status: 'error',
-      });
-    }
 
-    setIsReady(true);
-    setIsLoading(false);
-  };
+      setIsReady(true);
+      setIsLoading(false);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [account, isListReachedEnd, isLoading]
+  );
 
   const handleOnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetY = event.nativeEvent.contentOffset.y;
