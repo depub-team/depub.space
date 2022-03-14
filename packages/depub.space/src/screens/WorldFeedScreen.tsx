@@ -81,7 +81,7 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
       setIsLoading(false);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isListReachedEnd, isLoading, messages]
+    [isListReachedEnd, isLoading]
   );
 
   const handleOnSubmit = useCallback(

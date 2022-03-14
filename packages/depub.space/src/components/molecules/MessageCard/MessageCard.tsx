@@ -102,16 +102,6 @@ export const MessageCard: FC<MessageCardProps> = memo(
       [id, isDarkMode]
     );
 
-    const toUserRoute = useMemo(
-      () => ({
-        screen: 'User',
-        params: {
-          account: handle,
-        },
-      }),
-      [handle]
-    );
-
     const handleOnImagePress = (image: string, aspectRatio: number) => () => {
       showImageModal(image, aspectRatio);
     };
@@ -233,7 +223,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
       <MessageCardContainer {...props}>
         <Box alignSelf="flex-start">
           <Skeleton isLoaded={isLoaded} rounded="full" size="12">
-            <Link to={toUserRoute}>
+            <Link to={`/user/${handle}`}>
               <Tooltip
                 label={
                   likecoinAddress
@@ -259,7 +249,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
           <HStack alignItems="center" justifyContent="space-between">
             <Skeleton.Text flex={1} isLoaded={isLoaded} lines={2}>
               <VStack flex={1}>
-                <Link to={toUserRoute}>
+                <Link to={`/user/${handle}`}>
                   <Text color="primary.500" fontSize="md" fontWeight="bold">
                     {displayName}
                   </Text>
