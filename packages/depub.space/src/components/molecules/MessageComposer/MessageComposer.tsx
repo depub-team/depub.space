@@ -73,6 +73,7 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     const [isCollapsed, setIsCollapsed] = useState(true);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [totalLines, setTotalLines] = useState(1);
+    const containerRef = useRef<HTMLDivElement>(null);
     const blurTimeout = useRef(0);
     const formSchema = Yup.object().shape({
       message: Yup.string()
@@ -171,7 +172,7 @@ export const MessageComposer: FC<MessageComposerProps> = memo(
     );
 
     return (
-      <MessageComposerContainer isCollapsed={isCollapsed} {...props}>
+      <MessageComposerContainer ref={containerRef} isCollapsed={isCollapsed} {...props}>
         <HStack flex={1} space={stackSpacing}>
           <Link to={`/user${handle}`}>
             <Tooltip
