@@ -9,13 +9,13 @@ import update from 'immutability-helper';
 import { Box, HStack, Icon, IconButton, useBreakpointValue, useToken } from 'native-base';
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { DrawerActions } from '@react-navigation/native';
+import { DrawerActions, findFocusedRoute } from '@react-navigation/native';
 import { useAppState, useWallet } from '../hooks';
 import type { MainStackParamList } from './MainStackParamList';
 import { HomeScreen, ChannelScreen, UserScreen, WorldFeedScreen } from '../screens';
 import { Trends } from '../components/organisms/Trends';
 import { SideMenu } from '../components/organisms/SideMenu/SideMenu';
-import type { SideMenuItemProps } from '../components/organisms/SideMenu/SideMenuItem';
+import type { RouteParams, SideMenuItemProps } from '../components/organisms/SideMenu/SideMenuItem';
 
 const MainStack = createDrawerNavigator<MainStackParamList>();
 
@@ -39,6 +39,7 @@ const defaultMenuItem: SideMenuItemProps = {
 export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   const dimensions = useWindowDimensions();
   const isWideScreen = dimensions.width >= 768;
+  const [activeRoute, setActiveRoute] = useState<RouteParams<any, any> | null>(null);
   const { showWalletModal, disconnect, walletAddress, isLoading: isConnectLoading } = useWallet();
   const { hashTags, profile, list } = useAppState();
   const [menuItems, setMenuItems] = useState<SideMenuItemProps[]>(emptySideMenuItems);
@@ -127,22 +128,51 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
         $set: Object.keys(channelMap)
           .map<SideMenuItemProps>(key => ({
             name: key,
-            items: channelMap[key].map(hashTag => ({
-              name: hashTag,
-              icon: <Feather />,
-              iconName: 'hash',
-              routeParams: {
-                screen: 'Channel',
-                params: {
-                  name: hashTag,
+            items: channelMap[key].map(hashTag => {
+              const isScreenMatches = activeRoute?.screen === 'Channel';
+              const isParamMatches = activeRoute?.params?.name === hashTag;
+              const isActive = isScreenMatches && isParamMatches;
+
+              return {
+                name: hashTag,
+                icon: <Feather />,
+                iconName: 'hash',
+                isActive,
+                routeParams: {
+                  screen: 'Channel',
+                  params: {
+                    name: hashTag,
+                  },
                 },
-              },
-            })),
+              };
+            }),
           }))
-          .concat(defaultMenuItem),
+          .concat({
+            ...defaultMenuItem,
+            isActive: activeRoute?.screen === 'WorldFeed',
+          }),
       })
     );
-  }, [list]);
+  }, [list, activeRoute]);
+
+  // update active menu item
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('state', () => {
+      const focusedRoute = findFocusedRoute(navigation.getState());
+
+      if (!focusedRoute) {
+        return;
+      }
+
+      setActiveRoute({
+        screen: focusedRoute.name,
+        params: focusedRoute.params,
+      });
+    });
+
+    // // Return the function to unsubscribe from the event so it gets removed on unmount
+    return unsubscribe;
+  }, [navigation]);
 
   return (
     <HStack flex={1} overflow="hidden" safeArea>
