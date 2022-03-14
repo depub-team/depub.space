@@ -33,7 +33,7 @@ export const replaceHandleToAnchor = (content: string): string => {
 
   return content.replace(handleRegex, handleText => {
     const handle = handleText.replace(/^@/, '');
-    const hashLink = `/user/${handle}`;
+    const hashLink = `/${handle}`;
 
     // XXX: some url contains @, would double wrapping <a />
     if (content[content.indexOf(handleText) - 1] === '/') {

@@ -10,8 +10,8 @@ export const linking: LinkingOptions<RootStackParamList> = {
         screens: {
           Home: 'home',
           WorldFeed: 'all',
-          User: 'user/:account',
           Channel: 'hashtag/:name',
+          User: '/:account',
         },
       },
       NotFound: '*',

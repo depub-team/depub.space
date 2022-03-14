@@ -135,8 +135,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
               name: execArr[1],
             });
           }
-        } else if (/^\/user/.test(link)) {
-          const execArr = /^\/user\/(.+)$/.exec(link);
+        } else if (/^\/([\p{L}\d_-]+)/.test(link)) {
+          const execArr = /^\/(.+)$/.exec(link);
 
           if (execArr && execArr[1]) {
             navigation.navigate('User', {
@@ -223,7 +223,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
       <MessageCardContainer {...props}>
         <Box alignSelf="flex-start">
           <Skeleton isLoaded={isLoaded} rounded="full" size="12">
-            <Link to={`/user/${handle}`}>
+            <Link to={`/${handle}`}>
               <Tooltip
                 label={
                   likecoinAddress
@@ -249,7 +249,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
           <HStack alignItems="center" justifyContent="space-between">
             <Skeleton.Text flex={1} isLoaded={isLoaded} lines={2}>
               <VStack flex={1}>
-                <Link to={`/user/${handle}`}>
+                <Link to={`/${handle}`}>
                   <Text color="primary.500" fontSize="md" fontWeight="bold">
                     {displayName}
                   </Text>
