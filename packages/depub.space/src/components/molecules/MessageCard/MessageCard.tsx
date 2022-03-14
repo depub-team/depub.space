@@ -1,4 +1,13 @@
-import React, { useMemo, ComponentProps, FC, memo, useCallback, useEffect, useState } from 'react';
+import React, {
+  useMemo,
+  ComponentProps,
+  FC,
+  memo,
+  useCallback,
+  useEffect,
+  useState,
+  useRef,
+} from 'react';
 import { getLinkPreview } from 'link-preview-js';
 import {
   Image,
@@ -8,7 +17,6 @@ import {
   HStack,
   VStack,
   Avatar,
-  AspectRatio,
   Link as NBLink,
   Tooltip,
   useClipboard,
@@ -58,9 +66,11 @@ const areEqual = (prevProps: MessageCardProps, nextProps: MessageCardProps) =>
 export const MessageCard: FC<MessageCardProps> = memo(
   ({ isLoading, message: messageItem, ...props }) => {
     const { id, from, date, profile, message = '', images = emptyImages } = messageItem;
+    const [contentContainerWidth, setContentContainerWidth] = useState(0);
     const { colorMode } = useColorMode();
     const navigation = useNavigation<HomeScreenNavigationProps>();
     const isDarkMode = colorMode === 'dark';
+    const contentContainerRef = useRef<HTMLDivElement>(null);
     const [iscnId, revision] = id.replace(new RegExp(`^${ISCN_SCHEME}/`), '').split('/');
     const [copyIconState, setCopyIconState] = useState<'copied' | 'normal'>('normal');
     const shareableUrl = isDev
@@ -202,6 +212,23 @@ export const MessageCard: FC<MessageCardProps> = memo(
       });
     }, [images]);
 
+    // get content container width
+    useEffect(() => {
+      const handleWidnowResize = () => {
+        if (contentContainerRef.current) {
+          setContentContainerWidth(contentContainerRef.current.clientWidth);
+        }
+      };
+
+      window.addEventListener('resize', handleWidnowResize);
+
+      handleWidnowResize();
+
+      return () => {
+        window.removeEventListener('resize', handleWidnowResize);
+      };
+    }, []);
+
     return (
       <MessageCardContainer {...props}>
         <Box alignSelf="flex-start">
@@ -254,7 +281,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
             </Skeleton.Text>
           </HStack>
 
-          <VStack flex={1} space={4}>
+          <VStack ref={contentContainerRef} flex={1} space={4}>
             <Pressable onPress={handleOnPress}>
               <Skeleton.Text isLoaded={isLoaded} lines={2} space={2}>
                 <MessageContent content={message} />
@@ -269,23 +296,22 @@ export const MessageCard: FC<MessageCardProps> = memo(
                   const aspectRatio = imageSizes[index]
                     ? imageSizes[index][0] / imageSizes[index][1]
                     : 1;
+                  const imageHeight = contentContainerWidth * aspectRatio;
 
                   return (
-                    <AspectRatio key={image} maxW="100%" ratio={aspectRatio}>
-                      <Pressable onPress={handleOnImagePress(image, aspectRatio)}>
-                        <Image
-                          alt={`Image ${index}`}
-                          borderColor="gray.200"
-                          borderWidth={1}
-                          h="100%"
-                          resizeMode="cover"
-                          rounded="lg"
-                          source={imageSources[index]}
-                          textAlign="center"
-                          w="100%"
-                        />
-                      </Pressable>
-                    </AspectRatio>
+                    <Pressable key={image} onPress={handleOnImagePress(image, aspectRatio)}>
+                      <Image
+                        alt={`Image ${index}`}
+                        borderColor="gray.200"
+                        borderWidth={1}
+                        h={imageHeight}
+                        resizeMode="cover"
+                        rounded="lg"
+                        source={imageSources[index]}
+                        textAlign="center"
+                        w={contentContainerWidth}
+                      />
+                    </Pressable>
                   );
                 })}
               </VStack>

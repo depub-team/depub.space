@@ -25,6 +25,24 @@ export const Trends: FC<TrendProps> = ({ hashTags, ...props }) => {
   const isLoadingShow = !hashTags.length;
   const data = useMemo(() => hashTags.slice(0, 18), [hashTags]);
 
+  const renderListHeader = useMemo(
+    () => (
+      <ListHeaderContainer>
+        <Heading
+          p={{
+            base: 3,
+            md: 4,
+            lg: 6,
+          }}
+          size="md"
+        >
+          Trending
+        </Heading>
+      </ListHeaderContainer>
+    ),
+    []
+  );
+
   return (
     <Hidden till="lg">
       <Box
@@ -45,20 +63,7 @@ export const Trends: FC<TrendProps> = ({ hashTags, ...props }) => {
           h={dimension.height}
           keyExtractor={keyExtractor}
           ListFooterComponent={isLoadingShow ? <ListLoading /> : null}
-          ListHeaderComponent={
-            <ListHeaderContainer>
-              <Heading
-                p={{
-                  base: 3,
-                  md: 4,
-                  lg: 6,
-                }}
-                size="md"
-              >
-                Trending
-              </Heading>
-            </ListHeaderContainer>
-          }
+          ListHeaderComponent={renderListHeader}
           renderItem={renderItem}
           stickyHeaderIndices={stickyHeaderIndices}
         />

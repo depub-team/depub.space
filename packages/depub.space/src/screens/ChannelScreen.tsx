@@ -201,8 +201,7 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
         h={dimension.height - NAV_HEADER_HEIGHT}
         isLoading={isLoading}
         ListHeaderComponent={renderListHeader}
-        scrollEventThrottle={100}
-        stickyHeaderIndices={stickyHeaderIndices}
+        stickyHeaderIndices={isLoggedIn ? stickyHeaderIndices : undefined} // sticky message composer if logged in
         onFetchData={fetchNewMessages}
       />
     </Layout>
