@@ -15,6 +15,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
 import { HLogoText } from '@depub/theme';
+import { Link } from '@react-navigation/native';
 import type { SideMenuItemProps } from './SideMenuItem';
 import { SideMenuItem } from './SideMenuItem';
 import { ConnectWalletButton } from '../../atoms/ConnectWalletButton';
@@ -85,6 +86,7 @@ export const SideMenu: FC<SideMenuProps> = ({
   const { colorMode, toggleColorMode } = useColorMode();
   const isDarkMode = colorMode === 'dark';
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
+  const handle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const shortenAddress =
     walletAddress &&
     getShortenAddress(`${walletAddress.slice(0, 10)}...${walletAddress.slice(-4)}`);
@@ -93,6 +95,15 @@ export const SideMenu: FC<SideMenuProps> = ({
   const profilePicSource = useMemo(
     () => (profile ? { uri: profile.profilePic } : undefined),
     [profile]
+  );
+  const toUserRoute = useMemo(
+    () => ({
+      screen: 'User',
+      params: {
+        account: handle,
+      },
+    }),
+    [handle]
   );
 
   const handleOnConnect = useCallback(() => {
@@ -152,28 +163,33 @@ export const SideMenu: FC<SideMenuProps> = ({
           {isLogged ? (
             <VStack space={4}>
               <HStack alignItems="center" flex={1} space={3}>
-                <Avatar
-                  borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
-                  borderWidth={2}
-                  size="sm"
-                  source={profilePicSource}
-                >
-                  {abbrNickname}
-                </Avatar>
+                <Link to={toUserRoute}>
+                  <Avatar
+                    borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
+                    borderWidth={2}
+                    size="sm"
+                    source={profilePicSource}
+                  >
+                    {abbrNickname}
+                  </Avatar>
+                </Link>
                 <VStack flex={1}>
-                  <Tooltip label={displayName || ''}>
-                    <Text
-                      flex={1}
-                      fontSize="sm"
-                      fontWeight="bold"
-                      minW={0}
-                      overflow="hidden"
-                      textOverflow="ellipsis"
-                      whiteSpace="nowrap"
-                    >
-                      {displayName}
-                    </Text>
-                  </Tooltip>
+                  <Link to={toUserRoute}>
+                    <Tooltip label={displayName || ''}>
+                      <Text
+                        flex={1}
+                        fontSize="sm"
+                        fontWeight="bold"
+                        minW={0}
+                        overflow="hidden"
+                        textOverflow="ellipsis"
+                        whiteSpace="nowrap"
+                      >
+                        {displayName}
+                      </Text>
+                    </Tooltip>
+                  </Link>
+
                   <Tooltip label={walletAddress || ''}>
                     <Text
                       color="gray.500"

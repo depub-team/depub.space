@@ -23,8 +23,8 @@ const sortByRecordTimestamp = (m: Map<string, ISCNRecord>) =>
 interface RecordKeys {
   transactionKey: string;
   authorTransactionKey: string;
-  hashtagKeys: Map<string, string>;
-  mentionKeys: Map<string, string>;
+  hashtagKeys: Array<[key: string, value: string]>;
+  mentionKeys: Array<[key: string, value: string]>;
 }
 export class IscnTxn implements DurableObject {
   constructor(private readonly state: DurableObjectState, private readonly env: Bindings) {
@@ -59,13 +59,13 @@ export class IscnTxn implements DurableObject {
           const authorTransactionKey = `${AUTHOR_KEY}:${author.entity['@id']}:${ulid()}`;
           const hashtagKeys = hashtags
             ? hashtags.map(tag => [
-                tag,
+                tag.toLowerCase(),
                 `${HASHTAG_KEY}:${tag.toLowerCase().replace(/^#/, '')}:${ulid()}`,
               ])
             : [];
           const mentionKeys = mentions
             ? mentions.map(mention => [
-                mention,
+                mention.toLowerCase(),
                 `${MENTION_KEY}:${mention.toLowerCase().replace(/^@/, '')}:${ulid()}`,
               ])
             : [];
@@ -147,22 +147,30 @@ export class IscnTxn implements DurableObject {
         await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()))
       );
     } else if (mentioned) {
+      const mentionKeysMap = new Map(
+        // convert keys to lower case, since old keys were not storing in lower case
+        recordKeys?.mentionKeys.map(([k, v]) => [k.toLocaleLowerCase(), v]) || []
+      );
       const keyList = await this.state.storage.list<string>({
-        prefix: `${MENTION_KEY}:${mentioned.toLocaleLowerCase()}`,
+        prefix: `${MENTION_KEY}:${mentioned.toLocaleLowerCase()}:`,
         reverse: true,
         limit,
-        end: new Map(recordKeys?.mentionKeys || []).get(`@${mentioned}`),
+        end: mentionKeysMap.get(`@${mentioned.toLowerCase()}`),
       });
 
       transactionList = sortByRecordTimestamp(
         await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()))
       );
     } else if (hashtag) {
+      const hashTagKeysMap = new Map(
+        // convert keys to lower case, since old keys were not storing in lower case
+        recordKeys?.hashtagKeys.map(([k, v]) => [k.toLocaleLowerCase(), v]) || []
+      );
       const keyList = await this.state.storage.list<string>({
-        prefix: `${HASHTAG_KEY}:${hashtag.toLowerCase()}`,
+        prefix: `${HASHTAG_KEY}:${hashtag.toLowerCase()}:`,
         reverse: true,
         limit,
-        end: new Map(recordKeys?.hashtagKeys || []).get(`#${hashtag}`),
+        end: hashTagKeysMap.get(`#${hashtag.toLowerCase()}`),
       });
 
       transactionList = sortByRecordTimestamp(
@@ -170,7 +178,7 @@ export class IscnTxn implements DurableObject {
       );
     } else {
       transactionList = await this.state.storage.list<ISCNRecord>({
-        prefix,
+        prefix: `${prefix}:`,
         reverse: true,
         limit,
         end: recordKeys?.transactionKey,
