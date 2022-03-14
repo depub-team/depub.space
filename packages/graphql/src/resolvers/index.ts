@@ -2,10 +2,12 @@ import { ApolloError } from 'apollo-server-errors';
 import { Context } from '../context';
 import { InputMaybe, Message, Profile, Resolvers } from './generated_types';
 import { KVStore } from '../kv-store';
-import { DesmosProfileWithId, ISCNRecord } from '../interfaces';
+import { DesmosProfileWithId, ISCNTrend, ISCNRecord } from '../interfaces';
 
 const PAGING_LIMIT = 12;
 const PROFILE_KEY = 'profile';
+const LIST_KEY = 'list';
+const TREND_KEY = 'trend';
 
 export class ISCNError extends ApolloError {
   constructor(message: string) {
@@ -53,6 +55,14 @@ interface GetMessageArgs {
 
 interface GetUserProfileArgs {
   dtagOrAddress: string;
+}
+
+interface GetChannelsResponse {
+  hashTags: ISCNTrend[];
+  list: Array<{
+    name: string;
+    hashTag: string;
+  }>;
 }
 
 const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile | null> => {
@@ -197,7 +207,17 @@ const getMessage = async (args: GetMessageArgs, ctx: Context) => {
   try {
     const durableObjId = ctx.env.ISCN_TXN.idFromName('iscn-txn');
     const stub = ctx.env.ISCN_TXN.get(durableObjId);
-    const transaction = await getTransaction(stub, args.iscnId);
+    let transaction = await getTransaction(stub, args.iscnId);
+
+    // get the iscn record directly on likecoin chain if not found in durable object storage
+    if (!transaction) {
+      transaction = await ctx.dataSources.iscnQueryAPI.getRecord(args.iscnId);
+
+      // save it into durable object storage
+      if (transaction) {
+        await addTransactions([transaction], stub);
+      }
+    }
 
     if (!transaction) {
       throw new ISCNError('Not found');
@@ -255,6 +275,7 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
       mentioned,
       author,
     });
+
     const messages = await Promise.all(
       transactions.map(async t => {
         const authorAddress = getAuthorAddress(t);
@@ -280,14 +301,77 @@ const getUserProfile = async (args: GetUserProfileArgs, ctx: Context) => {
   return profile;
 };
 
+const getChannels = async (_args: any, ctx: Context): Promise<GetChannelsResponse> => {
+  const getChannelsFromDurableObject = async () => {
+    // get cached data
+    const cachedTrendData = await ctx.env.WORKERS_GRAPHQL_CACHE.get(TREND_KEY);
+
+    if (cachedTrendData) {
+      return JSON.parse(cachedTrendData);
+    }
+
+    // initialize durable object
+    const durableObjId = ctx.env.ISCN_TXN.idFromName('iscn-txn');
+    const stub = ctx.env.ISCN_TXN.get(durableObjId);
+    const getHashTagRequest = new Request(`http://iscn-txn/hashTags`, {
+      method: 'GET',
+    });
+    const getHashTagResponse = await stub.fetch(getHashTagRequest);
+    const { hashTags } = await getHashTagResponse.json<{
+      hashTags: ISCNTrend[];
+      lastKey: string;
+    }>();
+
+    const trimmedRecords = hashTags.slice(0, 30);
+
+    // put records into kv cache
+    await ctx.env.WORKERS_GRAPHQL_CACHE.put(TREND_KEY, JSON.stringify(trimmedRecords), {
+      expirationTtl: 10 * 60, // 10 minutes
+    });
+
+    return trimmedRecords;
+  };
+
+  const getListFromNotionAPI = async () => {
+    // get cached data
+    const cachedListData = await ctx.env.WORKERS_GRAPHQL_CACHE.get(LIST_KEY);
+
+    if (cachedListData) {
+      return JSON.parse(cachedListData);
+    }
+
+    const list = await ctx.dataSources.notionAPI.getList();
+
+    // put records into kv cache
+    await ctx.env.WORKERS_GRAPHQL_CACHE.put(LIST_KEY, JSON.stringify(list), {
+      expirationTtl: 1 * 60, // 1 minute
+    });
+
+    return list;
+  };
+
+  try {
+    const hashTags = await getChannelsFromDurableObject();
+    const list = await getListFromNotionAPI();
+
+    return { hashTags, list };
+  } catch (ex: any) {
+    // eslint-disable-next-line no-console
+    console.error(ex);
+  }
+
+  return { hashTags: [], list: [] };
+};
+
 const resolvers: Resolvers = {
   Query: {
     getUser: (_parent, args, ctx) => getUser(args.dtagOrAddress, ctx),
     messages: async (_parent, args, ctx) => getMessages(args, ctx),
-    messagesByTag: async (_parent, args, ctx) => getMessages(args, ctx),
+    messagesByHashTag: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByMentioned: async (_parent, args, ctx) => getMessages(args, ctx),
     getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
     getMessage: (_parent, args, ctx) => getMessage(args, ctx),
+    getChannels: (_parent, args, ctx) => getChannels(args, ctx),
   },
   User: {
     messages: async (parent, args, ctx) => {

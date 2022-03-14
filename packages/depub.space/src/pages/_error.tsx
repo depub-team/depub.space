@@ -3,11 +3,43 @@ import NextErrorComponent from 'next/error';
 import React from 'react';
 import { NextPageContext } from 'next';
 import * as Sentry from '@sentry/nextjs';
+import { theme } from '@depub/theme';
+import { ColorMode, NativeBaseProvider, StorageManager } from 'native-base';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Layout, NotFound } from '../components';
+import { getSystemDarkMode } from '../utils';
 
 type ErrorPageProps = {
   err: Error;
   hasGetInitialPropsRun: boolean;
+};
+
+const colorModeManager: StorageManager = {
+  get: async () => {
+    try {
+      const val = await AsyncStorage.getItem('@color-mode');
+
+      if (!val) {
+        const systemDarkMode = getSystemDarkMode();
+
+        return systemDarkMode;
+      }
+
+      return val === 'dark' ? 'dark' : 'light';
+    } catch (e) {
+      return 'light';
+    }
+  },
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  set: async (value: ColorMode) => {
+    try {
+      if (value) {
+        await AsyncStorage.setItem('@color-mode', value);
+      }
+    } catch (e) {
+      // do nothing
+    }
+  },
 };
 
 const MyError = ({ hasGetInitialPropsRun, err }: ErrorPageProps) => {
@@ -20,14 +52,15 @@ const MyError = ({ hasGetInitialPropsRun, err }: ErrorPageProps) => {
   }
 
   return (
-    <Layout
-      hideNavbar
-      metadata={{
-        title: '404',
-      }}
-    >
-      <NotFound />
-    </Layout>
+    <NativeBaseProvider colorModeManager={colorModeManager} theme={theme}>
+      <Layout
+        metadata={{
+          title: '404',
+        }}
+      >
+        <NotFound />
+      </Layout>
+    </NativeBaseProvider>
   );
 };
 

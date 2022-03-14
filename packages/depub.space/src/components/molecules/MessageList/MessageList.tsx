@@ -1,101 +1,76 @@
-import React, { FC, useEffect } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import Debug from 'debug';
-import { Center, Text, FlatList } from 'native-base';
-import { RefreshControl } from 'react-native';
+import { FlatList } from 'native-base';
+import { ListRenderItemInfo } from 'react-native';
 import { IFlatListProps } from 'native-base/lib/typescript/components/basic/FlatList';
 import { Message } from '../../../interfaces';
 import { MessageCard } from '../MessageCard';
-import { MAX_WIDTH, ROWS_PER_PAGE, END_REACHED_THRESHOLD } from '../../../contants';
+import { END_REACHED_THRESHOLD } from '../../../constants';
+import { ListLoading, ListEmpty, ListItemSeparator } from '../../atoms';
 
-const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
 const debug = Debug('web:<MessageList />');
 
+const renderItem = (info: ListRenderItemInfo<Message>) => <MessageCard message={info.item} />;
+
+const keyExtractor = ({ id }: Message) => id;
+
 export interface MessageListProps extends Omit<IFlatListProps<Message>, 'data' | 'renderItem'> {
-  messages: Message[];
+  data: Message[];
   isLoading?: boolean;
-  isLoadingMore?: boolean;
-  onShare?: (message: Message) => void;
-  onFetchMessages?: (previousId?: string) => Promise<void>;
+  onFetchData?: (previousId?: string, refresh?: boolean) => Promise<void>;
 }
 
-const ListEmptyComponent: FC<{ isReady: boolean }> = ({ isReady }) =>
-  isReady ? (
-    <Center my={4}>
-      <Text color="gray.500">No Message</Text>
-    </Center>
-  ) : null;
+export const MessageList: FC<MessageListProps> = ({ onFetchData, isLoading, data, ...props }) => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-export const MessageList: FC<MessageListProps> = ({
-  onFetchMessages,
-  isLoading,
-  isLoadingMore,
-  messages,
-  onShare,
-  ...props
-}) => {
-  const [refreshing, setRefreshing] = React.useState(false);
-  const [isReady, setIsReady] = React.useState(false);
-  const dummyItems = Array.from(new Array(ROWS_PER_PAGE)).map<Message>(() => ({
-    id: `dummy-${uid()}`,
-    message: '',
-    from: '',
-    date: new Date(),
-  }));
-  const showDummyItems = isLoading && refreshing;
+  const handleOnEndReached = useCallback(
+    async ({ distanceFromEnd }: { distanceFromEnd: number }) => {
+      debug(
+        'handleOnEndReached() -> distanceFromEnd: %d, data.length: %d',
+        distanceFromEnd,
+        data.length
+      );
+      if (distanceFromEnd < 0 || !data.length || isLoading) {
+        debug('handleOnEndReached() -> early return');
 
-  const data = showDummyItems ? dummyItems : [...messages, ...(isLoadingMore ? dummyItems : [])];
-  const handleOnEndReached = async ({ distanceFromEnd }: { distanceFromEnd: number }) => {
-    debug(
-      'handleOnEndReached() -> distanceFromEnd: %d, messages.length: %d',
-      distanceFromEnd,
-      messages.length
-    );
-    if (distanceFromEnd < 0 || !messages.length) {
+        return;
+      }
+
+      if (onFetchData) {
+        await onFetchData(data[data.length - 1].id);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data, isLoading]
+  );
+
+  const handleOnRefresh = useCallback(async () => {
+    if (isRefreshing) {
       return;
     }
 
-    if (messages.length > 0 && onFetchMessages) {
-      await onFetchMessages(messages[messages.length - 1].id);
-    }
-  };
-
-  const handleOnRefresh = async () => {
-    setRefreshing(true);
-
-    try {
-      if (onFetchMessages) {
-        await onFetchMessages();
-      }
-    } catch (ex) {
-      debug('handleOnRefresh() -> error: %O', ex);
+    if (onFetchData) {
+      await onFetchData(undefined, true);
     }
 
-    setRefreshing(false);
-  };
+    setIsRefreshing(false);
+  }, [isRefreshing, onFetchData]);
 
-  useEffect(() => {
-    setTimeout(() => {
-      setIsReady(true);
-    }, 100);
-  }, []);
-
+  // reference: https://gist.github.com/r0b0t3d/db629f5f4e249c7a5b6a3c211f2b8aa8
   return (
-    <FlatList<Message>
+    <FlatList
       data={data}
-      keyExtractor={item => item.id}
-      ListEmptyComponent={<ListEmptyComponent isReady={isReady} />}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleOnRefresh} />}
-      renderItem={ctx => (
-        <MessageCard
-          isLoading={/^dummy-/.test(ctx.item.id)}
-          maxW={MAX_WIDTH}
-          message={ctx.item}
-          mx="auto"
-          onShare={onShare}
-        />
-      )}
+      ItemSeparatorComponent={ListItemSeparator}
+      keyExtractor={keyExtractor}
+      ListEmptyComponent={!isLoading ? <ListEmpty /> : null}
+      ListFooterComponent={isLoading ? <ListLoading /> : null}
+      refreshing={isRefreshing}
+      renderItem={renderItem}
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onEndReached={handleOnEndReached}
       onEndReachedThreshold={END_REACHED_THRESHOLD}
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onRefresh={handleOnRefresh}
       {...props}
     />
   );

@@ -67,67 +67,57 @@ export class DesmosAPI extends DataSource {
   }
 
   public async getProfile(address: string) {
-    try {
-      const response = await fetch(this.baseURL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    const response = await fetch(this.baseURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: FETCH_PROFILE_DOCUMENT,
+        variables: {
+          address,
         },
-        body: JSON.stringify({
-          query: FETCH_PROFILE_DOCUMENT,
-          variables: {
-            address,
-          },
-        }),
-      });
-      const data = await response.json<any>();
-      const profile = data.data.profile[0] as DesmosProfile;
+      }),
+    });
+    const data = await response.json<any>();
+    const profile = data.data.profile[0] as DesmosProfile;
 
-      if (profile) {
-        const profileWithId = {
-          id: address,
-          ...profile,
-        } as DesmosProfileWithId;
+    if (profile) {
+      const profileWithId = {
+        id: address,
+        ...profile,
+      } as DesmosProfileWithId;
 
-        return profileWithId;
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(error);
+      return profileWithId;
     }
 
     return null;
   }
 
   public async getProfileByDtag(dtag: string) {
-    try {
-      const response = await fetch(this.baseURL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    const response = await fetch(this.baseURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: FETCH_PROFILE_DOCUMENT_BY_DTAG,
+        variables: {
+          dtag,
         },
-        body: JSON.stringify({
-          query: FETCH_PROFILE_DOCUMENT_BY_DTAG,
-          variables: {
-            dtag,
-          },
-        }),
-      });
-      const data = await response.json<any>();
-      const profile = data.data.profile[0];
-      const likecoinAddress = getLikecoinAddressByProfile(profile);
+      }),
+    });
+    const data = await response.json<any>();
+    const profile = data.data.profile[0];
+    const likecoinAddress = getLikecoinAddressByProfile(profile);
 
-      if (profile) {
-        const profileWithId = {
-          id: likecoinAddress || profile.address,
-          ...profile,
-        } as DesmosProfileWithId;
+    if (profile) {
+      const profileWithId = {
+        id: likecoinAddress || profile.address,
+        ...profile,
+      } as DesmosProfileWithId;
 
-        return profileWithId;
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(error);
+      return profileWithId;
     }
 
     return null;
