@@ -40,7 +40,11 @@ export const UserHeader: FC<UserHeaderProps> = memo(
           >
             {abbrNickname}
           </Avatar>
-          <VStack alignItems={collapse ? 'flex-start' : 'center'} space={1}>
+          <VStack
+            alignItems={collapse ? 'flex-start' : 'center'}
+            px={{ base: 3, md: 4, lg: 6 }}
+            space={1}
+          >
             <Box textAlign={collapse ? 'left' : 'center'}>
               <Heading fontSize="xl">{nickname}</Heading>
               {dtag ? (
