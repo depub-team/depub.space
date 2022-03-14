@@ -26,7 +26,9 @@
     "stargate",
     "stylelint",
     "superkv",
+    "Tendermint",
     "ulid",
+    "unstyled",
     "UZERO"
   ],
   "eslint.workingDirectories": [

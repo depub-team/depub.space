@@ -1,5 +1,5 @@
 import { ulidFactory } from 'ulid-workers';
-import { ISCNRecord } from '../interfaces';
+import { ISCNTrend, ISCNRecord } from '../interfaces';
 import { Bindings } from '../../bindings';
 
 const ulid = ulidFactory({ monotonic: false });
@@ -27,7 +27,9 @@ interface RecordKeys {
   mentionKeys: Map<string, string>;
 }
 export class IscnTxn implements DurableObject {
-  constructor(private readonly state: DurableObjectState, private readonly env: Bindings) {}
+  constructor(private readonly state: DurableObjectState, private readonly env: Bindings) {
+    // this.state.storage.deleteAll();
+  }
 
   public async addTransactions(request: Request) {
     const records = await request.json<ISCNRecord[]>();
@@ -43,8 +45,9 @@ export class IscnTxn implements DurableObject {
     // put into persistence storage
     await records
       .map(record => async () => {
+        const iscnId = record.data['@id'];
         const { description } = record.data.contentMetadata;
-        const recordKey = await this.state.storage.get(`${RECORD_KEY_KEY}:${record.data['@id']}`);
+        const recordKey = await this.state.storage.get(`${RECORD_KEY_KEY}:${iscnId}`);
         const author = record.data.stakeholders.find(
           stakeholder => stakeholder.contributionType === 'http://schema.org/author'
         );
@@ -55,18 +58,21 @@ export class IscnTxn implements DurableObject {
           const transactionKey = `${TRANSACTION_KEY}:${ulid()}`;
           const authorTransactionKey = `${AUTHOR_KEY}:${author.entity['@id']}:${ulid()}`;
           const hashtagKeys = hashtags
-            ? hashtags.map(tag => [tag, `${HASHTAG_KEY}:${tag.replace(/^#/, '')}:${ulid()}`])
+            ? hashtags.map(tag => [
+                tag,
+                `${HASHTAG_KEY}:${tag.toLowerCase().replace(/^#/, '')}:${ulid()}`,
+              ])
             : [];
           const mentionKeys = mentions
             ? mentions.map(mention => [
                 mention,
-                `${MENTION_KEY}:${mention.replace(/^@/, '')}:${ulid()}`,
+                `${MENTION_KEY}:${mention.toLowerCase().replace(/^@/, '')}:${ulid()}`,
               ])
             : [];
 
           await this.state.storage.put(transactionKey, record); // storing the message key
           await this.state.storage.put(authorTransactionKey, transactionKey);
-          await this.state.storage.put(`${RECORD_KEY_KEY}:${record.data['@id']}`, {
+          await this.state.storage.put(`${RECORD_KEY_KEY}:${iscnId}`, {
             transactionKey,
             authorTransactionKey,
             hashtagKeys,
@@ -142,7 +148,7 @@ export class IscnTxn implements DurableObject {
       );
     } else if (mentioned) {
       const keyList = await this.state.storage.list<string>({
-        prefix: `${MENTION_KEY}:${mentioned}`,
+        prefix: `${MENTION_KEY}:${mentioned.toLocaleLowerCase()}`,
         reverse: true,
         limit,
         end: new Map(recordKeys?.mentionKeys || []).get(`@${mentioned}`),
@@ -153,7 +159,7 @@ export class IscnTxn implements DurableObject {
       );
     } else if (hashtag) {
       const keyList = await this.state.storage.list<string>({
-        prefix: `${HASHTAG_KEY}:${hashtag}`,
+        prefix: `${HASHTAG_KEY}:${hashtag.toLowerCase()}`,
         reverse: true,
         limit,
         end: new Map(recordKeys?.hashtagKeys || []).get(`#${hashtag}`),
@@ -178,6 +184,51 @@ export class IscnTxn implements DurableObject {
         transactions,
       })
     );
+  }
+
+  public async getHashTags() {
+    let lastKey: string | undefined;
+    let keyListArr: [string, string][] = [];
+    let lastBatchSize = -1;
+
+    while (lastBatchSize !== 0) {
+      // eslint-disable-next-line no-await-in-loop
+      const keyList = await this.state.storage.list<string>({
+        prefix: `${HASHTAG_KEY}:`,
+        start: lastKey,
+        limit: 100,
+      });
+      const listArr = Array.from(keyList.entries());
+
+      lastBatchSize = listArr.length;
+      const newLastKey = listArr[listArr.length - 1][0];
+
+      if (newLastKey === lastKey) {
+        break;
+      }
+
+      lastKey = newLastKey;
+      keyListArr = keyListArr.concat(listArr);
+    }
+
+    const hashTagsWithCount = keyListArr.reduce((acc, [k]) => {
+      const key = k.toLowerCase().split(':')[1];
+      const count = acc[key] || 0;
+
+      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+      acc[key] = count + 1;
+
+      return acc;
+    }, {} as Record<string, number>);
+
+    const hashTags: ISCNTrend[] = Object.keys(hashTagsWithCount)
+      .sort((a, b) => (hashTagsWithCount[a] > hashTagsWithCount[b] ? -1 : 1))
+      .map(key => ({
+        name: key,
+        count: hashTagsWithCount[key],
+      }));
+
+    return new Response(JSON.stringify({ hashTags }));
   }
 
   public async getSequence(_request: Request) {
@@ -222,6 +273,12 @@ export class IscnTxn implements DurableObject {
 
       if (request.method === 'GET') {
         return this.getTransactions(request);
+      }
+    }
+
+    if (url.pathname === '/hashTags') {
+      if (request.method === 'GET') {
+        return this.getHashTags();
       }
     }
 
