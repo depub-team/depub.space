@@ -73,9 +73,9 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
 
         if (newMessages) {
           if (!refresh) {
-            setMessages(update(messages, { $push: newMessages }));
+            setMessages(msg => update(msg, { $push: newMessages }));
           } else {
-            setMessages(update(messages, { $set: newMessages }));
+            setMessages(msg => update(msg, { $set: newMessages }));
           }
         }
       } catch (ex) {
@@ -88,7 +88,7 @@ export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ naviga
       setIsLoading(false);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isListReachedEnd, isLoading, messages, name]
+    [isListReachedEnd, isLoading, name]
   );
 
   const handleOnSubmit = useCallback(

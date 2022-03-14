@@ -66,9 +66,9 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
 
         if (newMessages) {
           if (!refresh) {
-            setMessages(update(messages, { $push: newMessages }));
+            setMessages(msg => update(msg, { $push: newMessages }));
           } else {
-            setMessages(update(messages, { $set: newMessages }));
+            setMessages(msg => update(msg, { $set: newMessages }));
           }
         }
       } catch (ex) {
