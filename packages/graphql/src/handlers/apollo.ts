@@ -2,7 +2,7 @@ import { ApolloServer } from 'apollo-server-cloudflare';
 import { graphqlCloudflare } from 'apollo-server-cloudflare/dist/cloudflareApollo';
 import { typeDefs } from '../schema';
 import { resolvers } from '../resolvers';
-import { DesmosAPI, ISCNQueryAPI } from '../datasources';
+import { DesmosAPI, NotionAPI, ISCNQueryAPI } from '../datasources';
 import { GqlHandlerOptions } from './handler.types';
 
 const createServer = (graphQLOptions: GqlHandlerOptions): ApolloServer => {
@@ -16,6 +16,11 @@ const createServer = (graphQLOptions: GqlHandlerOptions): ApolloServer => {
     dataSources: () => ({
       iscnQueryAPI: new ISCNQueryAPI(env.NODE_URL),
       desmosAPI: new DesmosAPI(env.DESMOS_GRAPHQL_ENDPOINT),
+      notionAPI: new NotionAPI(
+        env.NOTION_API_ENDPOINT,
+        env.NOTION_API_SECRET,
+        env.NOTION_DATABASE_ID
+      ),
     }),
     ...graphQLOptions,
   });

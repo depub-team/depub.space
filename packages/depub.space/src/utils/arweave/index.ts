@@ -2,7 +2,7 @@ import { ISCNSignPayload } from '@likecoin/iscn-js';
 import { OfflineSigner } from '@cosmjs/proto-signing';
 import Debug from 'debug';
 import { estimateArweavePrice, uploadToArweave } from './api';
-import { sendLIKE } from '../sendLike';
+import { sendLIKE } from '../likecoin';
 import { signISCN } from '../iscn';
 
 const debug = Debug('web:arweave');
