@@ -296,7 +296,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
                   const aspectRatio = imageSizes[index]
                     ? imageSizes[index][0] / imageSizes[index][1]
                     : 1;
-                  const imageHeight = contentContainerWidth * aspectRatio;
+                  const imageHeight = contentContainerWidth / aspectRatio;
 
                   return (
                     <Pressable key={image} onPress={handleOnImagePress(image, aspectRatio)}>
