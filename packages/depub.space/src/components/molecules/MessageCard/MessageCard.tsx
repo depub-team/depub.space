@@ -127,8 +127,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
       if (e.target.tagName === 'A') {
         const link = e.target.getAttribute('href') as string;
 
-        if (/^\/channel/.test(link)) {
-          const execArr = /^\/channel\/(.+)$/.exec(link);
+        if (/^\/hashtag/.test(link)) {
+          const execArr = /^\/hashtag\/(.+)$/.exec(link);
 
           if (execArr && execArr[1]) {
             navigation.navigate('Channel', {

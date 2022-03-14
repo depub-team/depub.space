@@ -1,5 +1,4 @@
 import React, { FC, useEffect, useState } from 'react';
-import * as Linking from 'expo-linking';
 import {
   View,
   ColorMode,
@@ -16,7 +15,6 @@ import AppLoading from 'expo-app-loading';
 import {
   DarkTheme,
   DefaultTheme,
-  LinkingOptions,
   NavigationContainer,
   ThemeProvider,
 } from '@react-navigation/native';
@@ -26,8 +24,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AppStateProvider, WalletProvider } from '../hooks';
 import { AlertProvider, Meta } from '../components';
 import { RootNavigator } from './RootNavigator';
-import { RootStackParamList } from './RootStackParamList';
 import { getSystemDarkMode } from '../utils';
+import { linking } from './linking';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -38,24 +36,6 @@ const nativeBaseConfig = {
 };
 
 const navgiationDocumentTitle = { enabled: false };
-
-const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: [Linking.createURL('/')],
-  config: {
-    screens: {
-      Main: {
-        screens: {
-          Home: 'home',
-          WorldFeed: '/channel/all',
-          User: 'user/:account',
-          Channel: 'channel/:name',
-        },
-      },
-      NotFound: '*',
-      Post: 'post/:id/:revision',
-    },
-  },
-};
 
 const colorModeManager: StorageManager = {
   get: async () => {
