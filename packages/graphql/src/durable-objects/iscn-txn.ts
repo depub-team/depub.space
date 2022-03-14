@@ -33,8 +33,8 @@ export class IscnTxn implements DurableObject {
 
   public async addTransactions(request: Request) {
     const records = await request.json<ISCNRecord[]>();
-    const hashTagRegex = /#[\p{L}\d]+/giu;
-    const mentionRegex = /@[\p{L}\d]+/giu;
+    const hashTagRegex = /#[\p{L}\d_-]+/giu;
+    const mentionRegex = /@[\p{L}\d_-]+/giu;
 
     if (!records || !Array.isArray(records)) {
       return new Response('Invalid body', {
