@@ -1,4 +1,4 @@
-export * from './ChannelScreen';
+export * from './HashTagScreen';
 export * from './HomeScreen';
 export * from './LoadingScreen';
 export * from './NotFoundScreen';

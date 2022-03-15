@@ -12,7 +12,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
             path: '',
           },
           WorldFeed: 'all',
-          Channel: 'hashtag/:name',
+          HashTag: 'hashtag/:name',
           User: {
             path: ':account',
             parse: {
