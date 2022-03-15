@@ -18,7 +18,7 @@ export const TrendItem: FC<TrendItemProps> = memo(({ name, count }) => {
   const navgiation = useNavigation<HomeScreenNavigationProps>();
 
   const handleOnPress = useCallback(() => {
-    navgiation.navigate('Channel', { name });
+    navgiation.navigate('HashTag', { name });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name]);
 
