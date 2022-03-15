@@ -27,17 +27,17 @@ import {
   waitAsync,
 } from '../utils';
 
-const debug = Debug('web:<ChannelScreen />');
+const debug = Debug('web:<HashTagScreen />');
 
 const stickyHeaderIndices = [0];
 const emptyMessages: Message[] = [];
 
-export type ChannelScreenProps = CompositeScreenProps<
-  DrawerScreenProps<MainStackParamList, 'Channel'>,
+export type HashTagScreenProps = CompositeScreenProps<
+  DrawerScreenProps<MainStackParamList, 'HashTag'>,
   NativeStackScreenProps<RootStackParamList>
 >;
 
-export const ChannelScreen: FC<ChannelScreenProps> = assertRouteParams(({ navigation, route }) => {
+export const HashTagScreen: FC<HashTagScreenProps> = assertRouteParams(({ navigation, route }) => {
   const name = decodeURIComponent(route.params.name);
   const [messages, setMessages] = useState<Message[]>(emptyMessages);
   const [channelName, setChannelName] = useState<string | null>(null);

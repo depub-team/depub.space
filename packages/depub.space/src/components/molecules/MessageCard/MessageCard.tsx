@@ -131,7 +131,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
           const execArr = /^\/hashtag\/(.+)$/.exec(link);
 
           if (execArr && execArr[1]) {
-            navigation.navigate('Channel', {
+            navigation.navigate('HashTag', {
               name: execArr[1],
             });
           }
