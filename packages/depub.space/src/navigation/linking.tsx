@@ -8,14 +8,21 @@ export const linking: LinkingOptions<RootStackParamList> = {
     screens: {
       Main: {
         screens: {
-          Home: 'home',
+          Home: {
+            path: '',
+          },
           WorldFeed: 'all',
           Channel: 'hashtag/:name',
-          User: '/:account',
+          User: {
+            path: ':account',
+            parse: {
+              id: (id: string) => id.replace(/^@/, ''),
+            },
+          },
         },
       },
+      Post: ':id/:revision',
       NotFound: '*',
-      Post: 'post/:id/:revision',
     },
   },
 };
