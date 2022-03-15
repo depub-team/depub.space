@@ -29,6 +29,9 @@ export async function estimateArweavePrice(
 
   const res = await axios.post('/arweave/estimate', form, {
     headers: isNode() ? { ...form.getHeaders() } : {},
+    params: {
+      deduplicate: 1,
+    },
   });
   const { data } = res;
 
@@ -56,6 +59,9 @@ export async function uploadToArweave(
 
   const res = await axios.post(`/arweave/upload?txHash=${txHash}`, form, {
     headers: isNode() ? { ...form.getHeaders() } : {},
+    params: {
+      deduplicate: 1,
+    },
   });
   const { data } = res;
 
