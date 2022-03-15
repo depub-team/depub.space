@@ -30,7 +30,7 @@ export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
       void (async () => {
         await waitAsync(10);
 
-        navigation.navigate('Channel', {
+        navigation.navigate('HashTag', {
           name: firstItem.hashTag,
         });
       })();
