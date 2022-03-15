@@ -12,7 +12,7 @@ import { useWindowDimensions } from 'react-native';
 import { DrawerActions, findFocusedRoute } from '@react-navigation/native';
 import { useAppState, useWallet } from '../hooks';
 import type { MainStackParamList } from './MainStackParamList';
-import { HomeScreen, ChannelScreen, UserScreen, WorldFeedScreen } from '../screens';
+import { HomeScreen, HashTagScreen, UserScreen, WorldFeedScreen } from '../screens';
 import { Trends } from '../components/organisms/Trends';
 import { SideMenu } from '../components/organisms/SideMenu/SideMenu';
 import type { RouteParams, SideMenuItemProps } from '../components/organisms/SideMenu/SideMenuItem';
@@ -114,7 +114,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
   );
 
   useEffect(() => {
-    const channelMap = list.reduce(
+    const hashTagMap = list.reduce(
       (obj, { name, hashTag }) => ({
         ...obj,
         [name]: (obj[name] || []).concat(hashTag),
@@ -125,11 +125,11 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
     // compose the side menu items
     setMenuItems(items =>
       update(items, {
-        $set: Object.keys(channelMap)
+        $set: Object.keys(hashTagMap)
           .map<SideMenuItemProps>(key => ({
             name: key,
-            items: channelMap[key].map(hashTag => {
-              const isScreenMatches = activeRoute?.screen === 'Channel';
+            items: hashTagMap[key].map(hashTag => {
+              const isScreenMatches = activeRoute?.screen === 'HashTag';
               const isParamMatches = activeRoute?.params?.name === hashTag;
               const isActive = isScreenMatches && isParamMatches;
 
@@ -139,7 +139,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
                 iconName: 'hash',
                 isActive,
                 routeParams: {
-                  screen: 'Channel',
+                  screen: 'HashTag',
                   params: {
                     name: hashTag,
                   },
@@ -192,7 +192,7 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
 
           <MainStack.Group screenOptions={stackScreenOptions}>
             <MainStack.Screen component={UserScreen} name="User" />
-            <MainStack.Screen component={ChannelScreen} name="Channel" />
+            <MainStack.Screen component={HashTagScreen} name="HashTag" />
           </MainStack.Group>
         </MainStack.Navigator>
       </Box>

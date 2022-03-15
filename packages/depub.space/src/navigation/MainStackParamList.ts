@@ -9,7 +9,7 @@ export type MainStackParamList = {
   User: {
     account: string;
   };
-  Channel: {
+  HashTag: {
     name: string;
   };
 };
