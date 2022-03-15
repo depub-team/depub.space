@@ -174,7 +174,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   return (
     <MessageComposerContainer ref={containerRef} isCollapsed={isCollapsed} {...props}>
       <HStack flex={1} space={stackSpacing}>
-        <Link to={`/user${handle}`}>
+        <Link to={`/${handle}`}>
           <Tooltip
             label={
               likecoinAddress
