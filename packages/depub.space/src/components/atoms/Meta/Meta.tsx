@@ -2,6 +2,9 @@ import NextHead from 'next/head';
 import Script from 'next/script';
 import React, { FC } from 'react';
 
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
+
 export interface MetaProps {
   title?: string;
   image?: string;
@@ -21,7 +24,7 @@ export const Meta: FC<MetaProps> = ({
 }) => {
   const titleWithTagline = title ? `${title} | depub.SPACE` : 'depub.SPACE';
   const defaultDescription = 'Not your key, not your tweet. Be web3 native.';
-  const ogImage = image || '/app-logo.png';
+  const ogImage = image || `${APP_URL}/app-logo.png`;
   const ogUrl = typeof window !== 'undefined' ? window.location.href : 'https://depub.space';
 
   return (
