@@ -17,10 +17,12 @@ const ConnectButton: FC<ConnectButtonProps> = ({ icon, title, description, ...pr
   return (
     <Button
       _dark={{
-        _hover: { bg: 'gray.800', borderColor: 'gray.300' },
+        _hover: { bg: 'gray.800', borderColor: 'gray.400' },
+        borderColor: 'gray.500',
       }}
       _light={{
-        _hover: { bg: 'gray.100', borderColor: 'gray.200' },
+        _hover: { bg: 'gray.100', borderColor: 'gray.100' },
+        borderColor: 'gray.200',
       }}
       _stack={{
         alignItems: 'center',
@@ -28,14 +30,13 @@ const ConnectButton: FC<ConnectButtonProps> = ({ icon, title, description, ...pr
         direction: 'row',
         w: '100%',
       }}
-      borderColor="gray.200"
       borderWidth={1}
       rounded="lg"
       startIcon={<Image alt="start icon" h={12} source={iconSource} w={12} />}
       variant="unstyled"
       {...props}
     >
-      <Heading _dark={{ color: 'white' }} _light={{ color: 'black' }} mb={0} size="md">
+      <Heading _dark={{ color: 'white' }} _light={{ color: 'black' }} fontSize="md" mb={0}>
         {title}
       </Heading>
       <Text color="gray.400" fontSize="sm">
