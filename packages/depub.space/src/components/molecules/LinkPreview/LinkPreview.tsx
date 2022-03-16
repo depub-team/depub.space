@@ -1,6 +1,14 @@
-import { Text, Stack, Heading, Image, AspectRatio, Box, IBoxProps, Link } from 'native-base';
+import { Text, Stack, Heading, Image, AspectRatio, IBoxProps, Link, ITextProps } from 'native-base';
 import React, { FC, useMemo } from 'react';
 import { LinkPreviewItem } from '../../../interfaces';
+
+const textOverflowStyle: ITextProps = {
+  flex: 1,
+  minW: 0,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+};
 
 export interface LinkPreviewProps extends IBoxProps {
   preview: LinkPreviewItem;
@@ -15,44 +23,55 @@ export const LinkPreview: FC<LinkPreviewProps> = ({ preview }) => {
   );
 
   return (
-    <Box
-      _dark={{
-        borderColor: 'coolGray.600',
-        backgroundColor: 'gray.700',
-      }}
-      _light={{
-        backgroundColor: 'gray.50',
-      }}
-      borderColor="coolGray.200"
-      borderWidth="1"
-      overflow="hidden"
-      rounded="lg"
-    >
-      <Box>
+    <Link display="flex" flex="1" href={preview.url} isExternal>
+      <Stack
+        _dark={{
+          borderColor: 'coolGray.600',
+          backgroundColor: 'gray.700',
+        }}
+        _light={{
+          backgroundColor: 'gray.50',
+        }}
+        borderColor="coolGray.200"
+        borderWidth="1"
+        flex={1}
+        overflow="hidden"
+        rounded="lg"
+      >
         {preview?.images?.length ? (
           <AspectRatio ratio={16 / 9} w="100%">
             <Image alt="image" source={imageSource} />
           </AspectRatio>
         ) : null}
-      </Box>
-      <Stack p={3} space={3}>
-        <Stack space={2}>
-          <Box>
-            <Link href={preview.url} isExternal>
-              <Text color="gray.400" fontSize="xs" fontWeight="500">
-                {preview.url}
-              </Text>
-            </Link>
-          </Box>
-          <Box>
-            <Link href={preview.url} isExternal>
-              <Heading _dark={{ color: 'white' }} _light={{ color: 'black' }} size="sm">
-                {preview.siteName || preview.url}
-              </Heading>
-            </Link>
-          </Box>
+        <Stack
+          _dark={{
+            backgroundColor: 'gray.600',
+          }}
+          _light={{
+            backgroundColor: 'gray.100',
+          }}
+          flex={1}
+          p={3}
+          space={1}
+        >
+          <Text color="gray.400" fontSize="xs" fontWeight="500" {...textOverflowStyle}>
+            {preview.url}
+          </Text>
+          <Heading
+            _dark={{ color: 'white' }}
+            _light={{ color: 'black' }}
+            fontSize="md"
+            {...textOverflowStyle}
+          >
+            {preview.title || preview.url}
+          </Heading>
+          {preview.description ? (
+            <Text fontSize="md" {...textOverflowStyle}>
+              {preview.description}
+            </Text>
+          ) : null}
         </Stack>
       </Stack>
-    </Box>
+    </Link>
   );
 };

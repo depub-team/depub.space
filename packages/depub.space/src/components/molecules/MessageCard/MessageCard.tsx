@@ -245,7 +245,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
           </Skeleton>
         </Box>
 
-        <VStack flex={1}>
+        <VStack flex={1} space={2}>
           <HStack alignItems="center" justifyContent="space-between">
             <Skeleton.Text flex={1} isLoaded={isLoaded} lines={2}>
               <VStack flex={1}>
