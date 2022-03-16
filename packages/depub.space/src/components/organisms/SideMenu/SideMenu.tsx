@@ -127,6 +127,7 @@ export const SideMenu: FC<SideMenuProps> = ({
               color: 'black',
             }}
             href="/"
+            ml={4}
           >
             <HLogoText height={39} width={190} />
           </NBLink>

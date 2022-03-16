@@ -45,7 +45,7 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   const bio = profile?.bio;
   const dtag = profile?.dtag;
   const likecoinWalletAddress = profile && getLikecoinAddressByProfile(profile);
-  const layoutMetadata = useMemo(
+  const metadata = useMemo(
     () => ({ title: `${nickname || walletAddress} on depub.SPACE` }),
     [nickname, walletAddress]
   );
@@ -149,7 +149,7 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   );
 
   return account ? (
-    <Layout metadata={layoutMetadata}>
+    <Layout metadata={metadata}>
       {showMessagesList ? (
         <MessageList
           data={messages}

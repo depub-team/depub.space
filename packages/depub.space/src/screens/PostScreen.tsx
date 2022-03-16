@@ -1,6 +1,6 @@
 import Debug from 'debug';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { Layout, MessageModal, useAlert } from '../components';
 import { Message } from '../interfaces';
@@ -24,11 +24,17 @@ export const PostScreen: FC<PostScreenProps> = ({ route, navigation }) => {
   const iscnId = `${ISCN_SCHEME}/${id}/${revision}`;
   const messageBody = message?.message;
   const abbrvMessage =
-    `${messageBody?.slice(0, 30)}${messageBody?.length || 0 > 30 ? '...' : ''}` || '';
+    `${messageBody?.slice(0, 30)}${(messageBody?.length || 0) > 30 ? '...' : ''}` || '';
   const profile = message?.profile;
   const from = message?.from;
   const shortenAddress = from && getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
   const displayName = profile?.nickname || profile?.dtag || shortenAddress;
+  const metadata = useMemo(
+    () => ({
+      title: `${displayName}: ${abbrvMessage}`,
+    }),
+    [abbrvMessage, displayName]
+  );
 
   const handleOnClose = () => {
     if (navigation.canGoBack()) {
@@ -62,11 +68,7 @@ export const PostScreen: FC<PostScreenProps> = ({ route, navigation }) => {
 
   return (
     message && (
-      <Layout
-        metadata={{
-          title: `${displayName}: ${abbrvMessage}`,
-        }}
-      >
+      <Layout metadata={metadata}>
         <MessageModal isOpen message={message} onClose={handleOnClose} />
       </Layout>
     )
