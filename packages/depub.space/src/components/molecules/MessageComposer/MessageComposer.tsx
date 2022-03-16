@@ -155,6 +155,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     // reset state
     if (isSubmitted) {
       reset({ message: '' });
+      setImage(null);
 
       setIsSubmitted(false);
     }
