@@ -50,7 +50,7 @@ export const HashTagScreen: FC<HashTagScreenProps> = assertRouteParams(({ naviga
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const userHandle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const alert = useAlert();
-  const layoutMetadata = useMemo(() => ({ title: `#${name}` || undefined }), [name]);
+  const metadata = useMemo(() => ({ title: `#${name}` || undefined }), [name]);
 
   const fetchNewMessages = useCallback(
     async (previousId?: string, refresh?: boolean) => {
@@ -195,7 +195,7 @@ export const HashTagScreen: FC<HashTagScreenProps> = assertRouteParams(({ naviga
   );
 
   return (
-    <Layout metadata={layoutMetadata}>
+    <Layout metadata={metadata}>
       <MessageList
         data={messages}
         h={dimension.height - NAV_HEADER_HEIGHT}

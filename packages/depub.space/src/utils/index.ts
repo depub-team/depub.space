@@ -9,7 +9,7 @@ export * from './getAbbrNickname';
 export * from './getChannels';
 export * from './getMessageById';
 export * from './getMessages';
-export * from './getMessagesByChannel';
+export * from './getMessagesByHashTag';
 export * from './getMessagesByOwner';
 export * from './getShortenAddress';
 export * from './getSystemDarkMode';
