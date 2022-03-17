@@ -17,7 +17,7 @@
     "@cosmjs/proto-signing": "~0.26.5",
     "@cosmjs/stargate": "~0.26.5",
     "@cosmjs/tendermint-rpc": "~0.26.5",
-    "@depub/theme": "*",
+    "@depub/theme": "workspace:*",
     "@expo/next-adapter": "3.1.21",
     "@expo/vector-icons": "12.0.5",
     "@hookform/resolvers": "2.8.8",
@@ -33,6 +33,7 @@
     "@walletconnect/qrcode-modal": "1.7.4",
     "@walletconnect/utils": "1.7.4",
     "axios": "0.26.1",
+    "axios-retry": "3.2.4",
     "bignumber.js": "9.0.2",
     "cosmjs-types": "0.4.1",
     "dayjs": "1.10.8",
@@ -88,8 +89,5 @@
     "next-fonts": "1.5.1",
     "next-transpile-modules": "9.0.0",
     "typescript": "4.6.2"
-  },
-  "peerDependencies": {
-    "@depub/theme": "2.0.0"
   }
 }
