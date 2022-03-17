@@ -3,8 +3,8 @@ import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { BroadcastTxSuccess } from '@cosmjs/stargate';
 import * as Crypto from 'expo-crypto';
 import Debug from 'debug';
-import { submitToArweaveAndISCN } from './arweave';
-import { signISCN } from './iscn';
+import { submitToArweaveAndISCN } from '../arweave';
+import { signISCN } from './sign';
 
 const debug = Debug('postMessage()');
 const ISCN_FINGERPRINT = process.env.NEXT_PUBLIC_ISCN_FINGERPRINT || '';

@@ -1,8 +1,6 @@
-import axios from 'axios';
-import { Message, PaginatedResponse } from '../interfaces';
-import { ROWS_PER_PAGE, GRAPHQL_QUERY_MESSAGES } from '../constants';
-
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || '';
+import { queryClient } from './queryClient';
+import { Message, PaginatedResponse } from '../../interfaces';
+import { ROWS_PER_PAGE, GRAPHQL_QUERY_MESSAGES } from '../../constants';
 
 export interface MessagesQueryResponse {
   messages: Message[];
@@ -12,8 +10,8 @@ export const getMessages = async (
   previousId?: string,
   limit = ROWS_PER_PAGE
 ): Promise<PaginatedResponse<Message[]>> => {
-  const { data } = await axios.post<{ data: MessagesQueryResponse }>(
-    GRAPHQL_URL,
+  const { data } = await queryClient.post<{ data: MessagesQueryResponse }>(
+    '',
     {
       variables: {
         previousId: previousId || null, // graphql not accepts undefined

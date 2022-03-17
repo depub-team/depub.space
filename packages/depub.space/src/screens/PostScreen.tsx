@@ -58,7 +58,7 @@ export const PostScreen: FC<PostScreenProps> = ({ route, navigation }) => {
         }
       } catch (ex) {
         alert.show({
-          title: 'Failed to get the data, please try again later.',
+          title: 'Failed to get data, please try again later.',
           status: 'error',
         });
       }

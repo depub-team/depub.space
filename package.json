@@ -78,5 +78,6 @@
     "webpack": "5.69.1"
   },
   "npmClient": "yarn",
-  "useWorkspaces": true
+  "useWorkspaces": true,
+  "packageManager": "yarn@3.2.0"
 }
