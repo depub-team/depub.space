@@ -1,9 +1,7 @@
-import axios from 'axios';
-import { Message, PaginatedResponse, User } from '../interfaces';
+import { queryClient } from './queryClient';
+import { Message, PaginatedResponse, User } from '../../interfaces';
 
-import { ROWS_PER_PAGE, GRAPHQL_QUERY_MESSAGES_BY_USER } from '../constants';
-
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || '';
+import { ROWS_PER_PAGE, GRAPHQL_QUERY_MESSAGES_BY_USER } from '../../constants';
 
 export type GetUserWithMessagesResponse = User & {
   messages: Message[];
@@ -17,22 +15,14 @@ export const getMessagesByOwner = async (
   previousId?: string,
   limit = ROWS_PER_PAGE
 ): Promise<PaginatedResponse<GetUserWithMessagesResponse | null>> => {
-  const { data } = await axios.post<{ data: MessagesByOwnerResponse }>(
-    GRAPHQL_URL,
-    {
-      variables: {
-        dtagOrAddress: owner,
-        previousId,
-        limit,
-      },
-      query: GRAPHQL_QUERY_MESSAGES_BY_USER,
+  const { data } = await queryClient.post<{ data: MessagesByOwnerResponse }>('', {
+    variables: {
+      dtagOrAddress: owner,
+      previousId,
+      limit,
     },
-    {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-      },
-    }
-  );
+    query: GRAPHQL_QUERY_MESSAGES_BY_USER,
+  });
 
   if (data && data.data.getUser.messages.length) {
     return {

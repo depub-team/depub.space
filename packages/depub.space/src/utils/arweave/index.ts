@@ -3,7 +3,7 @@ import { OfflineSigner } from '@cosmjs/proto-signing';
 import Debug from 'debug';
 import { estimateArweavePrice, uploadToArweave } from './api';
 import { sendLIKE } from '../likecoin';
-import { signISCN } from '../iscn';
+import { signISCN } from '../iscn/sign';
 
 const debug = Debug('web:arweave');
 
