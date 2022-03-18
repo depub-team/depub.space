@@ -17,7 +17,7 @@
     "@cosmjs/proto-signing": "~0.26.5",
     "@cosmjs/stargate": "~0.26.5",
     "@cosmjs/tendermint-rpc": "~0.26.5",
-    "@depub/theme": "workspace:*",
+    "@depub/theme": "*",
     "@expo/next-adapter": "3.1.21",
     "@expo/vector-icons": "12.0.5",
     "@hookform/resolvers": "2.8.8",
