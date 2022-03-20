@@ -52,8 +52,18 @@ export type Message = {
   from: Scalars['String'];
   id: Scalars['ID'];
   images?: Maybe<Array<Maybe<Scalars['String']>>>;
-  message: Scalars['String'];
   profile?: Maybe<Profile>;
+  text: Scalars['String'];
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  deleteMessage?: Maybe<Scalars['Boolean']>;
+};
+
+
+export type MutationDeleteMessageArgs = {
+  iscnId: Scalars['String'];
 };
 
 export type Profile = {
@@ -208,6 +218,7 @@ export type ResolversTypes = {
   Int: ResolverTypeWrapper<Scalars['Int']>;
   List: ResolverTypeWrapper<List>;
   Message: ResolverTypeWrapper<Message>;
+  Mutation: ResolverTypeWrapper<{}>;
   Profile: ResolverTypeWrapper<Profile>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']>;
@@ -225,6 +236,7 @@ export type ResolversParentTypes = {
   Int: Scalars['Int'];
   List: List;
   Message: Message;
+  Mutation: {};
   Profile: Profile;
   Query: {};
   String: Scalars['String'];
@@ -267,9 +279,13 @@ export type MessageResolvers<ContextType = Context, ParentType extends Resolvers
   from?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   images?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
-  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   profile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType>;
+  text?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  deleteMessage?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteMessageArgs, 'iscnId'>>;
 };
 
 export type ProfileResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Profile'] = ResolversParentTypes['Profile']> = {
@@ -309,6 +325,7 @@ export type Resolvers<ContextType = Context> = {
   HashTag?: HashTagResolvers<ContextType>;
   List?: ListResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
+  Mutation?: MutationResolvers<ContextType>;
   Profile?: ProfileResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;

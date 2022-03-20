@@ -5,7 +5,7 @@ export interface Message {
   from: string;
   date: Date;
   fingerprint: string;
-  message?: string;
+  text?: string;
   profile?: DesmosProfile;
   images?: string[];
 }

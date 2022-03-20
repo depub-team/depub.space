@@ -31,7 +31,7 @@ const transformRecord = (record: ISCNRecord, profile: Profile | null) => {
 
   return {
     id: data['@id'] as string,
-    message: data.contentMetadata.description,
+    text: data.contentMetadata.description,
     from,
     profile,
     date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp).toISOString(),
@@ -63,6 +63,10 @@ interface GetChannelsResponse {
     name: string;
     hashTag: string;
   }>;
+}
+
+interface DeleteMessageArgs {
+  iscnId: string;
 }
 
 const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile | null> => {
@@ -200,7 +204,12 @@ const getTransactions = async (
   const getTransactionsResponse = await stub.fetch(getTransactionsRequest);
   const { transactions } = await getTransactionsResponse.json<{ transactions: ISCNRecord[] }>();
 
-  return transactions || [];
+  // if description is empty which means the message has been deleted
+  const filteredTransactions = (transactions || []).filter(
+    txn => !txn.data.contentMetadata?.description.length
+  );
+
+  return filteredTransactions;
 };
 
 const getMessage = async (args: GetMessageArgs, ctx: Context) => {
@@ -219,7 +228,8 @@ const getMessage = async (args: GetMessageArgs, ctx: Context) => {
       }
     }
 
-    if (!transaction) {
+    // if description is empty which means the message has been deleted
+    if (!transaction || !transaction.data.contentMetadata?.description) {
       throw new ISCNError('Not found');
     }
 
@@ -276,7 +286,7 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
       author,
     });
 
-    const messages = await Promise.all(
+    const Messages = await Promise.all(
       transactions.map(async t => {
         const authorAddress = getAuthorAddress(t);
         const userProfile = await getProfile(authorAddress, ctx);
@@ -286,13 +296,32 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
       })
     );
 
-    return messages;
+    return Messages;
   } catch (ex: any) {
     // eslint-disable-next-line no-console
     console.error(ex);
 
     throw new ISCNError(ex.message);
   }
+};
+
+const deleteMessage = async (args: DeleteMessageArgs, ctx: Context) => {
+  // initialize durable object
+  const durableObjId = ctx.env.ISCN_TXN.idFromName('iscn-txn');
+  const stub = ctx.env.ISCN_TXN.get(durableObjId);
+  const deleteTransactionRequest = new Request(
+    `http://iscn-txn/transactions/${encodeURIComponent(args.iscnId)}`,
+    {
+      method: 'DELETE',
+    }
+  );
+  const deleteTransactionResponse = await stub.fetch(deleteTransactionRequest);
+
+  if (deleteTransactionResponse.status === 201) {
+    return true;
+  }
+
+  return false;
 };
 
 const getUserProfile = async (args: GetUserProfileArgs, ctx: Context) => {
@@ -372,6 +401,10 @@ const resolvers: Resolvers = {
     getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
     getMessage: (_parent, args, ctx) => getMessage(args, ctx),
     getChannels: (_parent, args, ctx) => getChannels(args, ctx),
+  },
+  Mutation: {
+    // delete the message in storage api only
+    deleteMessage: (_parent, args, ctx) => deleteMessage(args, ctx),
   },
   User: {
     messages: async (parent, args, ctx) => {

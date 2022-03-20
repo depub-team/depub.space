@@ -1,10 +1,10 @@
 # Apollo GraphQL server
 
-This is a middleware layer that consolidates ISCN records for front-end.
+This is an API layer for front-end, it's utilized Cloudflare Durable Object to cache ISCN transactions in order to reduce rpc calls, this server will not make any changes to ISCN records on blockchain.
 
 ## Deployment
 
-The server deploying to Cloudflare workers.
+This project deploying to Cloudflare workers with Github action as a CI/CD.
 
 ### Production
 
@@ -16,6 +16,6 @@ The server deploying to Cloudflare workers.
 
 ## Development
 
-Running the server on local environment with Miniflare
+Running on local environment with Miniflare
 
 `yarn dev`

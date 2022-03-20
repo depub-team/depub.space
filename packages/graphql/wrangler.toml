@@ -33,7 +33,7 @@ durable_objects_persist = true
 
 
 [vars]
-NODE_URL = "https://node.testnet.like.co/"
+NODE_URL = "https://likecoin-public-testnet-4.oursky.dev/"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
 ENVIRONMENT = "staging"

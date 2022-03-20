@@ -11,6 +11,10 @@ const typeDefs = gql`
     getChannels: Channels
   }
 
+  type Mutation {
+    deleteMessage(iscnId: String!): Boolean
+  }
+
   type Channels {
     list: [List]!
     hashTags: [HashTag]!
@@ -28,7 +32,7 @@ const typeDefs = gql`
 
   type Message {
     id: ID! # ISCN record id
-    message: String!
+    text: String!
     from: String!
     date: String!
     images: [String]
