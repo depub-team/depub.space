@@ -1,2 +1,3 @@
+export * from './composeMessagePayload';
 export * from './postMessage';
-export * from './sign';
+export * from './updateMessage';

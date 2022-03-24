@@ -1,28 +1,12 @@
 import { OfflineDirectSigner, OfflineSigner } from '@cosmjs/proto-signing';
 import { AminoTypes, BroadcastTxSuccess, SigningStargateClient } from '@cosmjs/stargate';
-import { ISCNSigningClient, ISCNSignPayload } from '@likecoin/iscn-js';
+import { ISCNSignPayload } from '@likecoin/iscn-js';
 import { MsgCreateIscnRecord } from '@likecoin/iscn-message-types/dist/iscn/tx';
+import { getSigningClient } from './getSigningClient';
 
-const PUBLIC_RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
-
-let client: ISCNSigningClient | null = null;
-
-export async function getSigningClient() {
-  if (!client) {
-    const c = new ISCNSigningClient();
-
-    await c.connect(PUBLIC_RPC_ENDPOINT);
-    client = c;
-  }
-
-  return client;
-}
-
-export async function signISCN(tx: ISCNSignPayload, signer: OfflineSigner, address: string) {
-  const signingClient = await getSigningClient();
+export async function createISCN(payload: ISCNSignPayload, signer: OfflineSigner, address: string) {
+  const signingClient = await getSigningClient(signer);
   const isSignDirectSigner = typeof (signer as OfflineDirectSigner).signDirect === 'function';
-
-  await signingClient.connectWithSigner(PUBLIC_RPC_ENDPOINT, signer);
 
   // XXX: hacky way to inject additions into AminoTypes
   if (!isSignDirectSigner) {
@@ -56,7 +40,7 @@ export async function signISCN(tx: ISCNSignPayload, signer: OfflineSigner, addre
     });
   }
 
-  const res = await signingClient.createISCNRecord(address, tx, { memo: 'depub.space' });
+  const res = await signingClient.createISCNRecord(address, payload, { memo: 'depub.space' });
 
   return res as BroadcastTxSuccess;
 }

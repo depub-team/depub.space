@@ -5,7 +5,7 @@ import Debug from 'debug';
 
 const RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
 const COSMOS_DENOM = process.env.NEXT_PUBLIC_COSMOS_DENOM || '';
-const debug = Debug('web:sendLike');
+const debug = Debug('web:getLikecoinBalance');
 
 export class AccountNotFoundException extends Error {
   constructor(message: string) {

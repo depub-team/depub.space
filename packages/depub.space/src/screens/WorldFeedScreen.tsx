@@ -123,7 +123,7 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         navigation.navigate('User', { account: userHandle! });
       } catch (ex) {
-        debug('postMessage() -> error: %O', ex);
+        debug('handleOnSubmit() -> error: %O', ex);
         let errorMessage = 'Failed to post message! please try again later.';
 
         if (/^Account does not exist on chain/.test(ex.message)) {
