@@ -15,12 +15,17 @@ export interface LinkPreviewProps extends IBoxProps {
 }
 
 export const LinkPreview: FC<LinkPreviewProps> = ({ preview }) => {
-  const imageSource = useMemo(
-    () => ({
-      uri: preview.images[0],
-    }),
-    [preview]
-  );
+  const imageSource = useMemo(() => {
+    let imageSourceURI: { uri: string } | undefined;
+
+    if (preview && preview.images) {
+      imageSourceURI = {
+        uri: preview.images[0],
+      };
+    }
+
+    return imageSourceURI;
+  }, [preview]);
 
   return (
     <Link display="flex" flex="1" href={preview.url} isExternal>
@@ -38,7 +43,7 @@ export const LinkPreview: FC<LinkPreviewProps> = ({ preview }) => {
         overflow="hidden"
         rounded="lg"
       >
-        {preview?.images?.length ? (
+        {imageSource ? (
           <AspectRatio ratio={16 / 9} w="100%">
             <Image alt="image" source={imageSource} />
           </AspectRatio>
