@@ -42,7 +42,6 @@ export type HashTag = {
 
 export type List = {
   __typename?: 'List';
-  countryCodes: Array<Maybe<Scalars['String']>>;
   hashTag: Scalars['String'];
   name: Scalars['String'];
 };
@@ -79,6 +78,11 @@ export type Query = {
   messages?: Maybe<Array<Maybe<Message>>>;
   messagesByHashTag?: Maybe<Array<Maybe<Message>>>;
   messagesByMentioned?: Maybe<Array<Maybe<Message>>>;
+};
+
+
+export type QueryGetChannelsArgs = {
+  countryCode?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -258,7 +262,6 @@ export type HashTagResolvers<ContextType = Context, ParentType extends Resolvers
 };
 
 export type ListResolvers<ContextType = Context, ParentType extends ResolversParentTypes['List'] = ResolversParentTypes['List']> = {
-  countryCodes?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType>;
   hashTag?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -288,7 +291,7 @@ export type ProfileResolvers<ContextType = Context, ParentType extends Resolvers
 };
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  getChannels?: Resolver<Maybe<ResolversTypes['Channels']>, ParentType, ContextType>;
+  getChannels?: Resolver<Maybe<ResolversTypes['Channels']>, ParentType, ContextType, Partial<QueryGetChannelsArgs>>;
   getMessage?: Resolver<Maybe<ResolversTypes['Message']>, ParentType, ContextType, RequireFields<QueryGetMessageArgs, 'iscnId'>>;
   getUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryGetUserArgs, 'dtagOrAddress'>>;
   getUserProfile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType, RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>>;

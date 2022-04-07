@@ -60,7 +60,6 @@ interface GetUserProfileArgs {
 type ChannelList = {
   name: string;
   hashTag: string;
-  countryCodes: string[];
 };
 
 interface GetChannelsResponse {
@@ -304,7 +303,46 @@ const getUserProfile = async (args: GetUserProfileArgs, ctx: Context) => {
   return profile;
 };
 
-const getChannels = async (_args: any, ctx: Context): Promise<GetChannelsResponse> => {
+const getListFromNotionAPI = async (ctx: Context, countryCode?: string): Promise<ChannelList[]> => {
+  let myCountryCode = 'universal';
+  const CACHE_KEY = `${LIST_KEY}_${myCountryCode.toUpperCase()}`;
+
+  if (countryCode) {
+    myCountryCode = countryCode;
+  }
+
+  // get cached data
+  const cachedListData = await ctx.env.WORKERS_GRAPHQL_CACHE.get(CACHE_KEY);
+
+  if (cachedListData) {
+    return JSON.parse(cachedListData);
+  }
+
+  const databases = await ctx.dataSources.notionAPI.getDatabases();
+
+  if (!databases) {
+    return [];
+  }
+
+  const databaseIdByCountryCode = databases[myCountryCode];
+
+  if (!databaseIdByCountryCode) {
+    return [];
+  }
+
+  const list = await ctx.dataSources.notionAPI.getList(databaseIdByCountryCode);
+
+  // put records into kv cache
+  await ctx.env.WORKERS_GRAPHQL_CACHE.put(CACHE_KEY, JSON.stringify(list), {
+    expirationTtl: 1 * 60, // 1 minute
+  });
+
+  return list;
+};
+
+const getChannels = async (args: any, ctx: Context): Promise<GetChannelsResponse> => {
+  const { countryCode } = args;
+
   const getChannelsFromDurableObject = async (): Promise<ISCNTrend[]> => {
     // get cached data
     const cachedTrendData = await ctx.env.WORKERS_GRAPHQL_CACHE.get(TREND_KEY);
@@ -335,27 +373,9 @@ const getChannels = async (_args: any, ctx: Context): Promise<GetChannelsRespons
     return trimmedRecords;
   };
 
-  const getListFromNotionAPI = async (): Promise<ChannelList[]> => {
-    // get cached data
-    const cachedListData = await ctx.env.WORKERS_GRAPHQL_CACHE.get(LIST_KEY);
-
-    if (cachedListData) {
-      return JSON.parse(cachedListData);
-    }
-
-    const list = await ctx.dataSources.notionAPI.getList();
-
-    // put records into kv cache
-    await ctx.env.WORKERS_GRAPHQL_CACHE.put(LIST_KEY, JSON.stringify(list), {
-      expirationTtl: 1 * 60, // 1 minute
-    });
-
-    return list;
-  };
-
   try {
     const hashTags = await getChannelsFromDurableObject();
-    const list = await getListFromNotionAPI();
+    const list = await getListFromNotionAPI(ctx, countryCode);
 
     return { hashTags, list };
   } catch (ex: any) {

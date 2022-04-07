@@ -1,10 +1,5 @@
 import { DataSource } from 'apollo-datasource';
-import {
-  MultiSelectType,
-  NotionResponse,
-  SelectType,
-  TitleType,
-} from '../interfaces/notion-response.interface';
+import { NotionResponse, SelectType, TitleType } from '../interfaces/notion-response.interface';
 
 export class NotionAPI extends DataSource {
   constructor(
@@ -15,11 +10,39 @@ export class NotionAPI extends DataSource {
     super();
   }
 
-  public async getList() {
-    const response = await fetch(`${this.baseURL}/databases/${this.databaseId}/query`, {
+  public async getDatabases() {
+    const response = await fetch(`${this.baseURL}/search`, {
       method: 'POST',
       headers: {
-        Accept: 'application/json',
+        'Notion-Version': '2022-02-22',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.secret}`,
+      },
+      body: JSON.stringify({
+        filter: {
+          property: 'object',
+          value: 'database',
+        },
+      }),
+    });
+
+    const data = await response.json<NotionResponse<any>>();
+
+    if (!data || !data.results) {
+      return null;
+    }
+
+    const databases = Object.fromEntries(
+      data.results.map(r => [r.title[0].text.content.toLowerCase(), r.id])
+    );
+
+    return databases;
+  }
+
+  public async getList(databaseId: string) {
+    const response = await fetch(`${this.baseURL}/databases/${databaseId}/query`, {
+      method: 'POST',
+      headers: {
         'Notion-Version': '2022-02-22',
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.secret}`,
@@ -38,7 +61,6 @@ export class NotionAPI extends DataSource {
       NotionResponse<{
         'List Name': SelectType;
         'Channel(#)': TitleType;
-        'Country Code': MultiSelectType;
       }>
     >();
 
@@ -49,15 +71,12 @@ export class NotionAPI extends DataSource {
     const list = data.results.map(r => {
       const listNameProperty = r.properties['List Name'];
       const channelProperty = r.properties['Channel(#)'];
-      const countryProperty = r.properties['Country Code'];
       const listName = listNameProperty.select.name;
       const channelName = channelProperty.title[0].text.content;
-      const countryCodes = countryProperty.multi_select.map(select => select.name);
 
       return {
         name: listName,
         hashTag: channelName,
-        countryCodes,
       };
     });
 
