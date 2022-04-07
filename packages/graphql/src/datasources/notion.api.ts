@@ -1,5 +1,10 @@
 import { DataSource } from 'apollo-datasource';
-import { NotionResponse, SelectType, TitleType } from '../interfaces/notion-response.interface';
+import {
+  MultiSelectType,
+  NotionResponse,
+  SelectType,
+  TitleType,
+} from '../interfaces/notion-response.interface';
 
 export class NotionAPI extends DataSource {
   constructor(
@@ -33,6 +38,7 @@ export class NotionAPI extends DataSource {
       NotionResponse<{
         'List Name': SelectType;
         'Channel(#)': TitleType;
+        'Country Code': MultiSelectType;
       }>
     >();
 
@@ -43,12 +49,15 @@ export class NotionAPI extends DataSource {
     const list = data.results.map(r => {
       const listNameProperty = r.properties['List Name'];
       const channelProperty = r.properties['Channel(#)'];
+      const countryProperty = r.properties['Country Code'];
       const listName = listNameProperty.select.name;
       const channelName = channelProperty.title[0].text.content;
+      const countryCodes = countryProperty.multi_select.map(select => select.name);
 
       return {
         name: listName,
         hashTag: channelName,
+        countryCodes,
       };
     });
 
