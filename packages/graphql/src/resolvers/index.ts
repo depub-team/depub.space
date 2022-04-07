@@ -57,12 +57,15 @@ interface GetUserProfileArgs {
   dtagOrAddress: string;
 }
 
+type ChannelList = {
+  name: string;
+  hashTag: string;
+  countryCodes: string[];
+};
+
 interface GetChannelsResponse {
   hashTags: ISCNTrend[];
-  list: Array<{
-    name: string;
-    hashTag: string;
-  }>;
+  list: ChannelList[];
 }
 
 const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile | null> => {
@@ -302,7 +305,7 @@ const getUserProfile = async (args: GetUserProfileArgs, ctx: Context) => {
 };
 
 const getChannels = async (_args: any, ctx: Context): Promise<GetChannelsResponse> => {
-  const getChannelsFromDurableObject = async () => {
+  const getChannelsFromDurableObject = async (): Promise<ISCNTrend[]> => {
     // get cached data
     const cachedTrendData = await ctx.env.WORKERS_GRAPHQL_CACHE.get(TREND_KEY);
 
@@ -332,7 +335,7 @@ const getChannels = async (_args: any, ctx: Context): Promise<GetChannelsRespons
     return trimmedRecords;
   };
 
-  const getListFromNotionAPI = async () => {
+  const getListFromNotionAPI = async (): Promise<ChannelList[]> => {
     // get cached data
     const cachedListData = await ctx.env.WORKERS_GRAPHQL_CACHE.get(LIST_KEY);
 

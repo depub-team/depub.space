@@ -209,6 +209,12 @@ export class IscnTxn implements DurableObject {
       const listArr = Array.from(keyList.entries());
 
       lastBatchSize = listArr.length;
+
+      // early break when there are no more keys
+      if (!lastBatchSize) {
+        break;
+      }
+
       const newLastKey = listArr[listArr.length - 1][0];
 
       if (newLastKey === lastKey) {
