@@ -1,10 +1,10 @@
-import React, { FC, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { FC, useState, useMemo, useCallback } from 'react';
 import * as Sentry from '@sentry/nextjs';
 import update from 'immutability-helper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Debug from 'debug';
 import { useWindowDimensions } from 'react-native';
-import { CompositeScreenProps } from '@react-navigation/native';
+import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { Message } from '../interfaces';
 import { useAppState, useWallet } from '../hooks';
@@ -162,16 +162,18 @@ export const WorldFeedScreen: FC<WorldFeedScreenProps> = ({ navigation }) => {
     [isLoading, isLoggedIn, profile, walletAddress]
   );
 
-  useEffect(() => {
-    // reset
-    setIsListReachedEnd(false);
-    setMessages(emptyMessages);
+  useFocusEffect(
+    useCallback(() => {
+      // reset
+      setIsListReachedEnd(false);
+      setMessages(emptyMessages);
 
-    void (async () => {
-      await fetchNewMessages(undefined, true);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      void (async () => {
+        await fetchNewMessages(undefined, true);
+      })();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  );
 
   return (
     <Layout metadata={layoutMetadata}>
