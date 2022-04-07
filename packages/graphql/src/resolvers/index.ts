@@ -305,7 +305,7 @@ const getUserProfile = async (args: GetUserProfileArgs, ctx: Context) => {
 
 const getListFromNotionAPI = async (ctx: Context, countryCode?: string): Promise<ChannelList[]> => {
   let myCountryCode = 'universal';
-  const CACHE_KEY = `${LIST_KEY}_${myCountryCode.toUpperCase()}`;
+  const CACHE_KEY = `${LIST_KEY}_${myCountryCode}`;
 
   if (countryCode) {
     myCountryCode = countryCode;
@@ -319,9 +319,14 @@ const getListFromNotionAPI = async (ctx: Context, countryCode?: string): Promise
   }
 
   const databases = await ctx.dataSources.notionAPI.getDatabases();
+  const databaseKeys = Object.keys(databases || {});
 
   if (!databases) {
     return [];
+  }
+
+  if (!databaseKeys.includes(myCountryCode)) {
+    myCountryCode = 'universal';
   }
 
   const databaseIdByCountryCode = databases[myCountryCode];
