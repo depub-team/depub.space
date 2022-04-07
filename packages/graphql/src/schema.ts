@@ -8,7 +8,7 @@ const typeDefs = gql`
     getMessage(iscnId: String!): Message
     getUser(dtagOrAddress: String!, previousId: String, limit: Int): User
     getUserProfile(dtagOrAddress: String!): Profile
-    getChannels: Channels
+    getChannels(countryCode: String): Channels
   }
 
   type Channels {
@@ -19,7 +19,6 @@ const typeDefs = gql`
   type List {
     name: String!
     hashTag: String!
-    countryCodes: [String]!
   }
 
   type HashTag {

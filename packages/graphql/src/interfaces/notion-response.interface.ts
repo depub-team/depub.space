@@ -142,6 +142,7 @@ export interface Result<P extends Properties> {
   archived: boolean;
   properties: P;
   url: string;
+  title: TextType[];
 }
 
 export interface NotionResponse<P extends Properties> {
