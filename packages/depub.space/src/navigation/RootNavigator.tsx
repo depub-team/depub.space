@@ -60,7 +60,7 @@ export const RootNavigator: FC = () => {
       }
 
       const countryCode = await getCountryCode();
-      const channels = await getChannels();
+      const channels = await getChannels(countryCode);
 
       debug('countryCode: %s', countryCode);
 
@@ -68,12 +68,7 @@ export const RootNavigator: FC = () => {
         const { hashTags, list } = channels;
 
         setHashTags(hashTags);
-        setList(
-          list.filter(
-            channel =>
-              channel.countryCodes.length === 0 || channel.countryCodes.includes(countryCode)
-          )
-        );
+        setList(list);
       }
 
       setisInitialized(true);

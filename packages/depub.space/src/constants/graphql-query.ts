@@ -63,12 +63,11 @@ export const GRAPHQL_QUERY_MESSAGES_BY_TAG = `
 `;
 
 export const GRAPHQL_QUERY_CHANNELS = `
-  query GetChannels {
-    getChannels {
+  query GetChannels($countryCode: String) {
+    getChannels(countryCode: $countryCode) {
       list {
         name
         hashTag
-        countryCodes
       }
       hashTags {
         name
