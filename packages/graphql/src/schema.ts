@@ -19,6 +19,7 @@ const typeDefs = gql`
   type List {
     name: String!
     hashTag: String!
+    countryCodes: [String]!
   }
 
   type HashTag {

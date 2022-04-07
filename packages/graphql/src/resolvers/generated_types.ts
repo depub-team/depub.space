@@ -42,6 +42,7 @@ export type HashTag = {
 
 export type List = {
   __typename?: 'List';
+  countryCodes: Array<Maybe<Scalars['String']>>;
   hashTag: Scalars['String'];
   name: Scalars['String'];
 };
@@ -257,6 +258,7 @@ export type HashTagResolvers<ContextType = Context, ParentType extends Resolvers
 };
 
 export type ListResolvers<ContextType = Context, ParentType extends ResolversParentTypes['List'] = ResolversParentTypes['List']> = {
+  countryCodes?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType>;
   hashTag?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
