@@ -1,12 +1,14 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
+import Debug from 'debug';
 import { MainNavigator } from './MainNavigator';
 import { NotFoundScreen } from '../screens/NotFoundScreen';
 import { RootStackParamList } from './RootStackParamList';
 import { PostScreen, LoadingScreen } from '../screens';
 import { useAppState } from '../hooks';
-import { getChannels } from '../utils';
+import { getChannels, getCountryCode } from '../utils';
 
+const debug = Debug('web:<RootNavigator />');
 const RootStack = createStackNavigator<RootStackParamList>();
 
 const modalScreenOptions: StackNavigationOptions = {
@@ -57,13 +59,21 @@ export const RootNavigator: FC = () => {
         return;
       }
 
+      const countryCode = await getCountryCode();
       const channels = await getChannels();
+
+      debug('countryCode: %s', countryCode);
 
       if (channels) {
         const { hashTags, list } = channels;
 
         setHashTags(hashTags);
-        setList(list);
+        setList(
+          list.filter(
+            channel =>
+              channel.countryCodes.length === 0 || channel.countryCodes.includes(countryCode)
+          )
+        );
       }
 
       setisInitialized(true);
