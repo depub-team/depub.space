@@ -68,6 +68,7 @@ export const GRAPHQL_QUERY_CHANNELS = `
       list {
         name
         hashTag
+        countryCodes
       }
       hashTags {
         name
