@@ -75,7 +75,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
     const [copyIconState, setCopyIconState] = useState<'copied' | 'normal'>('normal');
     const shareableUrl = isDev
       ? `${APP_URL}/post?id=${iscnId}/${revision}`
-      : `${APP_URL}/post/${iscnId}/${revision}`;
+      : `${APP_URL}/${iscnId}/${revision}`;
     const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
     const dayFrom = dayjs(date).fromNow();
     const [linkPreivew, setLinkPreview] = useState<LinkPreviewItem | null>(null);
