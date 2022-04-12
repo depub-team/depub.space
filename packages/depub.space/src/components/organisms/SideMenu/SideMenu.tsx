@@ -1,6 +1,7 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import {
   Avatar,
+  useToast,
   Box,
   Button,
   HStack,
@@ -8,6 +9,7 @@ import {
   ScrollView,
   Switch,
   Text,
+  useClipboard,
   Tooltip,
   useColorMode,
   VStack,
@@ -85,6 +87,8 @@ export const SideMenu: FC<SideMenuProps> = ({
   const isLogged = Boolean(walletAddress);
   const { colorMode, toggleColorMode } = useColorMode();
   const isDarkMode = colorMode === 'dark';
+  const toast = useToast();
+  const { onCopy } = useClipboard();
   const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const shortenAddress =
@@ -105,6 +109,16 @@ export const SideMenu: FC<SideMenuProps> = ({
     }),
     [handle]
   );
+
+  const copyAddress = useCallback(async () => {
+    if (walletAddress) {
+      await onCopy(walletAddress);
+
+      toast.show({
+        description: 'Copied',
+      });
+    }
+  }, [onCopy, toast, walletAddress]);
 
   const handleOnConnect = useCallback(() => {
     if (onConnectWallet) onConnectWallet();
@@ -176,7 +190,7 @@ export const SideMenu: FC<SideMenuProps> = ({
                 </Link>
                 <VStack flex={1}>
                   <Link to={toUserRoute}>
-                    <Tooltip label={displayName || ''}>
+                    <Tooltip label={displayName} openDelay={250}>
                       <Text
                         flex={1}
                         fontSize="sm"
@@ -191,7 +205,7 @@ export const SideMenu: FC<SideMenuProps> = ({
                     </Tooltip>
                   </Link>
 
-                  <Tooltip label={walletAddress || ''}>
+                  <Tooltip label="Click to copy the wallet address" openDelay={250}>
                     <Text
                       color="gray.500"
                       flex={1}
@@ -200,6 +214,8 @@ export const SideMenu: FC<SideMenuProps> = ({
                       overflow="hidden"
                       textOverflow="ellipsis"
                       whiteSpace="nowrap"
+                      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                      onPress={copyAddress}
                     >
                       {walletAddress}
                     </Text>
