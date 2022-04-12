@@ -23,6 +23,7 @@ import {
   Icon,
   IconButton,
   useColorMode,
+  useToast,
 } from 'native-base';
 import dayjs from 'dayjs';
 import Debug from 'debug';
@@ -66,13 +67,14 @@ const areEqual = (prevProps: MessageCardProps, nextProps: MessageCardProps) =>
 export const MessageCard: FC<MessageCardProps> = memo(
   ({ isLoading, message: messageItem, ...props }) => {
     const { id, from, date, profile, message = '', images = emptyImages } = messageItem;
+    const toast = useToast();
     const [contentContainerWidth, setContentContainerWidth] = useState(0);
     const { colorMode } = useColorMode();
     const navigation = useNavigation<HomeScreenNavigationProps>();
     const isDarkMode = colorMode === 'dark';
     const contentContainerRef = useRef<HTMLDivElement>(null);
     const [iscnId, revision] = id.replace(new RegExp(`^${ISCN_SCHEME}/`), '').split('/');
-    const [copyIconState, setCopyIconState] = useState<'copied' | 'normal'>('normal');
+    const [copyUrlIconState, setCopyUrlIconState] = useState<'copied' | 'normal'>('normal');
     const shareableUrl = isDev
       ? `${APP_URL}/post?id=${iscnId}/${revision}`
       : `${APP_URL}/${iscnId}/${revision}`;
@@ -87,7 +89,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
     const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>(emptyImageSizes);
     const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
     const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
-    const isCopied = copyIconState === 'copied';
+    const isCopied = copyUrlIconState === 'copied';
     const isLoaded = !isLoading;
     const profilePicSource = useMemo(
       () => (profile ? { uri: profile?.profilePic } : undefined),
@@ -106,17 +108,29 @@ export const MessageCard: FC<MessageCardProps> = memo(
       showImageModal(image, aspectRatio);
     };
 
+    const copyAddress = useCallback(async () => {
+      await onCopy(from);
+
+      toast.show({
+        description: 'Copied',
+      });
+    }, [onCopy, toast, from]);
+
     const copyUrl = useCallback(async () => {
       await onCopy(shareableUrl);
 
-      setCopyIconState('copied');
+      setCopyUrlIconState('copied');
+
+      toast.show({
+        description: 'Copied',
+      });
 
       setTimeout(() => {
-        setCopyIconState('normal');
+        setCopyUrlIconState('normal');
       }, 2000);
 
       return null;
-    }, [onCopy, shareableUrl]);
+    }, [onCopy, toast, shareableUrl]);
 
     const handleOnPress = (e: any) => {
       debug('handleOnPress(e: %O)', e);
@@ -262,7 +276,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
                     </Text>
                   ) : null}
                   <Tooltip label="Click to copy the wallet address" openDelay={250}>
-                    <Text color="gray.400" fontSize="sm">
+                    {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
+                    <Text color="gray.400" fontSize="sm" onPress={copyAddress}>
                       {profile?.dtag ? `(${shortenAddress})` : shortenAddress}
                     </Text>
                   </Tooltip>
