@@ -1,5 +1,6 @@
 import { Text, Stack, Heading, Image, AspectRatio, IBoxProps, Link, ITextProps } from 'native-base';
-import React, { FC, useMemo } from 'react';
+import React, { FC, useEffect } from 'react';
+import { ImageSourcePropType } from 'react-native';
 import { LinkPreviewItem } from '../../../interfaces';
 
 const textOverflowStyle: ITextProps = {
@@ -14,18 +15,39 @@ export interface LinkPreviewProps extends IBoxProps {
   preview: LinkPreviewItem;
 }
 
+const preloadImage = async (src: string): Promise<string | undefined> =>
+  new Promise((resolve, reject) => {
+    const imageElement = document.createElement('img');
+
+    imageElement.addEventListener('load', () => {
+      resolve(src);
+    });
+
+    imageElement.addEventListener('error', () => {
+      reject(new Error('Image failed to load'));
+    });
+
+    imageElement.src = src;
+  });
+
 export const LinkPreview: FC<LinkPreviewProps> = ({ preview }) => {
-  const imageSource = useMemo(() => {
-    let imageSourceURI: { uri: string } | undefined;
+  const [imageSource, setImageSource] = React.useState<ImageSourcePropType | undefined>(undefined);
 
-    if (preview && preview.images) {
-      imageSourceURI = {
-        uri: preview.images[0],
-      };
-    }
+  useEffect(() => {
+    void (async () => {
+      if (preview && preview.images) {
+        try {
+          const preloadedImage = await preloadImage(preview.images[0]);
 
-    return imageSourceURI;
+          setImageSource({ uri: preloadedImage });
+        } catch {
+          // do nothing
+        }
+      }
+    })();
   }, [preview]);
+
+  useEffect(() => {}, [preview]);
 
   return (
     <Link display="flex" flex="1" href={preview.url} isExternal>

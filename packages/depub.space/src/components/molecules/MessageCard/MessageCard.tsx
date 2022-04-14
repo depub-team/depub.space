@@ -293,8 +293,6 @@ export const MessageCard: FC<MessageCardProps> = memo(
               </Skeleton.Text>
             </Pressable>
 
-            {linkPreivew ? <LinkPreview flex={1} preview={linkPreivew} /> : null}
-
             {images.length ? (
               <VStack flex={1} space={2}>
                 {images.map((image, index) => {
@@ -321,6 +319,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
                 })}
               </VStack>
             ) : null}
+
+            {linkPreivew ? <LinkPreview flex={1} preview={linkPreivew} /> : null}
           </VStack>
 
           <HStack alignItems="center" justifyContent="space-between" space={4}>
