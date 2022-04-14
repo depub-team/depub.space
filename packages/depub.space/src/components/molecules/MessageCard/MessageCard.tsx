@@ -286,7 +286,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
             </Skeleton.Text>
           </HStack>
 
-          <VStack ref={contentContainerRef} flex={1} space={4}>
+          <VStack ref={contentContainerRef} space={4}>
             <Pressable onPress={handleOnPress}>
               <Skeleton.Text isLoaded={isLoaded} lines={2} space={2}>
                 <MessageContent content={message} />
@@ -294,7 +294,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
             </Pressable>
 
             {images.length ? (
-              <VStack flex={1} space={2}>
+              <VStack space={2}>
                 {images.map((image, index) => {
                   const aspectRatio = imageSizes[index]
                     ? imageSizes[index][0] / imageSizes[index][1]
