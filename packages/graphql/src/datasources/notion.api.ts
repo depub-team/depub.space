@@ -2,11 +2,7 @@ import { DataSource } from 'apollo-datasource';
 import { NotionResponse, SelectType, TitleType } from '../interfaces/notion-response.interface';
 
 export class NotionAPI extends DataSource {
-  constructor(
-    private readonly baseURL: string,
-    private readonly secret: string,
-    private readonly databaseId: string
-  ) {
+  constructor(private readonly baseURL: string, private readonly secret: string) {
     super();
   }
 

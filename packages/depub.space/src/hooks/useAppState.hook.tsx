@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import React, {
   useMemo,
   createContext,
@@ -6,29 +7,54 @@ import React, {
   useContext,
   useEffect,
   useReducer,
+  useCallback,
 } from 'react';
 import update from 'immutability-helper';
+import { useNavigation } from '@react-navigation/native';
 import Debug from 'debug';
-import type { DesmosProfile, HashTag, List } from '../interfaces';
+import type { HomeScreenNavigationProps } from '../navigation/MainStackParamList';
+
+import type { ISCNCreateRawLog, DesmosProfile, HashTag, List } from '../interfaces';
 import { useAlert } from '../components/molecules/Alert';
 import { NoBalanceModal } from '../components/organisms/NoBalanceModal';
 import { useWallet } from './useWallet.hook';
-import { getUserByDTagOrAddress } from '../utils';
+import {
+  dataUrlToFile,
+  postMessage,
+  getUserByDTagOrAddress,
+  getLikecoinAddressByProfile,
+  TwitterAccessToken,
+} from '../utils';
 import { getLikeCoinBalance } from '../utils/likecoin';
+import * as twitter from '../utils/twitter';
 import { LoadingModal } from '../components/organisms/LoadingModal';
 import { ImageModal } from '../components/organisms/ImageModal';
+import { MessageFormType } from '../components/molecules/MessageComposer';
+import { MessageComposerModal } from '../components/organisms/MessageComposerModal';
+import { PostedMessageModal } from '../components/organisms/PostedMessageModal';
 
 const debug = Debug('web:useAppState');
+
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 
 export class AppStateError extends Error {}
 
 const FunctionNever = null as never;
 
+interface PostedMessage {
+  userHandle: string;
+  twitterUrl?: string;
+}
 export interface AppStateContextProps {
   isLoadingModalOpen: boolean;
   isImageModalOpen: boolean;
-  isNoBalanceModalShow: boolean;
+  isNoBalanceModalOpen: boolean;
+  isPostSuccessfulModalOpen: boolean;
+  isMessageComposerModalOpen: boolean;
+  twitterAccessToken: TwitterAccessToken | null;
   profile: DesmosProfile | null;
+  postedMessage: PostedMessage | null; // new posted message object
   list: List[];
   image: string | null; // image modal
   imageAspectRatio: number | null; // image modal
@@ -39,14 +65,22 @@ export interface AppStateContextProps {
   closeLoading: () => void;
   showImageModal: (image: string, aspectRatio: number) => void;
   closeImageModal: () => void;
+  showMessageComposerModal: () => void;
+  closeMessageComposerModal: () => void;
+  showPostSuccessfulModal: (postedMessage: PostedMessage) => void;
+  closePostSuccessfulModal: () => void;
 }
 
 const initialState: AppStateContextProps = {
   list: [],
   hashTags: [],
+  twitterAccessToken: null,
   isImageModalOpen: false,
   isLoadingModalOpen: false,
-  isNoBalanceModalShow: false,
+  isPostSuccessfulModalOpen: false,
+  isNoBalanceModalOpen: false,
+  isMessageComposerModalOpen: false,
+  postedMessage: null,
   image: null,
   imageAspectRatio: null,
   profile: null,
@@ -56,6 +90,10 @@ const initialState: AppStateContextProps = {
   closeLoading: FunctionNever,
   showImageModal: FunctionNever,
   closeImageModal: FunctionNever,
+  showMessageComposerModal: FunctionNever,
+  closeMessageComposerModal: FunctionNever,
+  showPostSuccessfulModal: FunctionNever,
+  closePostSuccessfulModal: FunctionNever,
 };
 
 export const AppStateContext = createContext<AppStateContextProps>(initialState);
@@ -67,6 +105,9 @@ const enum ActionType {
   SET_IS_LOADING_MODAL_OPEN = 'SET_IS_LOADING_MODAL_OPEN',
   SET_IS_IMAGE_MODAL_OPEN = 'SET_IS_IMAGE_MODAL_OPEN',
   SET_NO_BALANCE_MODAL_SHOW = 'SET_NO_BALANCE_MODAL_SHOW',
+  SET_IS_MESSAGE_COMPOSER_MODAL_OPEN = 'SET_IS_MESSAGE_COMPOSER_MODAL_OPEN',
+  SET_IS_POST_SUCCESSFUL_MODAL_OPEN = 'SET_IS_POST_SUCCESSFUL_MODAL_OPEN',
+  SET_TWITTER_ACCESS_TOKEN = 'SET_TWITTER_ACCESS_TOKEN',
 }
 
 type Action =
@@ -80,7 +121,14 @@ type Action =
       aspectRatio: number | null;
     }
   | { type: ActionType.SET_IS_LOADING_MODAL_OPEN; isLoadingModalOpen: boolean }
-  | { type: ActionType.SET_NO_BALANCE_MODAL_SHOW; isNoBalanceModalShow: boolean };
+  | { type: ActionType.SET_NO_BALANCE_MODAL_SHOW; isNoBalanceModalOpen: boolean }
+  | { type: ActionType.SET_IS_MESSAGE_COMPOSER_MODAL_OPEN; isMessageComposerModalOpen: boolean }
+  | { type: ActionType.SET_TWITTER_ACCESS_TOKEN; twitterAccessToken: TwitterAccessToken | null }
+  | {
+      type: ActionType.SET_IS_POST_SUCCESSFUL_MODAL_OPEN;
+      isPostSuccessfulModalOpen: boolean;
+      postedMessage: PostedMessage | null;
+    };
 
 const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
   debug('reducer: %O', action);
@@ -110,7 +158,20 @@ const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
       });
     case ActionType.SET_NO_BALANCE_MODAL_SHOW:
       return update(state, {
-        isNoBalanceModalShow: { $set: action.isNoBalanceModalShow },
+        isNoBalanceModalOpen: { $set: action.isNoBalanceModalOpen },
+      });
+    case ActionType.SET_IS_MESSAGE_COMPOSER_MODAL_OPEN:
+      return update(state, {
+        isMessageComposerModalOpen: { $set: action.isMessageComposerModalOpen },
+      });
+    case ActionType.SET_TWITTER_ACCESS_TOKEN:
+      return update(state, {
+        twitterAccessToken: { $set: action.twitterAccessToken },
+      });
+    case ActionType.SET_IS_POST_SUCCESSFUL_MODAL_OPEN:
+      return update(state, {
+        isPostSuccessfulModalOpen: { $set: action.isPostSuccessfulModalOpen },
+        postedMessage: { $set: action.postedMessage },
       });
     default:
       throw new AppStateError(`Cannot match action type ${(action as any).type}`);
@@ -134,11 +195,37 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
       aspectRatio,
     });
   },
+  showMessageComposerModal: () => {
+    dispatch({
+      type: ActionType.SET_IS_MESSAGE_COMPOSER_MODAL_OPEN,
+      isMessageComposerModalOpen: true,
+    });
+  },
+  closeMessageComposerModal: () => {
+    dispatch({
+      type: ActionType.SET_IS_MESSAGE_COMPOSER_MODAL_OPEN,
+      isMessageComposerModalOpen: false,
+    });
+  },
   showNoBalanceModal: () => {
-    dispatch({ type: ActionType.SET_NO_BALANCE_MODAL_SHOW, isNoBalanceModalShow: true });
+    dispatch({ type: ActionType.SET_NO_BALANCE_MODAL_SHOW, isNoBalanceModalOpen: true });
   },
   closeNoBalanceModal: () => {
-    dispatch({ type: ActionType.SET_NO_BALANCE_MODAL_SHOW, isNoBalanceModalShow: false });
+    dispatch({ type: ActionType.SET_NO_BALANCE_MODAL_SHOW, isNoBalanceModalOpen: false });
+  },
+  showPostSuccessfulModal: (postedMessage: PostedMessage) => {
+    dispatch({
+      type: ActionType.SET_IS_POST_SUCCESSFUL_MODAL_OPEN,
+      isPostSuccessfulModalOpen: true,
+      postedMessage,
+    });
+  },
+  closePostSuccessfulModal: () => {
+    dispatch({
+      type: ActionType.SET_IS_POST_SUCCESSFUL_MODAL_OPEN,
+      isPostSuccessfulModalOpen: false,
+      postedMessage: null,
+    });
   },
   setList: (list: List[]) => {
     dispatch({ type: ActionType.SET_LIST, list });
@@ -158,17 +245,149 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
 
 export const AppStateProvider: FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const navigation = useNavigation<HomeScreenNavigationProps>();
   const alert = useAlert();
-  const { walletAddress, error: connectError } = useWallet();
+  const { offlineSigner, walletAddress, error: connectError } = useWallet();
   const actions = useAppActions(dispatch);
+  const likecoinAddress = state.profile && getLikecoinAddressByProfile(state.profile);
+  const userHandle = likecoinAddress && state.profile?.dtag ? state.profile.dtag : walletAddress;
   const imageModalSoure = useMemo(
     () => (state.image ? { uri: state.image } : undefined),
     [state.image]
   );
 
+  const handleOnTwitterLogout = useCallback(() => {
+    if (!likecoinAddress) {
+      return;
+    }
+
+    actions.showLoading();
+
+    localStorage.removeItem('twitterAccessToken');
+
+    dispatch({
+      type: ActionType.SET_TWITTER_ACCESS_TOKEN,
+      twitterAccessToken: null,
+    });
+
+    actions.closeLoading();
+  }, [likecoinAddress, actions]);
+
+  const handleOnMessageComposerModalClose = useCallback(() => {
+    actions.closeMessageComposerModal();
+  }, [actions]);
+
+  const handleOnTwitterLogin = useCallback(() => {
+    if (!likecoinAddress) {
+      return;
+    }
+
+    actions.showLoading();
+
+    try {
+      const loginUrl = twitter.getLoginUrl(likecoinAddress);
+
+      window.open(
+        loginUrl,
+        'twitter',
+        'status=1,toolbar=no,location=0,status=no,titlebar=no,menubar=no,width=640,height=480'
+      );
+    } catch (error) {
+      debug('handleOnTwitterLogin() -> error: %O', error);
+    }
+
+    actions.closeLoading();
+  }, [actions, likecoinAddress]);
+
+  const postAndUpload = useCallback(
+    async (data: MessageFormType, image?: string | null) => {
+      let file: File | undefined;
+
+      if (image) {
+        file = await dataUrlToFile(image, 'upload');
+      }
+
+      if (!offlineSigner) {
+        alert.show({
+          title: 'No valid signer, please connect wallet',
+          status: 'error',
+        });
+
+        return;
+      }
+
+      // show loading
+      actions.showLoading();
+
+      try {
+        const txn = await postMessage(offlineSigner, data.message, file && [file]);
+        const rawLog = JSON.parse(txn.rawLog || '[]') as ISCNCreateRawLog[];
+        const iscnRecord = rawLog[0].events.find(event => event.type === 'iscn_record');
+        let twitterUrl: string | undefined;
+        let newMessageUrl: string | undefined;
+
+        if (iscnRecord?.attributes) {
+          const iscnId = iscnRecord.attributes.find(attribute => attribute.key === 'iscn_id');
+
+          if (iscnId) {
+            newMessageUrl = `${APP_URL}/${iscnId.value.replace('iscn://likecoin-chain/', '')}`;
+          }
+        }
+
+        if (!newMessageUrl) {
+          throw new Error('Failed to get new message url');
+        }
+
+        const textWithLink = `${data.message}\n\n${newMessageUrl}`;
+
+        // posting to Twitter
+        if (state.twitterAccessToken) {
+          twitterUrl = await twitter.postTweet(state.twitterAccessToken, textWithLink);
+        }
+
+        actions.showPostSuccessfulModal({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          userHandle: userHandle!,
+          twitterUrl,
+        });
+
+        actions.closeMessageComposerModal();
+        actions.closeLoading();
+      } catch (ex) {
+        debug('postMessage() -> error: %O', ex);
+        let errorMessage = 'Failed to post message! please try again later.';
+
+        if (/^Account does not exist on chain/.test(ex.message)) {
+          errorMessage = ex.message;
+        } else if (ex.message === 'Request rejected') {
+          errorMessage = ex.message;
+        }
+
+        actions.closeLoading();
+
+        alert.show({
+          title: errorMessage,
+          status: 'error',
+        });
+
+        Sentry.captureException(ex);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [offlineSigner, userHandle]
+  );
+
+  const handleCheckoutPostedMessage = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    navigation.navigate('User', { account: userHandle! });
+
+    actions.closePostSuccessfulModal();
+  }, [actions, navigation, userHandle]);
+
   useEffect(() => {
     let showModalTimeout = 0;
 
+    // get user profile and balance
     void (async () => {
       if (walletAddress) {
         const user = await getUserByDTagOrAddress(walletAddress);
@@ -206,10 +425,56 @@ export const AppStateProvider: FC = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectError]);
 
+  useEffect(() => {
+    const handleLocalStorageChange = async () => {
+      try {
+        // setup Twitter oauth access token
+        const encryptedTwitterAccessToken = localStorage.getItem('twitterAccessToken');
+
+        if (encryptedTwitterAccessToken) {
+          const twitterAccessToken = JSON.parse(
+            window.atob(encryptedTwitterAccessToken)
+          ) as TwitterAccessToken;
+
+          if (
+            twitterAccessToken &&
+            twitterAccessToken.access_token &&
+            Date.parse(twitterAccessToken.expires_at.toString()) > Date.now()
+          ) {
+            dispatch({
+              type: ActionType.SET_TWITTER_ACCESS_TOKEN,
+              twitterAccessToken,
+            });
+          }
+        } else if (walletAddress) {
+          const twitterAccessToken = await twitter.getAccessTokenByWalletAddress(walletAddress);
+
+          if (twitterAccessToken) {
+            dispatch({
+              type: ActionType.SET_TWITTER_ACCESS_TOKEN,
+              twitterAccessToken,
+            });
+          }
+        }
+      } catch {
+        // do nothing
+      }
+    };
+
+    void handleLocalStorageChange();
+
+    window.addEventListener('storage', handleLocalStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleLocalStorageChange);
+    };
+  }, [walletAddress]);
+
   const contextValue = useMemo(
     () => ({
       ...state,
       ...actions,
+      postAndUpload,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [state]
@@ -225,7 +490,26 @@ export const AppStateProvider: FC = ({ children }) => {
         onClose={actions.closeImageModal}
       />
       <LoadingModal isOpen={state.isLoadingModalOpen} />
-      <NoBalanceModal isOpen={state.isNoBalanceModalShow} onClose={actions.closeNoBalanceModal} />
+      <NoBalanceModal isOpen={state.isNoBalanceModalOpen} onClose={actions.closeNoBalanceModal} />
+      <MessageComposerModal
+        isLoading={state.isLoadingModalOpen}
+        isOpen={state.isMessageComposerModalOpen}
+        isTwitterLoggedIn={Boolean(state.twitterAccessToken)}
+        profile={state.profile}
+        walletAddress={walletAddress}
+        onClose={handleOnMessageComposerModalClose}
+        onSubmit={postAndUpload}
+        onTwitterLogin={handleOnTwitterLogin}
+        onTwitterLogout={handleOnTwitterLogout}
+      />
+      {state.isPostSuccessfulModalOpen && state.postedMessage && (
+        <PostedMessageModal
+          isOpen={state.isPostSuccessfulModalOpen}
+          twitterUrl={state.postedMessage?.twitterUrl || 'abc'}
+          onCheckout={handleCheckoutPostedMessage}
+          onClose={actions.closePostSuccessfulModal}
+        />
+      )}
     </AppStateContext.Provider>
   );
 };

@@ -16,6 +16,7 @@ import {
   WarningOutlineIcon,
   IconButton,
   Icon,
+  Switch,
   Tooltip,
   Collapse,
   Avatar,
@@ -54,23 +55,28 @@ export interface MessageComposerProps extends IStackProps {
   defaultValue?: string;
   profile: DesmosProfile | null;
   walletAddress: string | null;
+  isCollapsed?: boolean;
+  isTwitterLoggedIn?: boolean;
   onFocus?: () => void;
-  onBlur?: () => void;
+  onTwitterLogin?: () => void;
+  onTwitterLogout?: () => void;
   onSubmit?: (data: MessageFormType, image?: string | null) => Promise<void> | void;
 }
 
 export const MessageComposer: FC<MessageComposerProps> = ({
   onSubmit,
-  onBlur,
-  onFocus,
   defaultValue,
   isLoading,
   walletAddress,
   profile,
+  onTwitterLogin,
+  onTwitterLogout,
+  isTwitterLoggedIn = false,
+  isCollapsed = false,
+  onFocus,
   ...props
 }) => {
   const [image, setImage] = useState<string | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(true);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [totalLines, setTotalLines] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -129,18 +135,6 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [image, onSubmit]);
 
-  const handleOnFocus = useCallback(() => {
-    setIsCollapsed(false);
-    if (onFocus) onFocus();
-  }, [onFocus]);
-
-  const handleOnBlur = useCallback(() => {
-    blurTimeout.current = setTimeout(() => {
-      setIsCollapsed(true);
-      if (onBlur) onBlur();
-    }, 500) as unknown as number;
-  }, [onBlur]);
-
   const textAreaStyle = useAnimatedStyle(() => {
     const lineHeight = isCollapsed ? 1 : 4;
 
@@ -150,6 +144,12 @@ export const MessageComposer: FC<MessageComposerProps> = ({
       }),
     };
   }, [isCollapsed]);
+
+  const handleTwitterToggle = useCallback(() => {
+    if (isTwitterLoggedIn) {
+      if (onTwitterLogout) onTwitterLogout();
+    } else if (onTwitterLogin) onTwitterLogin();
+  }, [isTwitterLoggedIn, onTwitterLogout, onTwitterLogin]);
 
   useEffect(() => {
     // reset state
@@ -213,9 +213,8 @@ export const MessageComposer: FC<MessageComposerProps> = ({
                     totalLines={totalLines}
                     value={value}
                     whiteSpace={isCollapsed ? 'nowrap' : 'normal'}
-                    onBlur={handleOnBlur}
                     onChangeText={onChange}
-                    onFocus={handleOnFocus}
+                    onFocus={onFocus}
                     // eslint-disable-next-line @typescript-eslint/no-misused-promises
                     onSubmitEditing={handleOnSubmit}
                   />
@@ -238,11 +237,22 @@ export const MessageComposer: FC<MessageComposerProps> = ({
             <IconButton
               _icon={iconColor}
               borderRadius="full"
+              disabled={isLoading}
               icon={<Icon as={Ionicons} name="image-outline" />}
               // eslint-disable-next-line @typescript-eslint/no-misused-promises
               onPress={pickImage}
             />
           </Tooltip>
+
+          <HStack alignItems="center" flex={1} space={1}>
+            <Switch
+              disabled={isLoading}
+              size="sm"
+              value={isTwitterLoggedIn}
+              onToggle={handleTwitterToggle}
+            />
+            <Text fontWeight="bold">Post on Twitter</Text>
+          </HStack>
 
           <Text color="gray.400" fontSize="xs" ml="auto" textAlign="right">
             {(messageText || '').length} / {MAX_CHAR_LIMIT}
@@ -261,4 +271,4 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   );
 };
 
-(MessageComposer as any).whyDidYouRender = true;
+// (MessageComposer as any).whyDidYouRender = true;

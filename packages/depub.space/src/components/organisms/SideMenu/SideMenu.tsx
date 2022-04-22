@@ -157,11 +157,11 @@ export const SideMenu: FC<SideMenuProps> = ({
             <SideMenuItem
               icon={<MaterialIcons />}
               iconName="nightlight-round"
-              onPress={() => toggleColorMode()}
+              onPress={toggleColorMode}
             >
               <HStack alignItems="center" flex={1} justifyContent="space-between">
                 <Text fontWeight="bold">Night Mode</Text>
-                <Switch isChecked={isDarkMode} size="md" onToggle={() => toggleColorMode()} />
+                <Switch isChecked={isDarkMode} size="md" onToggle={toggleColorMode} />
               </HStack>
             </SideMenuItem>
           </VStack>
