@@ -426,10 +426,19 @@ export const AppStateProvider: FC = ({ children }) => {
   }, [connectError]);
 
   useEffect(() => {
-    const handleLocalStorageChange = async () => {
+    const handleLocalStorageChange = async (event?: StorageEvent) => {
       try {
+        if (event?.newValue === null) {
+          dispatch({
+            type: ActionType.SET_TWITTER_ACCESS_TOKEN,
+            twitterAccessToken: null,
+          });
+
+          return;
+        }
+
         // setup Twitter oauth access token
-        const encryptedTwitterAccessToken = localStorage.getItem('twitterAccessToken');
+        const encryptedTwitterAccessToken = window.localStorage.getItem('twitterAccessToken');
 
         if (encryptedTwitterAccessToken) {
           const twitterAccessToken = JSON.parse(
@@ -445,11 +454,19 @@ export const AppStateProvider: FC = ({ children }) => {
               type: ActionType.SET_TWITTER_ACCESS_TOKEN,
               twitterAccessToken,
             });
+
+            return;
           }
-        } else if (walletAddress) {
+        }
+
+        if (walletAddress) {
           const twitterAccessToken = await twitter.getAccessTokenByWalletAddress(walletAddress);
 
           if (twitterAccessToken) {
+            localStorage.setItem(
+              'twitterAccessToken',
+              window.btoa(JSON.stringify(twitterAccessToken))
+            );
             dispatch({
               type: ActionType.SET_TWITTER_ACCESS_TOKEN,
               twitterAccessToken,
