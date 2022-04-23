@@ -105,6 +105,15 @@ export const theme = extendTheme({
         color: 'primary.500',
       },
     },
+    Modal: {
+      defaultProps: {
+        _backdrop: {
+          _dark: {
+            opacity: 0.85,
+          },
+        },
+      },
+    },
     ModalContent: {
       baseStyle: {
         borderWidth: 1,

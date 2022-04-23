@@ -426,7 +426,7 @@ export const AppStateProvider: FC = ({ children }) => {
   }, [connectError]);
 
   useEffect(() => {
-    const handleLocalStorageChange = async (event?: StorageEvent) => {
+    const handleLocalStorageChange = (event?: StorageEvent) => {
       try {
         if (event?.newValue === null) {
           dispatch({
@@ -438,7 +438,8 @@ export const AppStateProvider: FC = ({ children }) => {
         }
 
         // setup Twitter oauth access token
-        const encryptedTwitterAccessToken = window.localStorage.getItem('twitterAccessToken');
+        const encryptedTwitterAccessToken =
+          event?.newValue || window.localStorage.getItem('twitterAccessToken');
 
         if (encryptedTwitterAccessToken) {
           const twitterAccessToken = JSON.parse(
@@ -450,23 +451,6 @@ export const AppStateProvider: FC = ({ children }) => {
             twitterAccessToken.access_token &&
             Date.parse(twitterAccessToken.expires_at.toString()) > Date.now()
           ) {
-            dispatch({
-              type: ActionType.SET_TWITTER_ACCESS_TOKEN,
-              twitterAccessToken,
-            });
-
-            return;
-          }
-        }
-
-        if (walletAddress) {
-          const twitterAccessToken = await twitter.getAccessTokenByWalletAddress(walletAddress);
-
-          if (twitterAccessToken) {
-            localStorage.setItem(
-              'twitterAccessToken',
-              window.btoa(JSON.stringify(twitterAccessToken))
-            );
             dispatch({
               type: ActionType.SET_TWITTER_ACCESS_TOKEN,
               twitterAccessToken,
@@ -522,7 +506,7 @@ export const AppStateProvider: FC = ({ children }) => {
       {state.isPostSuccessfulModalOpen && state.postedMessage && (
         <PostedMessageModal
           isOpen={state.isPostSuccessfulModalOpen}
-          twitterUrl={state.postedMessage?.twitterUrl || 'abc'}
+          twitterUrl={state.postedMessage?.twitterUrl}
           onCheckout={handleCheckoutPostedMessage}
           onClose={actions.closePostSuccessfulModal}
         />
