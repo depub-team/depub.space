@@ -1,0 +1,26 @@
+name = "oauth-staging"
+type = "javascript"
+
+account_id = '35641a6e50a31e745078ec7a010c2a6f'
+# route = ''
+# zone_id = ''
+
+compatibility_flags = []
+workers_dev = true
+compatibility_date = "2022-02-04"
+
+[build]
+command = "yarn build"
+
+[build.upload]
+format = "modules"
+main = "./index.mjs"
+
+[[migrations]]
+tag = "v1"
+
+[miniflare]
+
+# Override values for `--env production` usage
+[env.prod]
+name = "oauth"
