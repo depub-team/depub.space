@@ -61,6 +61,7 @@ export const getLikecoinAddressByProfile = (profile: DesmosProfile) => {
 
   return likecoinAddress;
 };
+
 export class DesmosAPI extends DataSource {
   constructor(private baseURL: string) {
     super();
@@ -109,9 +110,9 @@ export class DesmosAPI extends DataSource {
     });
     const data = await response.json<any>();
     const profile = data.data.profile[0];
-    const likecoinAddress = getLikecoinAddressByProfile(profile);
 
     if (profile) {
+      const likecoinAddress = getLikecoinAddressByProfile(profile);
       const profileWithId = {
         id: likecoinAddress || profile.address,
         ...profile,

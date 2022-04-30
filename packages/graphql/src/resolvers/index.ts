@@ -123,9 +123,11 @@ const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile 
 
 const getUser = async (account: string, ctx: Context) => {
   const profile = await getProfile(account, ctx);
+  const address = profile ? profile.id : account;
 
   return {
     id: account,
+    address,
     profile,
   };
 };

@@ -124,6 +124,7 @@ export type QueryMessagesByMentionedArgs = {
 
 export type User = {
   __typename?: 'User';
+  address: Scalars['String'];
   id: Scalars['ID'];
   messages?: Maybe<Array<Maybe<Message>>>;
   profile?: Maybe<Profile>;
@@ -301,6 +302,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 };
 
 export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+  address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<UserMessagesArgs>>;
   profile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType>;
