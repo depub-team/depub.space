@@ -37,6 +37,7 @@ const typeDefs = gql`
 
   type User {
     id: ID! # wallet address
+    address: String!
     profile: Profile
     messages(previousId: String, limit: Int): [Message]
   }

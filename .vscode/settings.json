@@ -1,6 +1,7 @@
 {
   "cSpell.words": [
     "Arweave",
+    "Bech",
     "bignumber",
     "cosmjs",
     "cosmwasm",
@@ -35,5 +36,5 @@
     "./packages/depub.space",
     "./packages/theme"
   ],
-  "jestrunner.configPath": "jest.config.json"
+  "jestrunner.configPath": "jest.config.js"
 }
