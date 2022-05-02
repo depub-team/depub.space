@@ -27,7 +27,7 @@ describe('messageSanitizer', () => {
       const result = replaceTagToAnchor(test);
 
       expect(result).toBe(
-        'ABC <a href="/tags?name=xyz">#xyz</a> XYZ <a href="/tags?name=abc">#abc</a>'
+        'ABC <a href="/hashtag/xyz">#xyz</a> XYZ <a href="/hashtag/abc">#abc</a>'
       );
     });
 
@@ -36,7 +36,7 @@ describe('messageSanitizer', () => {
       const result = replaceTagToAnchor(test);
 
       expect(result).toBe(
-        'ABC <a href="/tags?name=xyz">#xyz</a> XYZ <a href="/tags?name=abc">#abc</a> <a href="/tags?name=中文">#中文</a> <a href="/tags?name=中">#中</a>_文'
+        'ABC <a href="/hashtag/xyz">#xyz</a> XYZ <a href="/hashtag/abc">#abc</a> <a href="/hashtag/中文">#中文</a> <a href="/hashtag/中_文">#中_文</a>'
       );
     });
 
@@ -45,7 +45,7 @@ describe('messageSanitizer', () => {
       const result = replaceTagToAnchor(test);
 
       expect(result).toBe(
-        'ABC <a href="/tags?name=xyz">#xyz</a> XYZ <a href="/tags?name=abc2">#abc2</a> <a href="/tags?name=中文">#中文</a> <a href="/tags?name=中">#中</a>_文'
+        'ABC <a href="/hashtag/xyz">#xyz</a> XYZ <a href="/hashtag/abc2">#abc2</a> <a href="/hashtag/中文">#中文</a> <a href="/hashtag/中_文">#中_文</a>'
       );
     });
   });
