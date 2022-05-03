@@ -18,8 +18,7 @@ const createServer = (graphQLOptions: GqlHandlerOptions): ApolloServer => {
       desmosAPI: new DesmosAPI(env.DESMOS_GRAPHQL_ENDPOINT),
       notionAPI: new NotionAPI(
         env.NOTION_API_ENDPOINT,
-        env.NOTION_API_SECRET,
-        env.NOTION_DATABASE_ID
+        env.NOTION_API_SECRET
       ),
     }),
     ...graphQLOptions,
