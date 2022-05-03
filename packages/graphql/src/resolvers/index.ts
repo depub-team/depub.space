@@ -4,6 +4,7 @@ import { Context } from '../context';
 import { InputMaybe, Message, Profile, Resolvers } from './generated_types';
 import { KVStore } from '../kv-store';
 import { DesmosProfileWithId, ISCNTrend, ISCNRecord } from '../interfaces';
+import { toStars } from '../utils/to-stars';
 
 const PAGING_LIMIT = 12;
 const PROFILE_KEY = 'profile';
@@ -114,6 +115,10 @@ const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile 
 const getUser = async (account: string, ctx: Context) => {
   const profile = await getProfile(account, ctx);
   const address = profile ? profile.id : account;
+
+  const starsAddress = toStars(address);
+
+  await ctx.dataSources.stargazeAPI.getNFTs(starsAddress);
 
   return {
     id: account,

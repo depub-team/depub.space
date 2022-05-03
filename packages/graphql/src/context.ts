@@ -1,5 +1,5 @@
 import { Bindings } from '../bindings';
-import { DesmosAPI, ISCNQueryAPI, NotionAPI } from './datasources';
+import { DesmosAPI, ISCNQueryAPI, NotionAPI, StargazeAPI } from './datasources';
 
 type ContextFunctionParams = {
   request: Request;
@@ -11,6 +11,7 @@ type Context = {
     iscnQueryAPI: ISCNQueryAPI;
     desmosAPI: DesmosAPI;
     notionAPI: NotionAPI;
+    stargazeAPI: StargazeAPI;
   };
 };
 
