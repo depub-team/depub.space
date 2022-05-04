@@ -1,3 +1,4 @@
+export * from './change-address-prefix';
 export * from './get-author-address.util';
 export * from './set-cors.util';
 export * from './to-cosmos.util';

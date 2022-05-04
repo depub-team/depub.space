@@ -6,7 +6,23 @@ import { getUser } from './get-user.resolver';
 import { getMessages } from './get-messages.resolver';
 import { getMessage } from './get-message.resolver';
 import { setProfilePicture } from './set-profile-picture.resolver';
-import { toLike } from '../utils';
+import { toLike, changeAddressPrefix } from '../utils';
+import { Context } from '../context';
+import { NFTAsset } from '../interfaces/nft-asset.interface';
+
+const getStargazeNFTsByOwner = async (owner: string, ctx: Context): Promise<NFTAsset[]> => {
+  const starsAddress = changeAddressPrefix(owner, 'stars');
+  const stargazeAssets = await ctx.dataSources.stargazeAPI.getNFTsByOwner(starsAddress);
+
+  return stargazeAssets;
+};
+
+const getOmniflixNFTsByOwner = async (owner: string, ctx: Context): Promise<NFTAsset[]> => {
+  const omniflixAddress = changeAddressPrefix(owner, 'omniflix');
+  const omniflixAssets = await ctx.dataSources.omniflixAPI.getNFTsByOwner(omniflixAddress);
+
+  return omniflixAssets;
+};
 
 const resolvers: Resolvers = {
   Query: {
@@ -18,6 +34,8 @@ const resolvers: Resolvers = {
     getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
     getMessage: (_parent, args, ctx) => getMessage(args, ctx),
     getChannels: (_parent, args, ctx) => getChannels(args, ctx),
+    getOmniflixNFTsByOwner: (_parent, args, ctx) => getOmniflixNFTsByOwner(args.owner, ctx),
+    getStargazeNFTsByOwner: (_parent, args, ctx) => getStargazeNFTsByOwner(args.owner, ctx),
   },
   Mutation: {
     setProfilePicture: (_parent, args, ctx) => setProfilePicture(args, ctx),

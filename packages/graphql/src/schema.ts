@@ -10,6 +10,16 @@ const typeDefs = gql`
     getUserProfile(address: String!): UserProfile
     getDesmosProfile(dtagOrAddress: String!): UserProfile
     getChannels(countryCode: String): Channels
+    getStargazeNFTsByOwner(owner: String!): [NFTAsset]
+    getOmniflixNFTsByOwner(owner: String!): [NFTAsset]
+  }
+
+  type NFTAsset {
+    address: String!
+    name: String!
+    media: String!
+    mediaType: String!
+    tokenId: String!
   }
 
   type Mutation {

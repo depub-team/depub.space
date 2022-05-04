@@ -67,11 +67,22 @@ export type MutationSetProfilePictureArgs = {
   picture: Scalars['String'];
 };
 
+export type NftAsset = {
+  __typename?: 'NFTAsset';
+  address: Scalars['String'];
+  media: Scalars['String'];
+  mediaType: Scalars['String'];
+  name: Scalars['String'];
+  tokenId: Scalars['String'];
+};
+
 export type Query = {
   __typename?: 'Query';
   getChannels?: Maybe<Channels>;
   getDesmosProfile?: Maybe<UserProfile>;
   getMessage?: Maybe<Message>;
+  getOmniflixNFTsByOwner?: Maybe<Array<Maybe<NftAsset>>>;
+  getStargazeNFTsByOwner?: Maybe<Array<Maybe<NftAsset>>>;
   getUser?: Maybe<User>;
   getUserProfile?: Maybe<UserProfile>;
   messages?: Maybe<Array<Maybe<Message>>>;
@@ -92,6 +103,16 @@ export type QueryGetDesmosProfileArgs = {
 
 export type QueryGetMessageArgs = {
   iscnId: Scalars['String'];
+};
+
+
+export type QueryGetOmniflixNfTsByOwnerArgs = {
+  owner: Scalars['String'];
+};
+
+
+export type QueryGetStargazeNfTsByOwnerArgs = {
+  owner: Scalars['String'];
 };
 
 
@@ -229,6 +250,7 @@ export type ResolversTypes = {
   List: ResolverTypeWrapper<List>;
   Message: ResolverTypeWrapper<Message>;
   Mutation: ResolverTypeWrapper<{}>;
+  NFTAsset: ResolverTypeWrapper<NftAsset>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']>;
   User: ResolverTypeWrapper<User>;
@@ -247,6 +269,7 @@ export type ResolversParentTypes = {
   List: List;
   Message: Message;
   Mutation: {};
+  NFTAsset: NftAsset;
   Query: {};
   String: Scalars['String'];
   User: User;
@@ -298,10 +321,21 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   setProfilePicture?: Resolver<Maybe<ResolversTypes['UserProfile']>, ParentType, ContextType, RequireFields<MutationSetProfilePictureArgs, 'address' | 'picture'>>;
 };
 
+export type NftAssetResolvers<ContextType = Context, ParentType extends ResolversParentTypes['NFTAsset'] = ResolversParentTypes['NFTAsset']> = {
+  address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  media?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  mediaType?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  tokenId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   getChannels?: Resolver<Maybe<ResolversTypes['Channels']>, ParentType, ContextType, Partial<QueryGetChannelsArgs>>;
   getDesmosProfile?: Resolver<Maybe<ResolversTypes['UserProfile']>, ParentType, ContextType, RequireFields<QueryGetDesmosProfileArgs, 'dtagOrAddress'>>;
   getMessage?: Resolver<Maybe<ResolversTypes['Message']>, ParentType, ContextType, RequireFields<QueryGetMessageArgs, 'iscnId'>>;
+  getOmniflixNFTsByOwner?: Resolver<Maybe<Array<Maybe<ResolversTypes['NFTAsset']>>>, ParentType, ContextType, RequireFields<QueryGetOmniflixNfTsByOwnerArgs, 'owner'>>;
+  getStargazeNFTsByOwner?: Resolver<Maybe<Array<Maybe<ResolversTypes['NFTAsset']>>>, ParentType, ContextType, RequireFields<QueryGetStargazeNfTsByOwnerArgs, 'owner'>>;
   getUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryGetUserArgs, 'address'>>;
   getUserProfile?: Resolver<Maybe<ResolversTypes['UserProfile']>, ParentType, ContextType, RequireFields<QueryGetUserProfileArgs, 'address'>>;
   messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<QueryMessagesArgs>>;
@@ -335,6 +369,7 @@ export type Resolvers<ContextType = Context> = {
   List?: ListResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  NFTAsset?: NftAssetResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
   UserProfile?: UserProfileResolvers<ContextType>;
