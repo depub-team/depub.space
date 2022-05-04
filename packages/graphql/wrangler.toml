@@ -9,7 +9,8 @@ compatibility_flags = []
 workers_dev = true
 compatibility_date = "2022-02-04"
 kv_namespaces = [
-  { binding = "WORKERS_GRAPHQL_CACHE", id = "9cf0a6d5091e448c9411e8ee8c65acb6" }
+  { binding = "WORKERS_GRAPHQL_CACHE", id = "9cf0a6d5091e448c9411e8ee8c65acb6" },
+  { binding = "NFT_CONTRACTS_CACHE", id = "c486e49e358c4e3c9353fb34588d46ef" }
 ]
 
 [durable_objects]
@@ -39,12 +40,14 @@ DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
 ENVIRONMENT = "staging"
 NOTION_API_ENDPOINT = "https://api.notion.com/v1"
 STARGAZE_RPC_ENDPOINT = "https://rpc.stargaze-apis.com/"
+OMNIFLIX_REST_ENDPOINT = "https://data-api.omniflix.studio/"
 
 # Override values for `--env production` usage
 [env.prod]
 name = "depub-space-graphql"
 kv_namespaces = [
-  { binding = "WORKERS_GRAPHQL_CACHE", id = "5acfb215b0d34d8fa20d921d1e40c699" }
+  { binding = "WORKERS_GRAPHQL_CACHE", id = "5acfb215b0d34d8fa20d921d1e40c699" },
+  { binding = "NFT_CONTRACTS_CACHE", id = "c486e49e358c4e3c9353fb34588d46ef" }
 ]
 
 [env.prod.durable_objects]
@@ -59,6 +62,7 @@ DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
 ENVIRONMENT = "production"
 NOTION_API_ENDPOINT = "https://api.notion.com/v1"
 STARGAZE_RPC_ENDPOINT = "https://rpc.stargaze-apis.com/"
+OMNIFLIX_REST_ENDPOINT = "https://data-api.omniflix.studio/"
 
 # [secrets]
 # NOTION_API_SECRET

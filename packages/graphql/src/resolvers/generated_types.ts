@@ -56,6 +56,15 @@ export type Message = {
   profile?: Maybe<Profile>;
 };
 
+export type NftAsset = {
+  __typename?: 'NFTAsset';
+  address: Scalars['String'];
+  media: Scalars['String'];
+  mediaType: Scalars['String'];
+  name: Scalars['String'];
+  tokenId: Scalars['String'];
+};
+
 export type Profile = {
   __typename?: 'Profile';
   address: Scalars['String'];
@@ -73,6 +82,8 @@ export type Query = {
   __typename?: 'Query';
   getChannels?: Maybe<Channels>;
   getMessage?: Maybe<Message>;
+  getOmniflixNFTsByOwner?: Maybe<Array<Maybe<NftAsset>>>;
+  getStargazeNFTsByOwner?: Maybe<Array<Maybe<NftAsset>>>;
   getUser?: Maybe<User>;
   getUserProfile?: Maybe<Profile>;
   messages?: Maybe<Array<Maybe<Message>>>;
@@ -88,6 +99,16 @@ export type QueryGetChannelsArgs = {
 
 export type QueryGetMessageArgs = {
   iscnId: Scalars['String'];
+};
+
+
+export type QueryGetOmniflixNfTsByOwnerArgs = {
+  owner: Scalars['String'];
+};
+
+
+export type QueryGetStargazeNfTsByOwnerArgs = {
+  owner: Scalars['String'];
 };
 
 
@@ -214,6 +235,7 @@ export type ResolversTypes = {
   Int: ResolverTypeWrapper<Scalars['Int']>;
   List: ResolverTypeWrapper<List>;
   Message: ResolverTypeWrapper<Message>;
+  NFTAsset: ResolverTypeWrapper<NftAsset>;
   Profile: ResolverTypeWrapper<Profile>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']>;
@@ -231,6 +253,7 @@ export type ResolversParentTypes = {
   Int: Scalars['Int'];
   List: List;
   Message: Message;
+  NFTAsset: NftAsset;
   Profile: Profile;
   Query: {};
   String: Scalars['String'];
@@ -278,6 +301,15 @@ export type MessageResolvers<ContextType = Context, ParentType extends Resolvers
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type NftAssetResolvers<ContextType = Context, ParentType extends ResolversParentTypes['NFTAsset'] = ResolversParentTypes['NFTAsset']> = {
+  address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  media?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  mediaType?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  tokenId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type ProfileResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Profile'] = ResolversParentTypes['Profile']> = {
   address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   bio?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -294,6 +326,8 @@ export type ProfileResolvers<ContextType = Context, ParentType extends Resolvers
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   getChannels?: Resolver<Maybe<ResolversTypes['Channels']>, ParentType, ContextType, Partial<QueryGetChannelsArgs>>;
   getMessage?: Resolver<Maybe<ResolversTypes['Message']>, ParentType, ContextType, RequireFields<QueryGetMessageArgs, 'iscnId'>>;
+  getOmniflixNFTsByOwner?: Resolver<Maybe<Array<Maybe<ResolversTypes['NFTAsset']>>>, ParentType, ContextType, RequireFields<QueryGetOmniflixNfTsByOwnerArgs, 'owner'>>;
+  getStargazeNFTsByOwner?: Resolver<Maybe<Array<Maybe<ResolversTypes['NFTAsset']>>>, ParentType, ContextType, RequireFields<QueryGetStargazeNfTsByOwnerArgs, 'owner'>>;
   getUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryGetUserArgs, 'dtagOrAddress'>>;
   getUserProfile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType, RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>>;
   messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<QueryMessagesArgs>>;
@@ -316,6 +350,7 @@ export type Resolvers<ContextType = Context> = {
   HashTag?: HashTagResolvers<ContextType>;
   List?: ListResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
+  NFTAsset?: NftAssetResolvers<ContextType>;
   Profile?: ProfileResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;

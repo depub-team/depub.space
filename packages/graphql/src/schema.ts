@@ -9,6 +9,16 @@ const typeDefs = gql`
     getUser(dtagOrAddress: String!, previousId: String, limit: Int): User
     getUserProfile(dtagOrAddress: String!): Profile
     getChannels(countryCode: String): Channels
+    getStargazeNFTsByOwner(owner: String!): [NFTAsset]
+    getOmniflixNFTsByOwner(owner: String!): [NFTAsset]
+  }
+
+  type NFTAsset {
+    address: String!
+    name: String!
+    media: String!
+    mediaType: String!
+    tokenId: String!
   }
 
   type Channels {

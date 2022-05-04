@@ -3,8 +3,8 @@ import { toCosmos, toLike } from '../utils';
 import { Context } from '../context';
 import { InputMaybe, Message, Profile, Resolvers } from './generated_types';
 import { KVStore } from '../kv-store';
-import { DesmosProfileWithId, ISCNTrend, ISCNRecord } from '../interfaces';
-import { toStars } from '../utils/to-stars';
+import { DesmosProfileWithId, ISCNTrend, ISCNRecord, NFTAsset } from '../interfaces';
+import { changeAddressPrefix } from '../utils';
 
 const PAGING_LIMIT = 12;
 const PROFILE_KEY = 'profile';
@@ -115,10 +115,6 @@ const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile 
 const getUser = async (account: string, ctx: Context) => {
   const profile = await getProfile(account, ctx);
   const address = profile ? profile.id : account;
-
-  const starsAddress = toStars(address);
-
-  await ctx.dataSources.stargazeAPI.getNFTs(starsAddress);
 
   return {
     id: account,
@@ -404,6 +400,20 @@ const getChannels = async (args: any, ctx: Context): Promise<GetChannelsResponse
   return { hashTags: [], list: [] };
 };
 
+const getStargazeNFTsByOwner = async (owner: string, ctx: Context): Promise<NFTAsset[]> => {
+  const starsAddress = changeAddressPrefix(owner, 'stars');
+  const stargazeAssets = await ctx.dataSources.stargazeAPI.getNFTsByOwner(starsAddress);
+
+  return stargazeAssets;
+};
+
+const getOmniflixNFTsByOwner = async (owner: string, ctx: Context): Promise<NFTAsset[]> => {
+  const omniflixAddress = changeAddressPrefix(owner, 'omniflix');
+  const omniflixAssets = await ctx.dataSources.omniflixAPI.getNFTsByOwner(omniflixAddress);
+
+  return omniflixAssets;
+};
+
 const resolvers: Resolvers = {
   Query: {
     getUser: (_parent, args, ctx) => getUser(args.dtagOrAddress, ctx),
@@ -413,6 +423,8 @@ const resolvers: Resolvers = {
     getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
     getMessage: (_parent, args, ctx) => getMessage(args, ctx),
     getChannels: (_parent, args, ctx) => getChannels(args, ctx),
+    getOmniflixNFTsByOwner: (_parent, args, ctx) => getOmniflixNFTsByOwner(args.owner, ctx),
+    getStargazeNFTsByOwner: (_parent, args, ctx) => getStargazeNFTsByOwner(args.owner, ctx),
   },
   User: {
     messages: async (parent, args, ctx) => {
