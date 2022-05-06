@@ -10,6 +10,7 @@ import React, {
 import update from 'immutability-helper';
 import WalletConnect from '@walletconnect/client';
 import QRCodeModal from '@walletconnect/qrcode-modal';
+import { fromBech32, toBech32 } from '@cosmjs/encoding';
 import Debug from 'debug';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { payloadId } from '@walletconnect/utils';
@@ -142,10 +143,10 @@ export const getChainInfo = () => {
   };
 
   const testnet = {
-    chainId: 'likecoin-public-testnet-5',
+    chainId: 'likecoin-skynet-1',
     chainName: 'LikeCoin public test chain',
-    rpc: 'https://likecoin-public-testnet-5.oursky.dev/rpc/',
-    rest: 'https://likecoin-public-testnet-5.oursky.dev/',
+    rpc: 'http://52.187.27.20:26657/',
+    rest: 'http://52.187.27.20:26657/',
     stakeCurrency: {
       coinDenom: 'EKIL',
       coinMinimalDenom: 'nanoekil',
@@ -157,12 +158,12 @@ export const getChainInfo = () => {
       coinType: 118,
     },
     bech32Config: {
-      bech32PrefixAccAddr: 'cosmos',
-      bech32PrefixAccPub: 'cosmospub',
-      bech32PrefixValAddr: 'cosmosvaloper',
-      bech32PrefixValPub: 'cosmosvaloperpub',
-      bech32PrefixConsAddr: 'cosmosvalcons',
-      bech32PrefixConsPub: 'cosmosvalconspub',
+      bech32PrefixAccAddr: 'like',
+      bech32PrefixAccPub: 'likepub',
+      bech32PrefixValAddr: 'likevaloper',
+      bech32PrefixValPub: 'likevaloperpub',
+      bech32PrefixConsAddr: 'likevalcons',
+      bech32PrefixConsPub: 'likevalconspub',
     },
     currencies: [
       {
@@ -189,6 +190,12 @@ export const getChainInfo = () => {
   };
 
   return isTestnet ? testnet : mainnet;
+};
+
+const toLike1 = (address: string) => {
+  const decoded = fromBech32(address);
+
+  return toBech32('like', decoded.data);
 };
 
 const initialState = {
@@ -260,7 +267,10 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
 
     if (!address) return false;
 
-    setWalletAddress(address);
+    // convert to like1 address if needed
+    const like1Address = /^like1/.test(address) ? address : toLike1(address);
+
+    setWalletAddress(like1Address);
     setOfflineSigner(myOfflineSigner);
 
     await AsyncStorage.setItem(KEY_CONNECTED_WALLET_TYPE, 'keplr');

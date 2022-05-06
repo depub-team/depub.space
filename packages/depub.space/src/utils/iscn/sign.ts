@@ -29,7 +29,7 @@ export async function signISCN(tx: ISCNSignPayload, signer: OfflineSigner, addre
     const signingStargateClient: SigningStargateClient = (signingClient as any).signingClient;
 
     (signingStargateClient as any).aminoTypes = new AminoTypes({
-      prefix: 'cosmos',
+      prefix: 'like',
       additions: {
         '/likechain.iscn.MsgCreateIscnRecord': {
           aminoType: 'likecoin-chain/MsgCreateIscnRecord',
