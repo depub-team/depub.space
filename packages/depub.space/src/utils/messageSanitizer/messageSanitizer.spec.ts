@@ -10,6 +10,15 @@ describe('messageSanitizer', () => {
         'ABC <a href="https://abc.com" target="_blank" rel="noopener noreferrer">https://abc.com</a> #XYZ <a href="https://xyz.com" target="_blank" rel="noopener noreferrer">https://xyz.com</a>'
       );
     });
+
+    it('should extract URLs with chinese charaters', () => {
+      const test = 'ABC中文 https://abc.com/中文 中文 #XYZ https://繁中.com/中文?name=壹貳參';
+      const result = replaceURLToAnchor(test);
+
+      expect(result).toBe(
+        'ABC中文 <a href="https://abc.com/中文" target="_blank" rel="noopener noreferrer">https://abc.com/中文</a> 中文 #XYZ <a href="https://繁中.com/中文?name=壹貳參" target="_blank" rel="noopener noreferrer">https://繁中.com/中文?name=壹貳參</a>'
+      );
+    });
   });
 
   describe('replaceTagToAnchor', () => {
@@ -18,7 +27,7 @@ describe('messageSanitizer', () => {
       const result = replaceTagToAnchor(test);
 
       expect(result).toBe(
-        'ABC <a href="/tags?name=xyz">#xyz</a> XYZ <a href="/tags?name=abc">#abc</a>'
+        'ABC <a href="/hashtag/xyz">#xyz</a> XYZ <a href="/hashtag/abc">#abc</a>'
       );
     });
 
@@ -27,7 +36,7 @@ describe('messageSanitizer', () => {
       const result = replaceTagToAnchor(test);
 
       expect(result).toBe(
-        'ABC <a href="/tags?name=xyz">#xyz</a> XYZ <a href="/tags?name=abc">#abc</a> <a href="/tags?name=中文">#中文</a> <a href="/tags?name=中">#中</a>_文'
+        'ABC <a href="/hashtag/xyz">#xyz</a> XYZ <a href="/hashtag/abc">#abc</a> <a href="/hashtag/中文">#中文</a> <a href="/hashtag/中_文">#中_文</a>'
       );
     });
 
@@ -36,7 +45,7 @@ describe('messageSanitizer', () => {
       const result = replaceTagToAnchor(test);
 
       expect(result).toBe(
-        'ABC <a href="/tags?name=xyz">#xyz</a> XYZ <a href="/tags?name=abc2">#abc2</a> <a href="/tags?name=中文">#中文</a> <a href="/tags?name=中">#中</a>_文'
+        'ABC <a href="/hashtag/xyz">#xyz</a> XYZ <a href="/hashtag/abc2">#abc2</a> <a href="/hashtag/中文">#中文</a> <a href="/hashtag/中_文">#中_文</a>'
       );
     });
   });
