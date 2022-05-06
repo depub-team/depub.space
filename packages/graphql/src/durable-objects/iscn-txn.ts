@@ -1,6 +1,7 @@
 import { ulidFactory } from 'ulid-workers';
 import { ISCNTrend, ISCNRecord } from '../interfaces';
 import { Bindings } from '../../bindings';
+import { toCosmos } from '../utils';
 
 const ulid = ulidFactory({ monotonic: false });
 const NEXT_SEQUENCE_KEY = 'sequence';
@@ -142,9 +143,24 @@ export class IscnTxn implements DurableObject {
         limit,
         end: recordKeys?.authorTransactionKey,
       });
+      let keyListValues = [...keyList.values()];
+
+      // get messages posted by legacy address if the author address is prefixed with like
+      if (author.startsWith('like')) {
+        const legacyAddress = toCosmos(author);
+
+        const legacyKeyList = await this.state.storage.list<string>({
+          prefix: `${AUTHOR_KEY}:${legacyAddress}`,
+          reverse: true,
+          limit,
+          end: recordKeys?.authorTransactionKey,
+        });
+
+        keyListValues = keyListValues.concat(...legacyKeyList.values());
+      }
 
       transactionList = sortByRecordTimestamp(
-        await this.state.storage.get<ISCNRecord>(Array.from(keyList.values()))
+        await this.state.storage.get<ISCNRecord>(keyListValues)
       );
     } else if (mentioned) {
       const mentionKeysMap = new Map(

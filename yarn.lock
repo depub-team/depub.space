@@ -1186,6 +1186,13 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
+"@babel/runtime@^7.11.2":
+  version "7.17.9"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.17.9.tgz#d19fbf802d01a8cb6cf053a64e472d42c434ba72"
+  integrity sha512-lSiBBvodq29uShpWGNbgFdKYNiFDo5/HIYsaCEY9ff4sb10x9jizo2+pRrSyF4jKZCXqgzuqBOQKbUm90gQwJg==
+  dependencies:
+    regenerator-runtime "^0.13.4"
+
 "@babel/template@^7.0.0", "@babel/template@^7.12.7", "@babel/template@^7.16.7", "@babel/template@^7.3.3", "@babel/template@^7.8.6":
   version "7.16.7"
   resolved "https://registry.yarnpkg.com/@babel/template/-/template-7.16.7.tgz#8d126c8701fde4d66b264b3eba3d96f07666d155"
@@ -1242,7 +1249,7 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@confio/ics23@^0.6.3":
+"@confio/ics23@^0.6.3", "@confio/ics23@^0.6.8":
   version "0.6.8"
   resolved "https://registry.yarnpkg.com/@confio/ics23/-/ics23-0.6.8.tgz#2a6b4f1f2b7b20a35d9a0745bb5a446e72930b3d"
   integrity sha512-wB6uo+3A50m0sW/EWcU64xpV/8wShZ6bMTa7pF8eYsTrSkQA7oLUIJcs/wb8g4y2Oyq701BaGiO6n/ak5WXO1w==
@@ -1259,6 +1266,59 @@
     "@cosmjs/encoding" "0.26.6"
     "@cosmjs/math" "0.26.6"
     "@cosmjs/utils" "0.26.6"
+
+"@cosmjs/amino@0.28.4", "@cosmjs/amino@^0.28.3":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/amino/-/amino-0.28.4.tgz#9315f6876dba80148cf715ced44d1dc7a9b68b94"
+  integrity sha512-b8y5gFC0eGrH0IoYSNtDmTdsTgeQ1KFZ5YVOeIiKmzF91MeiciYO/MNqc027kctacZ+UbnVWGEUGyRBPi9ta/g==
+  dependencies:
+    "@cosmjs/crypto" "0.28.4"
+    "@cosmjs/encoding" "0.28.4"
+    "@cosmjs/math" "0.28.4"
+    "@cosmjs/utils" "0.28.4"
+
+"@cosmjs/cli@^0.28.3":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/cli/-/cli-0.28.4.tgz#801b92da8c9f58afa3fe8ae025285d2b0fad7cbf"
+  integrity sha512-EBrqDuG8ybsRJUFWPisKgq2INTGfHdG7nCNSdkGiNKSAS3oWdNjrikKCeykMZbyewiRYA/ysC1nggn7tAqbo6g==
+  dependencies:
+    "@cosmjs/amino" "0.28.4"
+    "@cosmjs/cosmwasm-stargate" "0.28.4"
+    "@cosmjs/crypto" "0.28.4"
+    "@cosmjs/encoding" "0.28.4"
+    "@cosmjs/faucet-client" "0.28.4"
+    "@cosmjs/math" "0.28.4"
+    "@cosmjs/proto-signing" "0.28.4"
+    "@cosmjs/stargate" "0.28.4"
+    "@cosmjs/tendermint-rpc" "0.28.4"
+    "@cosmjs/utils" "0.28.4"
+    axios "^0.21.2"
+    babylon "^6.18.0"
+    chalk "^4"
+    cosmjs-types "^0.4.0"
+    diff "^4"
+    recast "^0.20"
+    ts-node "^8"
+    typescript "~4.4"
+    yargs "^15.3.1"
+
+"@cosmjs/cosmwasm-stargate@0.28.4", "@cosmjs/cosmwasm-stargate@^0.28.3":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/cosmwasm-stargate/-/cosmwasm-stargate-0.28.4.tgz#5f06f31cd932ae409dc75a07993ed258279fd9a7"
+  integrity sha512-dkTwTD+j2mjk7+l3pQQ3io2D0U7NIA4LXzkKtfBN87PGlj2G+VJFzcXk1T4DYmvrXjsQOi1kYeQRGWFA0XdvnQ==
+  dependencies:
+    "@cosmjs/amino" "0.28.4"
+    "@cosmjs/crypto" "0.28.4"
+    "@cosmjs/encoding" "0.28.4"
+    "@cosmjs/math" "0.28.4"
+    "@cosmjs/proto-signing" "0.28.4"
+    "@cosmjs/stargate" "0.28.4"
+    "@cosmjs/tendermint-rpc" "0.28.4"
+    "@cosmjs/utils" "0.28.4"
+    cosmjs-types "^0.4.0"
+    long "^4.0.0"
+    pako "^2.0.2"
+    protobufjs "~6.10.2"
 
 "@cosmjs/cosmwasm-stargate@~0.26.5":
   version "0.26.6"
@@ -1294,6 +1354,19 @@
     ripemd160 "^2.0.2"
     sha.js "^2.4.11"
 
+"@cosmjs/crypto@0.28.4", "@cosmjs/crypto@^0.28.3":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/crypto/-/crypto-0.28.4.tgz#b2f1ccb9edee7d357ed1dcd92bdb61f6a1ca06d3"
+  integrity sha512-JRxNLlED3DDh9d04A0RcRw3mYkoobN7q7wafUFy3vI1TjoyWx33v0gqqaYE6/hoo9ghUrJSVOfzVihl8fZajJA==
+  dependencies:
+    "@cosmjs/encoding" "0.28.4"
+    "@cosmjs/math" "0.28.4"
+    "@cosmjs/utils" "0.28.4"
+    "@noble/hashes" "^1"
+    bn.js "^5.2.0"
+    elliptic "^6.5.3"
+    libsodium-wrappers "^0.7.6"
+
 "@cosmjs/encoding@0.26.6":
   version "0.26.6"
   resolved "https://registry.yarnpkg.com/@cosmjs/encoding/-/encoding-0.26.6.tgz#80de9f1a4b5b4cc203b16b4190b9a42da7de1a49"
@@ -1303,6 +1376,22 @@
     bech32 "^1.1.4"
     readonly-date "^1.0.0"
 
+"@cosmjs/encoding@0.28.4", "@cosmjs/encoding@^0.28.3":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/encoding/-/encoding-0.28.4.tgz#ea39eb4c27ebf7b35e62e9898adae189b86d0da7"
+  integrity sha512-N6Qnjs4dd8KwjW5m9t3L+rWYYGW2wyS+iLtJJ9DD8DiTTxpW9h7/AmUVO/dsRe5H2tV8/DzH/B9pFfpsgro22A==
+  dependencies:
+    base64-js "^1.3.0"
+    bech32 "^1.1.4"
+    readonly-date "^1.0.0"
+
+"@cosmjs/faucet-client@0.28.4", "@cosmjs/faucet-client@^0.28.3":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/faucet-client/-/faucet-client-0.28.4.tgz#4b34a7ea25052147383f31e290d6aa1980e9a898"
+  integrity sha512-tTR9CrA9+KzI7Yk5LGkMUtbSCs1Pai39tE0ih+zfTjp2hDVUTL6ymvW752/qIXOgylCsE5g3ynhBLM25gjDYgw==
+  dependencies:
+    axios "^0.21.2"
+
 "@cosmjs/json-rpc@0.26.6":
   version "0.26.6"
   resolved "https://registry.yarnpkg.com/@cosmjs/json-rpc/-/json-rpc-0.26.6.tgz#a41d706f419281a4586553fe68a65f773fb56d1a"
@@ -1311,12 +1400,40 @@
     "@cosmjs/stream" "0.26.6"
     xstream "^11.14.0"
 
+"@cosmjs/json-rpc@0.28.4":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/json-rpc/-/json-rpc-0.28.4.tgz#19bc38b895bbb74122832a22aea5b25087143636"
+  integrity sha512-An8ZQi9OKbnS8ew/MyHhF90zQpXBF8RTj2wdvIH+Hr8yA6QjynY8hxRpUwYUt3Skc5NeUnTZNuWCzlluHnoxVg==
+  dependencies:
+    "@cosmjs/stream" "0.28.4"
+    xstream "^11.14.0"
+
+"@cosmjs/ledger-amino@^0.28.3":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/ledger-amino/-/ledger-amino-0.28.4.tgz#1762cdf2572731d529aad7ac20472b7ddbf0d93a"
+  integrity sha512-SdKGk3jElpF5lbBJ8f/xvgk1GkItezpaZosAeOIgyzeGfDJL/nPFl0K0vs9L2PLCzLPEScA+9EocMC7F90UA4w==
+  dependencies:
+    "@cosmjs/amino" "0.28.4"
+    "@cosmjs/crypto" "0.28.4"
+    "@cosmjs/encoding" "0.28.4"
+    "@cosmjs/math" "0.28.4"
+    "@cosmjs/utils" "0.28.4"
+    ledger-cosmos-js "^2.1.8"
+    semver "^7.3.2"
+
 "@cosmjs/math@0.26.6":
   version "0.26.6"
   resolved "https://registry.yarnpkg.com/@cosmjs/math/-/math-0.26.6.tgz#11f3273634bab69187c6361533a14c72f611f6a2"
   integrity sha512-nblvidxwugM/kh1Vx95s7MQ596r5ap1ZUpjHYJTLbnYvnObHvfYvM3qb8SJzY0u7x5+u9E0oSFzLwMRfUTEQ3g==
   dependencies:
     bn.js "^4.11.8"
+
+"@cosmjs/math@0.28.4", "@cosmjs/math@^0.28.3":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/math/-/math-0.28.4.tgz#ddc35b69fa1ffeaf5928f70d4c2faf9284627d84"
+  integrity sha512-wsWjbxFXvk46Dsx8jQ5vsBZOIQuiUIyaaZbUvxsgIhAMpuuBnV5O/drK87+B+4cL+umTelFqTbWnkqueVCIFxQ==
+  dependencies:
+    bn.js "^5.2.0"
 
 "@cosmjs/proto-signing@0.26.6", "@cosmjs/proto-signing@~0.26.5":
   version "0.26.6"
@@ -1330,12 +1447,36 @@
     long "^4.0.0"
     protobufjs "~6.10.2"
 
+"@cosmjs/proto-signing@0.28.4", "@cosmjs/proto-signing@^0.28.3":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/proto-signing/-/proto-signing-0.28.4.tgz#7007651042bd05b3eee7e1c8562417bbed630198"
+  integrity sha512-4vgCLK9gOsdWzD78V5XbAsupSSyntPEzokWYhgRQNwgVTcKX1kg0eKZqUvF5ua5iL9x6MevfH/sgwPyiYleMBw==
+  dependencies:
+    "@cosmjs/amino" "0.28.4"
+    "@cosmjs/crypto" "0.28.4"
+    "@cosmjs/encoding" "0.28.4"
+    "@cosmjs/math" "0.28.4"
+    "@cosmjs/utils" "0.28.4"
+    cosmjs-types "^0.4.0"
+    long "^4.0.0"
+    protobufjs "~6.10.2"
+
 "@cosmjs/socket@0.26.6":
   version "0.26.6"
   resolved "https://registry.yarnpkg.com/@cosmjs/socket/-/socket-0.26.6.tgz#17aefcc2de412c26c93c5b31d71f1c4b8e06491d"
   integrity sha512-JLizR/QlRJ+nBE/A4QfhinTLycI7a20w0hgHhkq9UUvRlFEh+j6bBK7TilDYZpX0Yjb+wJhCt7wHTiJo+uLjSA==
   dependencies:
     "@cosmjs/stream" "0.26.6"
+    isomorphic-ws "^4.0.1"
+    ws "^7"
+    xstream "^11.14.0"
+
+"@cosmjs/socket@0.28.4":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/socket/-/socket-0.28.4.tgz#f2c337bee18c631739ba6c2357fe564dbf17df45"
+  integrity sha512-jAEL3Ri+s8XuBM3mqgO4yvmeQu+R+704V37lGROC1B6kAbGxWRyOWrMdOOiFJzCZ35sSMB7L+xKjpE8ug0vJjg==
+  dependencies:
+    "@cosmjs/stream" "0.28.4"
     isomorphic-ws "^4.0.1"
     ws "^7"
     xstream "^11.14.0"
@@ -1358,10 +1499,35 @@
     protobufjs "~6.10.2"
     xstream "^11.14.0"
 
+"@cosmjs/stargate@0.28.4", "@cosmjs/stargate@^0.28.3":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/stargate/-/stargate-0.28.4.tgz#a5acbaa3451f7c853739064f799dec21097a06df"
+  integrity sha512-tdwudilP5iLNwDm4TOMBjWuL5YehLPqGlC5/7hjJM/kVHyzLFo4Lzt0dVEwr5YegH+RsRXH/VtFLQz+NYlCobw==
+  dependencies:
+    "@confio/ics23" "^0.6.8"
+    "@cosmjs/amino" "0.28.4"
+    "@cosmjs/encoding" "0.28.4"
+    "@cosmjs/math" "0.28.4"
+    "@cosmjs/proto-signing" "0.28.4"
+    "@cosmjs/stream" "0.28.4"
+    "@cosmjs/tendermint-rpc" "0.28.4"
+    "@cosmjs/utils" "0.28.4"
+    cosmjs-types "^0.4.0"
+    long "^4.0.0"
+    protobufjs "~6.10.2"
+    xstream "^11.14.0"
+
 "@cosmjs/stream@0.26.6":
   version "0.26.6"
   resolved "https://registry.yarnpkg.com/@cosmjs/stream/-/stream-0.26.6.tgz#5474da08b5e8dd46de61ce9f16e39ad9751e9779"
   integrity sha512-4Tfh1UlSCEBl+yqPeu+4q1uqwkKbx5gqYU/JDL81cLHW5QpxUA83F59+Pr9XohcnrHUmSt3DoDPqIlAoIdft1Q==
+  dependencies:
+    xstream "^11.14.0"
+
+"@cosmjs/stream@0.28.4":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/stream/-/stream-0.28.4.tgz#88a294c2404107327f8e293b952db047ab182179"
+  integrity sha512-BDwDdFOrOgRx/Wm5nknb9YCV9HHIUcsOxykTDZqdArCUsn4QJBq79QIjp919G05Z8UemkoHwiUCUNB2BfoKmFw==
   dependencies:
     xstream "^11.14.0"
 
@@ -1380,10 +1546,31 @@
     readonly-date "^1.0.0"
     xstream "^11.14.0"
 
+"@cosmjs/tendermint-rpc@0.28.4":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/tendermint-rpc/-/tendermint-rpc-0.28.4.tgz#78835fdc8126baa3122c8b2b396c1d7d290c7167"
+  integrity sha512-iz6p4UW2QUZNh55WeJy9wHbMdqM8COo0AJdrGU4Ikb/xU0/H6b0dFPoEK+i6ngR0cSizh+hpTMzh3AA7ySUKlA==
+  dependencies:
+    "@cosmjs/crypto" "0.28.4"
+    "@cosmjs/encoding" "0.28.4"
+    "@cosmjs/json-rpc" "0.28.4"
+    "@cosmjs/math" "0.28.4"
+    "@cosmjs/socket" "0.28.4"
+    "@cosmjs/stream" "0.28.4"
+    "@cosmjs/utils" "0.28.4"
+    axios "^0.21.2"
+    readonly-date "^1.0.0"
+    xstream "^11.14.0"
+
 "@cosmjs/utils@0.26.6":
   version "0.26.6"
   resolved "https://registry.yarnpkg.com/@cosmjs/utils/-/utils-0.26.6.tgz#134ef1ea0675580c2cc7524589d09f3d42c678a7"
   integrity sha512-Zx60MMI1vffX8c2UbUMlszrGIug3TWa25bD7NF3blJ5k/MVCZFsPafEZ+jEi7kcqoxdhMhgJTI6AmUhnMfq9SQ==
+
+"@cosmjs/utils@0.28.4", "@cosmjs/utils@^0.28.3":
+  version "0.28.4"
+  resolved "https://registry.yarnpkg.com/@cosmjs/utils/-/utils-0.28.4.tgz#ecbc72458cdaffa6eeef572bc691502b3151330f"
+  integrity sha512-lb3TU6833arPoPZF8HTeG9V418CpurvqH5Aa/ls0I0wYdPDEMO6622+PQNQhQ8Vw8Az2MXoSyc8jsqrgawT84Q==
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
@@ -2549,6 +2736,35 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
+"@ledgerhq/devices@^5.51.1":
+  version "5.51.1"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/devices/-/devices-5.51.1.tgz#d741a4a5d8f17c2f9d282fd27147e6fe1999edb7"
+  integrity sha512-4w+P0VkbjzEXC7kv8T1GJ/9AVaP9I6uasMZ/JcdwZBS3qwvKo5A5z9uGhP5c7TvItzcmPb44b5Mw2kT+WjUuAA==
+  dependencies:
+    "@ledgerhq/errors" "^5.50.0"
+    "@ledgerhq/logs" "^5.50.0"
+    rxjs "6"
+    semver "^7.3.5"
+
+"@ledgerhq/errors@^5.50.0":
+  version "5.50.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/errors/-/errors-5.50.0.tgz#e3a6834cb8c19346efca214c1af84ed28e69dad9"
+  integrity sha512-gu6aJ/BHuRlpU7kgVpy2vcYk6atjB4iauP2ymF7Gk0ez0Y/6VSMVSJvubeEQN+IV60+OBK0JgeIZG7OiHaw8ow==
+
+"@ledgerhq/hw-transport@^5.25.0":
+  version "5.51.1"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport/-/hw-transport-5.51.1.tgz#8dd14a8e58cbee4df0c29eaeef983a79f5f22578"
+  integrity sha512-6wDYdbWrw9VwHIcoDnqWBaDFyviyjZWv6H9vz9Vyhe4Qd7TIFmbTl/eWs6hZvtZBza9K8y7zD8ChHwRI4s9tSw==
+  dependencies:
+    "@ledgerhq/devices" "^5.51.1"
+    "@ledgerhq/errors" "^5.50.0"
+    events "^3.3.0"
+
+"@ledgerhq/logs@^5.50.0":
+  version "5.50.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-5.50.0.tgz#29c6419e8379d496ab6d0426eadf3c4d100cd186"
+  integrity sha512-swKHYCOZUGyVt4ge0u8a7AwNcA//h4nx5wIi0sruGye1IJ5Cva0GyK9L2/WdX+kWVTKp92ZiEo1df31lrWGPgA==
+
 "@likecoin/iscn-js@0.0.7":
   version "0.0.7"
   resolved "https://registry.yarnpkg.com/@likecoin/iscn-js/-/iscn-js-0.0.7.tgz#2e68d915ec96a763d6484df7ff3bbf29f45e8d71"
@@ -2831,7 +3047,7 @@
   resolved "https://registry.yarnpkg.com/@next/swc-win32-x64-msvc/-/swc-win32-x64-msvc-12.1.0.tgz#d27e7e76c87a460a4da99c5bfdb1618dcd6cd064"
   integrity sha512-aBvcbMwuanDH4EMrL2TthNJy+4nP59Bimn8egqv6GHMVj0a44cU6Au4PjOhLNqEh9l+IpRGBqMTzec94UdC5xg==
 
-"@noble/hashes@^1.0.0":
+"@noble/hashes@^1", "@noble/hashes@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.0.0.tgz#d5e38bfbdaba174805a4e649f13be9a9ed3351ae"
   integrity sha512-DZVbtY62kc3kkBtMHqwCOfXrT/hnoORy5BJ4+HU1IR59X0KWAOqsfzQPcUl/lQLlG7qXbe/fZ3r/emxtAl+sqg==
@@ -7205,6 +7421,11 @@ babel-preset-jest@^27.5.1:
     babel-plugin-jest-hoist "^27.5.1"
     babel-preset-current-node-syntax "^1.0.0"
 
+babylon@^6.18.0:
+  version "6.18.0"
+  resolved "https://registry.yarnpkg.com/babylon/-/babylon-6.18.0.tgz#af2f3b88fa6f5c1e4c634d1a0f8eac4f55b395e3"
+  integrity sha512-q/UEjfGJ2Cm3oKV71DJz9d25TPnq5rhBVL2Q4fA5wcC3jcrdn7+SssEybFIxwAvvP+YCsCYNKughoF33GxgycQ==
+
 backo2@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/backo2/-/backo2-1.0.2.tgz#31ab1ac8b129363463e35b3ebb69f4dfcfba7947"
@@ -7331,7 +7552,7 @@ bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.11.8, bn.js@^4.11.9:
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.12.0.tgz#775b3f278efbb9718eec7361f483fb36fbbfea88"
   integrity sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==
 
-bn.js@^5.0.0, bn.js@^5.1.1:
+bn.js@^5.0.0, bn.js@^5.1.1, bn.js@^5.2.0:
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-5.2.0.tgz#358860674396c6997771a9d051fcc1b57d4ae002"
   integrity sha512-D7iWRBvnZE8ecXiLj/9wbxH7Tk79fAh8IHaTNq1RWRixsS02W+5qS+iE9yq6RYl0asXx5tw0bLhmT5pIfbSquw==
@@ -7828,7 +8049,7 @@ chalk@^1.0.0, chalk@^1.1.3:
     strip-ansi "^3.0.0"
     supports-color "^2.0.0"
 
-chalk@^4.0.0, chalk@^4.1.0, chalk@^4.1.1, chalk@^4.1.2:
+chalk@^4, chalk@^4.0.0, chalk@^4.1.0, chalk@^4.1.1, chalk@^4.1.2:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-4.1.2.tgz#aac4e2b7734a740867aeb16bf02aad556a1e7a01"
   integrity sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==
@@ -8555,7 +8776,7 @@ cosmiconfig@^6.0.0:
     path-type "^4.0.0"
     yaml "^1.7.2"
 
-cosmjs-types@0.4.1:
+cosmjs-types@0.4.1, cosmjs-types@^0.4.0:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/cosmjs-types/-/cosmjs-types-0.4.1.tgz#3b2a53ba60d33159dd075596ce8267cfa7027063"
   integrity sha512-I7E/cHkIgoJzMNQdFF0YVqPlaTqrqKHrskuSTIqlEyxfB5Lf3WKCajSXVK2yHOfOFfSux/RxEdpMzw/eO4DIog==
@@ -8570,6 +8791,23 @@ cosmjs-types@^0.2.0:
   dependencies:
     long "^4.0.0"
     protobufjs "~6.11.2"
+
+cosmwasm@1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/cosmwasm/-/cosmwasm-1.1.1.tgz#02b22a269044c61714c85fa55e624b2f83f7c086"
+  integrity sha512-tjpjwnRIQ6VEcTVB0Pq8+F+Xp6jdnC3BcXmcDHCJHIc5Gg4Mm++AA+6fTfR0yuiPbEAk6wYkokfLtv12I0sPNQ==
+  dependencies:
+    "@cosmjs/amino" "^0.28.3"
+    "@cosmjs/cli" "^0.28.3"
+    "@cosmjs/cosmwasm-stargate" "^0.28.3"
+    "@cosmjs/crypto" "^0.28.3"
+    "@cosmjs/encoding" "^0.28.3"
+    "@cosmjs/faucet-client" "^0.28.3"
+    "@cosmjs/ledger-amino" "^0.28.3"
+    "@cosmjs/math" "^0.28.3"
+    "@cosmjs/proto-signing" "^0.28.3"
+    "@cosmjs/stargate" "^0.28.3"
+    "@cosmjs/utils" "^0.28.3"
 
 cp-file@^7.0.0:
   version "7.0.0"
@@ -9224,7 +9462,7 @@ diff-sequences@^27.5.1:
   resolved "https://registry.yarnpkg.com/diff-sequences/-/diff-sequences-27.5.1.tgz#eaecc0d327fd68c8d9672a1e64ab8dccb2ef5327"
   integrity sha512-k1gCAXAsNgLwEL+Y8Wvl+M6oEFj5bgazfZULpS5CneoPPXRaCCW7dm+q21Ky2VEE5X+VeRDBVg1Pcvvsr4TtNQ==
 
-diff@^4.0.1:
+diff@^4, diff@^4.0.1:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/diff/-/diff-4.0.2.tgz#60f3aecb89d5fae520c11aa19efc2bb982aade7d"
   integrity sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==
@@ -10193,7 +10431,7 @@ eventemitter3@^3.1.0:
   resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-3.1.2.tgz#2d3d48f9c346698fce83a85d7d664e98535df6e7"
   integrity sha512-tvtQIeLVHjDkJYnzf2dgVMxfuSGJeM/7UCG17TT4EumTfNtF+0nebF/4zWOIkCreAbtNqhGEboB6BWrwqNaw4Q==
 
-events@^3.0.0, events@^3.2.0:
+events@^3.0.0, events@^3.2.0, events@^3.3.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/events/-/events-3.3.0.tgz#31a95ad0a924e2d2c419a813aeb2c4e878ea7400"
   integrity sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==
@@ -13725,6 +13963,16 @@ lazy-universal-dotenv@^3.0.1:
     core-js "^3.0.4"
     dotenv "^8.0.0"
     dotenv-expand "^5.1.0"
+
+ledger-cosmos-js@^2.1.8:
+  version "2.1.8"
+  resolved "https://registry.yarnpkg.com/ledger-cosmos-js/-/ledger-cosmos-js-2.1.8.tgz#b409ecd1e77f630e6fb212a9f602fe5c6e8f054b"
+  integrity sha512-Gl7SWMq+3R9OTkF1hLlg5+1geGOmcHX9OdS+INDsGNxSiKRWlsWCvQipGoDnRIQ6CPo2i/Ze58Dw0Mt/l3UYyA==
+  dependencies:
+    "@babel/runtime" "^7.11.2"
+    "@ledgerhq/hw-transport" "^5.25.0"
+    bech32 "^1.1.4"
+    ripemd160 "^2.0.2"
 
 leven@^3.1.0:
   version "3.1.0"
@@ -17446,7 +17694,7 @@ readonly-date@^1.0.0:
   resolved "https://registry.yarnpkg.com/readonly-date/-/readonly-date-1.0.0.tgz#5af785464d8c7d7c40b9d738cbde8c646f97dcd9"
   integrity sha512-tMKIV7hlk0h4mO3JTmmVuIlJVXjKk3Sep9Bf5OH0O+758ruuVkUy2J9SttDLm91IEX/WHlXPSpxMGjPj4beMIQ==
 
-recast@^0.20.3:
+recast@^0.20, recast@^0.20.3:
   version "0.20.5"
   resolved "https://registry.yarnpkg.com/recast/-/recast-0.20.5.tgz#8e2c6c96827a1b339c634dd232957d230553ceae"
   integrity sha512-E5qICoPoNL4yU0H0NoBDntNB0Q5oMSNh9usFctYniLBluTthi3RsQVBXIJNbApOlvSwW/RGxIuokPcAc59J5fQ==
@@ -17943,7 +18191,7 @@ run-queue@^1.0.0, run-queue@^1.0.3:
   dependencies:
     aproba "^1.1.1"
 
-rxjs@^6.3.3:
+rxjs@6, rxjs@^6.3.3:
   version "6.6.7"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.6.7.tgz#90ac018acabf491bf65044235d5863c4dab804c9"
   integrity sha512-hTdwr+7yYNIT5n4AMYp85KA6yw2Va0FLa3Rguvbpa4W3I5xynaBZo41cM3XM+4Q6fRMj3sBYIR1VAmZMXYJvRQ==
@@ -19587,6 +19835,17 @@ ts-node@10.5.0:
     v8-compile-cache-lib "^3.0.0"
     yn "3.1.1"
 
+ts-node@^8:
+  version "8.10.2"
+  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-8.10.2.tgz#eee03764633b1234ddd37f8db9ec10b75ec7fb8d"
+  integrity sha512-ISJJGgkIpDdBhWVu3jufsWpK3Rzo7bdiIXJjQc0ynKxVOVcg2oIrf2H2cejminGrptVc6q6/uynAHNCuWGbpVA==
+  dependencies:
+    arg "^4.1.0"
+    diff "^4.0.1"
+    make-error "^1.1.1"
+    source-map-support "^0.5.17"
+    yn "3.1.1"
+
 ts-node@^9:
   version "9.1.1"
   resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-9.1.1.tgz#51a9a450a3e959401bda5f004a72d54b936d376d"
@@ -19714,6 +19973,11 @@ typescript@4.6.2:
   version "4.6.2"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.6.2.tgz#fe12d2727b708f4eef40f51598b3398baa9611d4"
   integrity sha512-HM/hFigTBHZhLXshn9sN37H085+hQGeJHJ/X7LpBWLID/fbc2acUMfU+lGD98X81sKP+pFa9f0DZmCwB9GnbAg==
+
+typescript@~4.4:
+  version "4.4.4"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.4.tgz#2cd01a1a1f160704d3101fd5a58ff0f9fcb8030c"
+  integrity sha512-DqGhF5IKoBl8WNf8C1gu8q0xZSInh9j1kJJMqT3a94w1JzVaBU4EXOSMrz9yDqMT0xt3selp83fuFMQ0uzv6qA==
 
 ua-parser-js@^0.7.30:
   version "0.7.31"
