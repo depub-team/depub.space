@@ -31,7 +31,7 @@ const transformRecord = (record: ISCNRecord, profile: Profile | null) => {
 
   return {
     id: data['@id'] as string,
-    message: data.contentMetadata.description,
+    message: data.contentMetadata.description || '',
     from,
     profile,
     date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp).toISOString(),
