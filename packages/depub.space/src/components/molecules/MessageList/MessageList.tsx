@@ -56,6 +56,8 @@ export const MessageList: FC<MessageListProps> = ({ onFetchData, isLoading, data
     setIsRefreshing(false);
   }, [isRefreshing, onFetchData]);
 
+  console.log(data);
+
   // reference: https://gist.github.com/r0b0t3d/db629f5f4e249c7a5b6a3c211f2b8aa8
   return (
     <FlatList

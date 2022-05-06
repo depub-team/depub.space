@@ -28,7 +28,7 @@ export const getMessages = async (
 
   if (data && data.data.messages.length) {
     return {
-      data: data.data.messages,
+      data: data.data.messages.filter(message => Boolean(message)),
       hasMore: data.data.messages.length >= limit,
     };
   }
