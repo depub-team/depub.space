@@ -1,0 +1,61 @@
+name = "depub-space-graphql-staging"
+type = "javascript"
+
+account_id = '35641a6e50a31e745078ec7a010c2a6f'
+# route = ''
+# zone_id = ''
+
+compatibility_flags = []
+workers_dev = true
+compatibility_date = "2022-02-04"
+kv_namespaces = [
+  { binding = "WORKERS_GRAPHQL_CACHE", id = "9cf0a6d5091e448c9411e8ee8c65acb6" }
+]
+
+[durable_objects]
+bindings = [
+  { name = "ISCN_TXN", class_name = "IscnTxn" }
+]
+
+[build]
+command = "yarn build"
+
+[build.upload]
+format = "modules"
+main = "./index.mjs"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["IscnTxn"]
+
+[miniflare]
+durable_objects_persist = true
+
+
+[vars]
+NODE_URL = "https://likecoin-public-testnet-5.oursky.dev/"
+ISCN_FINGERPRINT = "https://depub.blog"
+DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
+ENVIRONMENT = "staging"
+NOTION_API_ENDPOINT = "https://api.notion.com/v1"
+NOTION_API_SECRET = "secret_86zdikTfI5CB1AB4mn4cVw38DjbQ2XkuXYvBudOEMhF"
+
+# Override values for `--env production` usage
+[env.prod]
+name = "depub-space-graphql"
+kv_namespaces = [
+  { binding = "WORKERS_GRAPHQL_CACHE", id = "5acfb215b0d34d8fa20d921d1e40c699" }
+]
+
+[env.prod.durable_objects]
+bindings = [
+  { name = "ISCN_TXN", class_name = "IscnTxn" }
+]
+
+[env.prod.vars]
+NODE_URL = "https://mainnet-node.like.co/"
+ISCN_FINGERPRINT = "https://depub.blog"
+DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
+ENVIRONMENT = "production"
+NOTION_API_ENDPOINT = "https://api.notion.com/v1"
+NOTION_API_SECRET = "secret_86zdikTfI5CB1AB4mn4cVw38DjbQ2XkuXYvBudOEMhF"
