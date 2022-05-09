@@ -19,6 +19,15 @@ describe('messageSanitizer', () => {
         'ABC中文 <a href="https://abc.com/中文" target="_blank" rel="noopener noreferrer">https://abc.com/中文</a> 中文 #XYZ <a href="https://繁中.com/中文?name=壹貳參" target="_blank" rel="noopener noreferrer">https://繁中.com/中文?name=壹貳參</a>'
       );
     });
+
+    it('should extract URLs with long top level domain', () => {
+      const test = 'ABC中文 https://abc.network 中文 #XYZ https://繁中.network/中文?name=壹貳參';
+      const result = replaceURLToAnchor(test);
+
+      expect(result).toBe(
+        'ABC中文 <a href="https://abc.network" target="_blank" rel="noopener noreferrer">https://abc.network</a> 中文 #XYZ <a href="https://繁中.network/中文?name=壹貳參" target="_blank" rel="noopener noreferrer">https://繁中.network/中文?name=壹貳參</a>'
+      );
+    });
   });
 
   describe('replaceTagToAnchor', () => {
