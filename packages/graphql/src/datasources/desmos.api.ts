@@ -1,5 +1,5 @@
 import { DataSource } from 'apollo-datasource';
-import { DesmosProfile, DesmosProfileWithId } from '../interfaces';
+import { DesmosProfile } from '../interfaces';
 
 const FETCH_PROFILE_DOCUMENT = `query DesmosProfileLink($address: String) {
   profile(where: { chain_links: { external_address: { _eq: $address } } }) {
@@ -84,12 +84,7 @@ export class DesmosAPI extends DataSource {
     const profile = data.data.profile[0] as DesmosProfile;
 
     if (profile) {
-      const profileWithId = {
-        id: address,
-        ...profile,
-      } as DesmosProfileWithId;
-
-      return profileWithId;
+      return profile;
     }
 
     return null;
@@ -112,13 +107,7 @@ export class DesmosAPI extends DataSource {
     const profile = data.data.profile[0];
 
     if (profile) {
-      const likecoinAddress = getLikecoinAddressByProfile(profile);
-      const profileWithId = {
-        id: likecoinAddress || profile.address,
-        ...profile,
-      } as DesmosProfileWithId;
-
-      return profileWithId;
+      return profile;
     }
 
     return null;

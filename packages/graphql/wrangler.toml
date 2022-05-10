@@ -14,7 +14,8 @@ kv_namespaces = [
 
 [durable_objects]
 bindings = [
-  { name = "ISCN_TXN", class_name = "IscnTxn" }
+  { name = "ISCN_TXN", class_name = "IscnTxn" },
+  { name = "USER_PROFILE", class_name = "UserProfile" }
 ]
 
 [build]
@@ -49,7 +50,8 @@ kv_namespaces = [
 
 [env.prod.durable_objects]
 bindings = [
-  { name = "ISCN_TXN", class_name = "IscnTxn" }
+  { name = "ISCN_TXN", class_name = "IscnTxn" },
+  { name = "USER_PROFILE", class_name = "UserProfile" }
 ]
 
 [env.prod.vars]

@@ -6,9 +6,14 @@ const typeDefs = gql`
     messagesByHashTag(tag: String!, previousId: String, limit: Int): [Message]
     messagesByMentioned(mentioned: String!, previousId: String, limit: Int): [Message]
     getMessage(iscnId: String!): Message
-    getUser(dtagOrAddress: String!, previousId: String, limit: Int): User
-    getUserProfile(dtagOrAddress: String!): Profile
+    getUser(address: String!, previousId: String, limit: Int): User
+    getUserProfile(address: String!): UserProfile
+    getDesmosProfile(dtagOrAddress: String!): UserProfile
     getChannels(countryCode: String): Channels
+  }
+
+  type Mutation {
+    setProfilePicture(address: String!, picture: String!): UserProfile
   }
 
   type Channels {
@@ -32,13 +37,13 @@ const typeDefs = gql`
     from: String!
     date: String!
     images: [String]
-    profile: Profile
+    profile: UserProfile
   }
 
   type User {
-    id: ID! # wallet address
     address: String!
-    profile: Profile
+    profile: UserProfile
+    desmosProfile: UserProfile
     messages(previousId: String, limit: Int): [Message]
   }
 
@@ -53,16 +58,13 @@ const typeDefs = gql`
     chainConfig: ChainConfig
   }
 
-  type Profile {
-    id: ID! # Desmos address
+  type UserProfile {
     address: String!
     bio: String
     coverPic: String
-    creationTime: String! # ISO timestamp
-    dtag: String!
-    nickname: String!
+    dtag: String
+    nickname: String
     profilePic: String
-    chainLinks: [ChainLink]
   }
 `;
 

@@ -6,17 +6,14 @@ export interface ChainLink {
 }
 
 export interface DesmosProfile {
-  address: string;
+  likecoinAddress: string;
   applicationLinks: [];
-  bio: string;
   chainLinks: ChainLink[];
-  coverPic: string;
   creationTime: string; // ISO timestamp
+  address: string;
+  bio: string;
+  coverPic: string;
   dtag: string;
   nickname: string;
   profilePic: string;
-}
-
-export interface DesmosProfileWithId extends DesmosProfile {
-  id: string;
 }

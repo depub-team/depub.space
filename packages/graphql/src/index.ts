@@ -21,6 +21,13 @@ const handleRequest = async (request: Request, env: Bindings) => {
   const refererUrl = referer && new URL(referer);
 
   try {
+    // Authentication with signed message
+    const authHeader = request.headers.get('Authorization');
+
+    if (authHeader) {
+      // const [, signature] = authHeader.split('Bearer ');
+    }
+
     if (url.pathname === graphQLOptions.baseEndpoint) {
       const response =
         request.method === 'OPTIONS'
@@ -32,6 +39,7 @@ const handleRequest = async (request: Request, env: Bindings) => {
               }),
             });
 
+      // CORS
       if (graphQLOptions.cors) {
         let allowOrigin = '*';
 
