@@ -37,6 +37,7 @@ const debug = Debug('web:useAppState');
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
+const TWITTER_ACCESS_TOKEN_STORAGE_KEY = 'TWITTER_ACCESS_TOKEN_STORAGE_KEY';
 
 export class AppStateError extends Error {}
 
@@ -52,7 +53,7 @@ export interface AppStateContextProps {
   isNoBalanceModalOpen: boolean;
   isPostSuccessfulModalOpen: boolean;
   isMessageComposerModalOpen: boolean;
-  twitterAccessToken: TwitterAccessToken | null;
+  twitterAccessToken: TwitterAccessToken | null; // Twitter OAuth token for v1.1 API
   profile: DesmosProfile | null;
   postedMessage: PostedMessage | null; // new posted message object
   list: List[];
@@ -263,7 +264,7 @@ export const AppStateProvider: FC = ({ children }) => {
 
     actions.showLoading();
 
-    localStorage.removeItem('twitterAccessToken');
+    localStorage.removeItem(TWITTER_ACCESS_TOKEN_STORAGE_KEY);
 
     dispatch({
       type: ActionType.SET_TWITTER_ACCESS_TOKEN,
@@ -277,7 +278,7 @@ export const AppStateProvider: FC = ({ children }) => {
     actions.closeMessageComposerModal();
   }, [actions]);
 
-  const handleOnTwitterLogin = useCallback(() => {
+  const handleOnTwitterLogin = useCallback(async () => {
     if (!likecoinAddress) {
       return;
     }
@@ -285,7 +286,7 @@ export const AppStateProvider: FC = ({ children }) => {
     actions.showLoading();
 
     try {
-      const loginUrl = twitter.getLoginUrl(likecoinAddress);
+      const loginUrl = await twitter.getLoginUrl();
 
       window.open(
         loginUrl,
@@ -439,18 +440,15 @@ export const AppStateProvider: FC = ({ children }) => {
 
         // setup Twitter oauth access token
         const encryptedTwitterAccessToken =
-          event?.newValue || window.localStorage.getItem('twitterAccessToken');
+          event?.newValue || window.localStorage.getItem(TWITTER_ACCESS_TOKEN_STORAGE_KEY);
 
         if (encryptedTwitterAccessToken) {
           const twitterAccessToken = JSON.parse(
             window.atob(encryptedTwitterAccessToken)
           ) as TwitterAccessToken;
 
-          if (
-            twitterAccessToken &&
-            twitterAccessToken.access_token &&
-            Date.parse(twitterAccessToken.expires_at.toString()) > Date.now()
-          ) {
+          console.log('twitterAccessToken =', twitterAccessToken);
+          if (twitterAccessToken && twitterAccessToken.oauth_token) {
             dispatch({
               type: ActionType.SET_TWITTER_ACCESS_TOKEN,
               twitterAccessToken,
@@ -500,6 +498,7 @@ export const AppStateProvider: FC = ({ children }) => {
         walletAddress={walletAddress}
         onClose={handleOnMessageComposerModalClose}
         onSubmit={postAndUpload}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onTwitterLogin={handleOnTwitterLogin}
         onTwitterLogout={handleOnTwitterLogout}
       />

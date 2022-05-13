@@ -34,8 +34,6 @@ if (process.argv[2] === 'test') {
   }
 }
 
-console.log(path.resolve(__dirname, '../../node_modules/crypto-browserify/index.js'));
-
 try {
   await build({
     bundle: true,

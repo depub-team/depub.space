@@ -1,7 +1,6 @@
 export interface TwitterAccessToken {
-  token_type: string; // bearer
-  expires_in: number;
-  access_token: string;
-  scope: string;
-  expires_at: Date;
+  oauth_token: string;
+  oauth_token_secret: string;
+  user_id: string;
+  screen_name: string;
 }

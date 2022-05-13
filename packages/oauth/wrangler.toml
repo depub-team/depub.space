@@ -21,6 +21,20 @@ tag = "v1"
 
 [miniflare]
 
+[vars]
+TWITTER_CLIENT_ID = "VUFqaVZVc1RLUzFtMTdIWGJWMG46MTpjaQ"
+TWITTER_API_KEY = "WI7NcqAuiGLdX8d4SY4tUCvvu"
+TWITTER_ACCESS_TOKEN = "333748468-QGFhPpAxxhekphkuCfc6gn58PfjBJf8aIlgPONYP"
+
+
+route = "stag.depub.space/oauth/*"
+
 # Override values for `--env production` usage
 [env.prod]
 name = "oauth"
+route = "depub.space/oauth/*"
+
+# [secrets]
+# TWITTER_CLIENT_SECRET
+# TWITTER_API_SECRET_KEY
+# TWITTER_ACCESS_TOKEN_SECRET

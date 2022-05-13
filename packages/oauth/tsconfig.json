@@ -12,6 +12,7 @@
     "baseUrl": "./",
     "types": [
       "jest",
+      "node",
       "@cloudflare/workers-types"
     ]
   },

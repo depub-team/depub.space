@@ -8,6 +8,9 @@
   "type": "module",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
+  "browser": {
+    "crypto": false
+  },
   "scripts": {
     "build": "node build.js",
     "deploy:prod": "NODE_ENV=production npx @cloudflare/wrangler publish --env prod",
@@ -17,13 +20,13 @@
     "test": "yarn build && node --experimental-vm-modules ../../node_modules/jest/bin/jest --config ./jest.config.json"
   },
   "dependencies": {
-    "twitter-v1-oauth": "1.0.14"
+    "oauth-1.0a": "2.2.6"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "3.4.0",
     "@esbuild-plugins/node-globals-polyfill": "0.1.1",
     "@esbuild-plugins/node-modules-polyfill": "0.1.4",
-    "@types/node": "17.0.21",
+    "@types/node": "^17.0.21",
     "crypto-browserify": "3.12.0",
     "esbuild": "0.14.23",
     "esbuild-plugin-alias": "0.2.1",
