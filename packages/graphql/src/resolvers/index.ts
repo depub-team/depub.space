@@ -1,4 +1,5 @@
 import { ApolloError } from 'apollo-server-errors';
+import { toCosmos } from '../utils';
 import { Context } from '../context';
 import { InputMaybe, Message, Profile, Resolvers } from './generated_types';
 import { KVStore } from '../kv-store';
@@ -80,7 +81,12 @@ const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile 
     let profile: DesmosProfileWithId | null = null;
 
     if (/^(cosmos1|like1)/.test(dtagOrAddress)) {
-      profile = await ctx.dataSources.desmosAPI.getProfile(dtagOrAddress);
+      let address = dtagOrAddress
+
+      // hotfix for desmos do not support like1 address
+      if (/^like1/.test(dtagOrAddress)) address = toCosmos(dtagOrAddress)
+
+      profile = await ctx.dataSources.desmosAPI.getProfile(address);
     } else {
       profile = await ctx.dataSources.desmosAPI.getProfileByDtag(dtagOrAddress);
     }
