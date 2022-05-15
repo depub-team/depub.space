@@ -22,6 +22,7 @@ export const MessageComposerModal: FC<MessageComposerModalProps> = ({
     <Modal.Content maxH="100%" maxW={MAX_WIDTH} w="95%">
       <Modal.Body px={0}>
         <MessageComposer
+          autoFocus={modalProps.isOpen}
           defaultValue={defaultValue}
           isCollapsed={isCollapsed}
           isLoading={isLoading}
