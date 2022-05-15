@@ -149,9 +149,15 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   }, [isCollapsed]);
 
   const handleTwitterToggle = useCallback(() => {
-    if (isTwitterLoggedIn) {
-      if (onTwitterLogout) onTwitterLogout();
-    } else if (onTwitterLogin) onTwitterLogin();
+    if (isTwitterLoggedIn && onTwitterLogout) {
+      onTwitterLogout();
+
+      return;
+    }
+
+    if (onTwitterLogin) {
+      onTwitterLogin();
+    }
   }, [isTwitterLoggedIn, onTwitterLogout, onTwitterLogin]);
 
   useEffect(() => {

@@ -1,4 +1,7 @@
 import axios from 'axios';
+import Debug from 'debug';
+
+const debug = Debug('web:twitter/getLoginUrl');
 
 /* eslint-disable prefer-destructuring */
 const NEXT_PUBLIC_OAUTH_URL = process.env.NEXT_PUBLIC_OAUTH_URL || '';
@@ -9,6 +12,8 @@ if (!NEXT_PUBLIC_OAUTH_URL) {
 }
 
 export const getLoginUrl = async () => {
+  debug('getLoginUrl()');
+
   const callbackURL = `${NEXT_PUBLIC_OAUTH_URL}/twitter/callback`;
 
   const response = await axios({
@@ -20,6 +25,8 @@ export const getLoginUrl = async () => {
     responseType: 'text',
   });
   // eslint-disable-next-line @typescript-eslint/naming-convention
+
+  debug('getLoginUrl() -> response', response);
 
   return `https://api.twitter.com/oauth/authorize?${response.data}`;
 };

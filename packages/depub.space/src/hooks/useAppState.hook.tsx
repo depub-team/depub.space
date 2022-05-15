@@ -258,7 +258,7 @@ export const AppStateProvider: FC = ({ children }) => {
   );
 
   const handleOnTwitterLogout = useCallback(() => {
-    if (!likecoinAddress) {
+    if (!state.twitterAccessToken) {
       return;
     }
 
@@ -272,14 +272,14 @@ export const AppStateProvider: FC = ({ children }) => {
     });
 
     actions.closeLoading();
-  }, [likecoinAddress, actions]);
+  }, [state.twitterAccessToken, actions]);
 
   const handleOnMessageComposerModalClose = useCallback(() => {
     actions.closeMessageComposerModal();
   }, [actions]);
 
   const handleOnTwitterLogin = useCallback(async () => {
-    if (!likecoinAddress) {
+    if (!offlineSigner) {
       return;
     }
 
@@ -298,7 +298,7 @@ export const AppStateProvider: FC = ({ children }) => {
     }
 
     actions.closeLoading();
-  }, [actions, likecoinAddress]);
+  }, [actions, offlineSigner]);
 
   const postAndUpload = useCallback(
     async (data: MessageFormType, image?: string | null) => {
