@@ -1,16 +1,13 @@
 import crypto from 'crypto';
 import OAuth from 'oauth-1.0a';
 import { Bindings } from '../bindings';
+import { getAuthHeader } from './get-auth-header';
 import { getCorsHeaders } from './get-cors-header';
 
-interface TwitterUploadResponse {
-  errors?: { code: number; message: string }[];
-  media_id: number;
-  media_id_string: string;
-  media_key: string;
-  size: number;
-  expires_after_secs: string;
-  image: { image_type: string; w: number; h: number };
+interface RequestPayload {
+  media_data: string;
+  media_category: string;
+  additional_owners?: string;
 }
 
 export async function uploadMedia(request: Request, env: Bindings) {
@@ -22,12 +19,16 @@ export async function uploadMedia(request: Request, env: Bindings) {
 
   try {
     const formData = await request.formData();
-    const body = Object.fromEntries(formData.entries()) as {
-      oauth_token?: string;
-      oauth_token_secret?: string;
-    };
+    const accessTokens = getAuthHeader(request);
 
-    if (!body.oauth_token || !body.oauth_token_secret) {
+    if (!accessTokens) {
+      return new Response('Unauthorized', {
+        status: 401,
+        headers: getCorsHeaders(request),
+      });
+    }
+
+    if (!formData.has('file')) {
       return new Response('Invalid body', {
         status: 403,
         headers: getCorsHeaders(request),
@@ -35,20 +36,26 @@ export async function uploadMedia(request: Request, env: Bindings) {
     }
 
     const file = formData.get('file');
-    const token = {
-      key: env.TWITTER_ACCESS_TOKEN,
-      secret: env.TWITTER_ACCESS_TOKEN_SECRET,
-    };
+    // app key
+    // const token: OAuth.Token = {
+    //   key: env.TWITTER_ACCESS_TOKEN,
+    //   secret: env.TWITTER_ACCESS_TOKEN_SECRET,
+    // };
 
     const fileArrayBuffer = await (file as Blob).arrayBuffer();
     const base64String = btoa(
       new Uint8Array(fileArrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
     );
+    const data: RequestPayload = { media_data: base64String, media_category: 'tweet_image' };
+
+    if (formData.has('additional_owners')) {
+      data.additional_owners = formData.get('additional_owners') as string;
+    }
 
     const requestData: OAuth.RequestOptions = {
       url: 'https://upload.twitter.com/1.1/media/upload.json',
       method: 'POST',
-      data: { media_data: base64String, media_category: 'tweet_image' },
+      data,
     };
     const oauth = new OAuth({
       signature_method: 'HMAC-SHA1',
@@ -60,7 +67,7 @@ export async function uploadMedia(request: Request, env: Bindings) {
         secret: env.TWITTER_API_SECRET_KEY,
       },
     });
-    const authHeader = oauth.toHeader(oauth.authorize(requestData, token));
+    const authHeader = oauth.toHeader(oauth.authorize(requestData, accessTokens));
 
     const uploadResponse = await fetch(requestData.url, {
       method: requestData.method,
@@ -71,20 +78,8 @@ export async function uploadMedia(request: Request, env: Bindings) {
       body: new URLSearchParams(requestData.data),
     });
 
-    if (uploadResponse.status !== 200) {
-      const responseBody = await uploadResponse.text();
-      const errors = responseBody || 'Twitter API returned non-200 status code for Media';
-
-      return new Response(errors, {
-        status: 500,
-        headers: getCorsHeaders(request),
-      });
-    }
-
-    const responseBody = await uploadResponse.json<TwitterUploadResponse>();
-
-    return new Response(JSON.stringify(responseBody), {
-      status: 200,
+    return new Response(uploadResponse.body, {
+      status: uploadResponse.status,
       headers: getCorsHeaders(request),
     });
   } catch (error) {

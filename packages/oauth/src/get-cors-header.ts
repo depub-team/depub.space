@@ -7,17 +7,16 @@ const whitelistOrigins = [
 
 export const getCorsHeaders = (request: Request) => {
   const origin = request.headers.get('Origin');
-  const headers = new Headers();
 
   if (!origin || !whitelistOrigins.includes(origin)) {
-    return headers;
+    return undefined;
   }
 
-  headers.append('Access-Control-Allow-Origin', origin);
-  headers.append('Access-Control-Allow-Methods', 'GET,HEAD,POST,DELETE,OPTIONS');
-  headers.append('Access-Control-Max-Age', '86400');
-
-  return headers;
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET,HEAD,POST,DELETE,OPTIONS',
+    'Access-Control-Max-Age': '86400',
+  };
 };
 
 export const handleOptions = (request: Request) => {

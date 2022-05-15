@@ -37,7 +37,7 @@ const debug = Debug('web:useAppState');
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
-const TWITTER_ACCESS_TOKEN_STORAGE_KEY = 'TWITTER_ACCESS_TOKEN_STORAGE_KEY';
+const TWITTER_ACCESS_TOKEN_STORAGE_KEY = 'TWITTER_ACCESS_TOKEN';
 
 export class AppStateError extends Error {}
 
@@ -324,8 +324,8 @@ export const AppStateProvider: FC = ({ children }) => {
         const txn = await postMessage(offlineSigner, data.message, file && [file]);
         const rawLog = JSON.parse(txn.rawLog || '[]') as ISCNCreateRawLog[];
         const iscnRecord = rawLog[0].events.find(event => event.type === 'iscn_record');
-        let twitterUrl: string | undefined;
         let newMessageUrl: string | undefined;
+        let twitterUrl: string | undefined;
 
         if (iscnRecord?.attributes) {
           const iscnId = iscnRecord.attributes.find(attribute => attribute.key === 'iscn_id');
@@ -339,11 +339,18 @@ export const AppStateProvider: FC = ({ children }) => {
           throw new Error('Failed to get new message url');
         }
 
-        const textWithLink = `${data.message}\n\n${newMessageUrl}`;
-
         // posting to Twitter
         if (state.twitterAccessToken) {
-          twitterUrl = await twitter.postTweet(state.twitterAccessToken, textWithLink);
+          try {
+            twitterUrl = await twitter.postTweet(state.twitterAccessToken, data.message, file);
+          } catch (error) {
+            debug('postAndUpload() -> error: %O', error);
+
+            alert.show({
+              title: 'Failed to post to Twitter, please try again later',
+              status: 'error',
+            });
+          }
         }
 
         actions.showPostSuccessfulModal({
@@ -447,7 +454,6 @@ export const AppStateProvider: FC = ({ children }) => {
             window.atob(encryptedTwitterAccessToken)
           ) as TwitterAccessToken;
 
-          console.log('twitterAccessToken =', twitterAccessToken);
           if (twitterAccessToken && twitterAccessToken.oauth_token) {
             dispatch({
               type: ActionType.SET_TWITTER_ACCESS_TOKEN,

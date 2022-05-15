@@ -50,6 +50,7 @@ export const PostedMessageModal: FC<PostedMessageModalProps> = ({
               >
                 <Icon as={<Feather />} color="emerald.500" mt="2" name="check-circle" size="xl" />
               </PresenceTransition>
+
               <Text textAlign="center">Your tweet has been created successfully!</Text>
               {twitterUrl && (
                 <Text textAlign="center">

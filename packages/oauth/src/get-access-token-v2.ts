@@ -1,6 +1,6 @@
 import { Bindings } from '../bindings';
 
-const TWITTER_ACCESS_TOKEN_STORAGE_KEY = 'TWITTER_ACCESS_TOKEN_STORAGE_KEY';
+const TWITTER_ACCESS_TOKEN_STORAGE_KEY = 'TWITTER_ACCESS_TOKEN';
 
 // XXX: unused function, but keep it in case we need it in the future
 

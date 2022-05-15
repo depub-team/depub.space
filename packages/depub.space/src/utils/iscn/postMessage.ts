@@ -12,7 +12,7 @@ const ISCN_FINGERPRINT = process.env.NEXT_PUBLIC_ISCN_FINGERPRINT || '';
 export const postMessage = async (
   offlineSigner: OfflineSigner,
   message: string,
-  files?: string | File[]
+  files?: string | File[] // FIXME: should only supports one file
 ) => {
   debug('message: %s, files: %O', message, files);
 

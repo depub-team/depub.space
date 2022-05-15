@@ -28,6 +28,7 @@ export async function postTweetV2(request: Request) {
   });
 
   return new Response(response.body, {
+    status: response.status,
     headers: {
       ...getCorsHeaders(request),
       ...Object.fromEntries(response.headers.entries()),

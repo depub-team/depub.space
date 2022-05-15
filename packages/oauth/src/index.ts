@@ -5,29 +5,7 @@ import { handleOptions } from './get-cors-header';
 import { uploadMedia } from './upload-media';
 import { getTwitterOAuthToken } from './get-oauth-token';
 import { getTwitterAccessToken } from './get-access-token';
-
-function serveHTML() {
-  const html = `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Test</title>
-  </head>
-  <body>
-    <form method="POST" action="/oauth/twitter/upload" enctype="multipart/form-data">
-      <input type="hidden" name="additional_owners" />
-      <input type="file" multiple name="file" />
-      <input name="oauth_token" type="hidden" value="68345395-fVCmtxrqLxDR04AEIoXg7xwFCMAJ901gCMoFqtBJW" />
-      <input name="oauth_token_secret" type="hidden" value="n15SLJK5cfwfZpPYbx8NEVFqJGldq4jrfQmyuTAteifJr" />
-      <input type="submit" />
-    </form>
-  </body>
-</html>
-`;
-
-  return new Response(html, { headers: { 'Content-Type': 'html' } });
-}
+import { postTweet } from './post-tweet';
 
 async function handleRequest(request: Request, env: Bindings) {
   const url = new URL(request.url);
@@ -38,6 +16,14 @@ async function handleRequest(request: Request, env: Bindings) {
   }
 
   try {
+    if (pathname === '/oauth/twitter/tweets') {
+      return await postTweet(request, env);
+    }
+
+    if (pathname === '/oauth/twitter/upload') {
+      return await uploadMedia(request, env);
+    }
+
     if (pathname === '/oauth/twitter/request_token') {
       return await getTwitterOAuthToken(request, env);
     }
@@ -46,6 +32,7 @@ async function handleRequest(request: Request, env: Bindings) {
       return await getTwitterAccessToken(request, env);
     }
 
+    // v2
     if (pathname === '/oauth/twitter/v2/callback') {
       return await getTwitterAccessTokenV2(request, env);
     }
@@ -53,12 +40,6 @@ async function handleRequest(request: Request, env: Bindings) {
     if (pathname === '/oauth/twitter/v2/tweets') {
       return await postTweetV2(request);
     }
-
-    if (pathname === '/oauth/twitter/upload') {
-      return await uploadMedia(request, env);
-    }
-
-    return serveHTML();
 
     return new Response('Not found', {
       status: 404,
