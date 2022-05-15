@@ -39,16 +39,14 @@ export async function getTwitterOAuthToken(request: Request, env: Bindings) {
       data: { oauth_callback: redirectURI },
     };
 
-    const authHeader = oauth.toHeader(oauth.authorize(requestData)).Authorization;
-
-    const headers = new Headers();
-
-    headers.append('Authorization', authHeader);
+    const authHeader = oauth.toHeader(oauth.authorize(requestData));
 
     const result = await fetch('https://api.twitter.com/oauth/request_token', {
       method: 'POST',
       body: JSON.stringify({ oauth_callback: redirectURI }),
-      headers,
+      headers: {
+        ...authHeader,
+      },
     });
 
     const responseText = await result.text();
