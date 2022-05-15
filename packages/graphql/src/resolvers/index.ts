@@ -81,12 +81,13 @@ const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile 
     let profile: DesmosProfileWithId | null = null;
 
     if (/^(cosmos1|like1)/.test(dtagOrAddress)) {
-      let address = dtagOrAddress
+
+      profile = await ctx.dataSources.desmosAPI.getProfile(dtagOrAddress);
 
       // hotfix for desmos do not support like1 address
-      if (/^like1/.test(dtagOrAddress)) address = toCosmos(dtagOrAddress)
-
-      profile = await ctx.dataSources.desmosAPI.getProfile(address);
+      if (!profile && /^like1/.test(dtagOrAddress)) {
+        profile = await ctx.dataSources.desmosAPI.getProfile(toCosmos(dtagOrAddress))
+      }
     } else {
       profile = await ctx.dataSources.desmosAPI.getProfileByDtag(dtagOrAddress);
     }
