@@ -105,6 +105,28 @@ export const theme = extendTheme({
         color: 'primary.500',
       },
     },
+    Modal: {
+      defaultProps: {
+        _backdrop: {
+          _dark: {
+            opacity: 0.85,
+          },
+        },
+      },
+    },
+    ModalContent: {
+      baseStyle: {
+        borderWidth: 1,
+        borderStyle: 'solid',
+        borderColor: 'rgba(255,255,255,0.07)',
+        _light: {
+          bg: 'white',
+        },
+        _dark: {
+          bg: '#000e21',
+        },
+      },
+    },
     ModalCloseButton: {
       baseStyle: {
         _icon: {
