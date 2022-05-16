@@ -132,9 +132,9 @@ export class IscnTxn implements DurableObject {
     const author = url.searchParams.get('author');
     const mentioned = url.searchParams.get('mentioned');
     const hashtag = url.searchParams.get('hashtag');
-    const recordKeys = await this.state.storage.get<RecordKeys>(`${RECORD_KEY_KEY}:${from}`);
     const prefix = TRANSACTION_KEY;
     let transactionList: Map<string, ISCNRecord>;
+    const recordKeys = await this.state.storage.get<RecordKeys>(`${RECORD_KEY_KEY}:${from}`);
 
     if (author) {
       const keyList = await this.state.storage.list<string>({
@@ -148,7 +148,6 @@ export class IscnTxn implements DurableObject {
       // get messages posted by legacy address if the author address is prefixed with like
       if (author.startsWith('like')) {
         const legacyAddress = toCosmos(author);
-
         const legacyKeyList = await this.state.storage.list<string>({
           prefix: `${AUTHOR_KEY}:${legacyAddress}`,
           reverse: true,
