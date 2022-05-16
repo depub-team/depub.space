@@ -81,12 +81,11 @@ const getProfile = async (dtagOrAddress: string, ctx: Context): Promise<Profile 
     let profile: DesmosProfileWithId | null = null;
 
     if (/^(cosmos1|like1)/.test(dtagOrAddress)) {
-
       profile = await ctx.dataSources.desmosAPI.getProfile(dtagOrAddress);
 
-      // hotfix for desmos do not support like1 address
+      // XXX: hotfix for desmos do not support like1 address
       if (!profile && /^like1/.test(dtagOrAddress)) {
-        profile = await ctx.dataSources.desmosAPI.getProfile(toCosmos(dtagOrAddress))
+        profile = await ctx.dataSources.desmosAPI.getProfile(toCosmos(dtagOrAddress));
       }
     } else {
       profile = await ctx.dataSources.desmosAPI.getProfileByDtag(dtagOrAddress);
@@ -409,17 +408,14 @@ const resolvers: Resolvers = {
     getChannels: (_parent, args, ctx) => getChannels(args, ctx),
   },
   User: {
-    messages: async (parent, args, ctx) => {
-      const walletAddress = parent.profile?.id || parent.id;
-
-      return getMessages(
+    messages: async (parent, args, ctx) =>
+      getMessages(
         {
-          author: walletAddress,
+          author: parent.id,
           ...args,
         },
         ctx
-      );
-    },
+      ),
   },
 };
 
