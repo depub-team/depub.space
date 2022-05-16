@@ -51,7 +51,7 @@ export const PostedMessageModal: FC<PostedMessageModalProps> = ({
                 <Icon as={<Feather />} color="emerald.500" mt="2" name="check-circle" size="xl" />
               </PresenceTransition>
 
-              <Text textAlign="center">Your tweet is registered as NFT.</Text>
+              <Text textAlign="center">Your tweet is registered as an NFT</Text>
               {twitterUrl && (
                 <Text textAlign="center">
                   The tweet is simultaneously shared on Twitter.{' '}
