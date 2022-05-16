@@ -34,6 +34,11 @@ route = "stag.depub.space/oauth/*"
 name = "oauth"
 route = "depub.space/oauth/*"
 
+[env.prod.vars]
+TWITTER_CLIENT_ID = "UTlWYmFQck5GdnZJVVZrVVFOb0M6MTpjaQ"
+TWITTER_API_KEY = "BOfpv17BCVjadMWLUAFTpf4RP"
+TWITTER_ACCESS_TOKEN = "333748468-QGFhPpAxxhekphkuCfc6gn58PfjBJf8aIlgPONYP"
+
 # [secrets]
 # TWITTER_CLIENT_SECRET
 # TWITTER_API_SECRET_KEY
