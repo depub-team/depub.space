@@ -51,13 +51,14 @@ export const PostedMessageModal: FC<PostedMessageModalProps> = ({
                 <Icon as={<Feather />} color="emerald.500" mt="2" name="check-circle" size="xl" />
               </PresenceTransition>
 
-              <Text textAlign="center">Your tweet is registered as an NFT</Text>
+              <Text textAlign="center">Your tweet is registered as an NFT.</Text>
               {twitterUrl && (
                 <Text textAlign="center">
-                  The tweet is simultaneously shared on Twitter.{' '}
+                  The tweet is simultaneously shared on Twitter. Click{' '}
                   <Link href={twitterUrl} isExternal>
                     here to open
                   </Link>
+                  .
                 </Text>
               )}
             </VStack>
