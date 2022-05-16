@@ -1,5 +1,5 @@
 import { ApolloError } from 'apollo-server-errors';
-import { toCosmos } from '../utils';
+import { toCosmos, toLike } from '../utils';
 import { Context } from '../context';
 import { InputMaybe, Message, Profile, Resolvers } from './generated_types';
 import { KVStore } from '../kv-store';
@@ -408,14 +408,22 @@ const resolvers: Resolvers = {
     getChannels: (_parent, args, ctx) => getChannels(args, ctx),
   },
   User: {
-    messages: async (parent, args, ctx) =>
-      getMessages(
+    messages: async (parent, args, ctx) => {
+      let walletAddress = parent.profile?.id || parent.id;
+
+      // always use like prefix address
+      if (walletAddress.startsWith('cosmos')) {
+        walletAddress = toLike(walletAddress);
+      }
+
+      return getMessages(
         {
-          author: parent.id,
+          author: walletAddress,
           ...args,
         },
         ctx
-      ),
+      );
+    },
   },
 };
 
