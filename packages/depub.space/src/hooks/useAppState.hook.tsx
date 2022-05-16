@@ -268,7 +268,8 @@ export const AppStateProvider: FC = ({ children }) => {
     });
 
     actions.closeLoading();
-  }, [actions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleOnMessageComposerModalClose = useCallback(() => {
     actions.closeMessageComposerModal();
@@ -294,7 +295,8 @@ export const AppStateProvider: FC = ({ children }) => {
     }
 
     actions.closeLoading();
-  }, [actions, offlineSigner]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const postAndUpload = useCallback(
     async (data: MessageFormType, image?: string | null) => {
@@ -377,7 +379,8 @@ export const AppStateProvider: FC = ({ children }) => {
         Sentry.captureException(ex);
       }
     },
-    [actions, alert, offlineSigner, state.twitterAccessToken, userHandle]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [alert, state.twitterAccessToken, userHandle]
   );
 
   const handleOkPostedMessage = useCallback(() => {
@@ -413,7 +416,8 @@ export const AppStateProvider: FC = ({ children }) => {
     return () => {
       clearTimeout(showModalTimeout);
     };
-  }, [actions, walletAddress]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walletAddress]);
 
   useEffect(() => {
     if (connectError) {
@@ -424,7 +428,8 @@ export const AppStateProvider: FC = ({ children }) => {
         status: 'error',
       });
     }
-  }, [alert, connectError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectError]);
 
   useEffect(() => {
     const handleLocalStorageChange = (event?: StorageEvent) => {
@@ -474,7 +479,8 @@ export const AppStateProvider: FC = ({ children }) => {
       ...actions,
       postAndUpload,
     }),
-    [actions, postAndUpload, state]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [postAndUpload, state]
   );
 
   return (
