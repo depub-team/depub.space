@@ -296,7 +296,7 @@ export const AppStateProvider: FC = ({ children }) => {
 
     actions.closeLoading();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [offlineSigner]);
 
   const postAndUpload = useCallback(
     async (data: MessageFormType, image?: string | null) => {
