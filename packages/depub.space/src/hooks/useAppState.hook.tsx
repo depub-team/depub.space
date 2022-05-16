@@ -377,8 +377,7 @@ export const AppStateProvider: FC = ({ children }) => {
         Sentry.captureException(ex);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [offlineSigner, userHandle]
+    [actions, alert, offlineSigner, state.twitterAccessToken, userHandle]
   );
 
   const handleOkPostedMessage = useCallback(() => {
@@ -414,8 +413,7 @@ export const AppStateProvider: FC = ({ children }) => {
     return () => {
       clearTimeout(showModalTimeout);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [walletAddress]);
+  }, [actions, walletAddress]);
 
   useEffect(() => {
     if (connectError) {
@@ -426,8 +424,7 @@ export const AppStateProvider: FC = ({ children }) => {
         status: 'error',
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connectError]);
+  }, [alert, connectError]);
 
   useEffect(() => {
     const handleLocalStorageChange = (event?: StorageEvent) => {
@@ -477,8 +474,7 @@ export const AppStateProvider: FC = ({ children }) => {
       ...actions,
       postAndUpload,
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state]
+    [actions, postAndUpload, state]
   );
 
   return (
