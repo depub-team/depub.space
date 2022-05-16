@@ -145,7 +145,7 @@ export class IscnTxn implements DurableObject {
       });
       let keyListValues = [...keyList.values()];
 
-      // get messages posted by legacy address if the author address is prefixed with like
+      // XXX: get messages posted by legacy address if the author address is prefixed with like
       if (author.startsWith('like')) {
         const legacyAddress = toCosmos(author);
         const legacyKeyList = await this.state.storage.list<string>({

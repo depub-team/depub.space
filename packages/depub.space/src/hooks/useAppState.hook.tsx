@@ -471,7 +471,7 @@ export const AppStateProvider: FC = ({ children }) => {
     return () => {
       window.removeEventListener('storage', handleLocalStorageChange);
     };
-  }, [walletAddress]);
+  }, []);
 
   const contextValue = useMemo(
     () => ({
