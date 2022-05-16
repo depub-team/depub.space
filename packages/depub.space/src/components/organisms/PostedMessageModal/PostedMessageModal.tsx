@@ -15,14 +15,14 @@ export interface PostedMessageModalProps {
   twitterUrl?: string;
   isOpen?: boolean;
   onClose: () => void;
-  onCheckout: () => void;
+  onOk: () => void;
 }
 
 export const PostedMessageModal: FC<PostedMessageModalProps> = ({
   isOpen,
   twitterUrl,
   onClose,
-  onCheckout,
+  onOk,
 }) => {
   const cancelRef = useRef(null);
 
@@ -30,7 +30,7 @@ export const PostedMessageModal: FC<PostedMessageModalProps> = ({
     <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
       <AlertDialog.Content>
         <AlertDialog.CloseButton />
-        <AlertDialog.Header>ISCN Record Created</AlertDialog.Header>
+        <AlertDialog.Header>Tweeted</AlertDialog.Header>
         <AlertDialog.Body>
           <Center>
             <VStack alignItems="center" justifyContent="center" py={4} space={4}>
@@ -51,10 +51,10 @@ export const PostedMessageModal: FC<PostedMessageModalProps> = ({
                 <Icon as={<Feather />} color="emerald.500" mt="2" name="check-circle" size="xl" />
               </PresenceTransition>
 
-              <Text textAlign="center">Your tweet has been created successfully!</Text>
+              <Text textAlign="center">Your tweet is registered as NFT.</Text>
               {twitterUrl && (
                 <Text textAlign="center">
-                  And also shared on Twitter, Click{' '}
+                  The tweet is simultaneously shared on Twitter.{' '}
                   <Link href={twitterUrl} isExternal>
                     here to open
                   </Link>
@@ -65,11 +65,8 @@ export const PostedMessageModal: FC<PostedMessageModalProps> = ({
         </AlertDialog.Body>
         <AlertDialog.Footer>
           <Button.Group space={2}>
-            <Button ref={cancelRef} colorScheme="coolGray" variant="unstyled" onPress={onClose}>
-              Cancel
-            </Button>
-            <Button colorScheme="primary" onPress={onCheckout}>
-              Checkout
+            <Button ref={cancelRef} colorScheme="primary" onPress={onOk}>
+              OK
             </Button>
           </Button.Group>
         </AlertDialog.Footer>

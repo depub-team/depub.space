@@ -258,10 +258,6 @@ export const AppStateProvider: FC = ({ children }) => {
   );
 
   const handleOnTwitterLogout = useCallback(() => {
-    if (!state.twitterAccessToken) {
-      return;
-    }
-
     actions.showLoading();
 
     localStorage.removeItem(TWITTER_ACCESS_TOKEN_STORAGE_KEY);
@@ -272,7 +268,7 @@ export const AppStateProvider: FC = ({ children }) => {
     });
 
     actions.closeLoading();
-  }, [state.twitterAccessToken, actions]);
+  }, [actions]);
 
   const handleOnMessageComposerModalClose = useCallback(() => {
     actions.closeMessageComposerModal();
@@ -385,7 +381,7 @@ export const AppStateProvider: FC = ({ children }) => {
     [offlineSigner, userHandle]
   );
 
-  const handleCheckoutPostedMessage = useCallback(() => {
+  const handleOkPostedMessage = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     navigation.navigate('User', { account: userHandle! });
 
@@ -512,8 +508,8 @@ export const AppStateProvider: FC = ({ children }) => {
         <PostedMessageModal
           isOpen={state.isPostSuccessfulModalOpen}
           twitterUrl={state.postedMessage?.twitterUrl}
-          onCheckout={handleCheckoutPostedMessage}
           onClose={actions.closePostSuccessfulModal}
+          onOk={handleOkPostedMessage}
         />
       )}
     </AppStateContext.Provider>
