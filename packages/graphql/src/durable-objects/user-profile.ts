@@ -45,7 +45,7 @@ export class UserProfile implements DurableObject {
     const url = new URL(request.url.replace(/^\//, ''));
     const address = decodeURIComponent(url.pathname.split('/').pop() || '');
     const userProfileKey = `${USER_PROFILE_KEY}:${address}`;
-    const isValidAddress = !/^(cosmos1|like1)/.test(address);
+    const isValidAddress = /^(cosmos1|like1)/.test(address);
 
     if (!isValidAddress) {
       return new Response('Invalid address', { status: 400 });

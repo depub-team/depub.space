@@ -2,6 +2,7 @@ export {}
 
 export interface Bindings {
   ISCN_TXN: DurableObjectNamespace;
+  USER_PROFILE: DurableObjectNamespace;
   WORKERS_GRAPHQL_CACHE: KVNamespace;
   NODE_URL: string;
   ISCN_FINGERPRINT: string;

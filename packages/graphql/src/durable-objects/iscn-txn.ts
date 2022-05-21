@@ -333,9 +333,12 @@ export class IscnTxn implements DurableObject {
       // eslint-disable-next-line no-console
       console.error(ex);
 
-      return new Response(JSON.stringify({
-        error: ex instanceof Error ? ex.message : 'Unknown error',
-      }), { status: 500 });
+      return new Response(
+        JSON.stringify({
+          error: ex instanceof Error ? ex.message : 'Unknown error',
+        }),
+        { status: 500 }
+      );
     }
 
     return new Response(undefined, { status: 403 });

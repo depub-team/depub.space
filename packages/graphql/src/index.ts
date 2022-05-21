@@ -3,7 +3,7 @@ import { apollo, playground } from './handlers';
 import { GqlHandlerOptions } from './handlers/handler.types';
 import { setCorsHeaders as setCors } from './utils';
 
-export { IscnTxn } from './durable-objects';
+export { IscnTxn, UserProfile } from './durable-objects';
 
 const graphQLOptions: GqlHandlerOptions = {
   baseEndpoint: '/',

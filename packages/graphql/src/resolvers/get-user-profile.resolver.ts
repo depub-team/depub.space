@@ -8,12 +8,15 @@ export const getUserProfile = async (
   ctx: Context
 ): Promise<UserProfile> => {
   // get user profile from durable object
-  const durableObjId = ctx.env.ISCN_TXN.idFromName('user-profile');
-  const stub = ctx.env.ISCN_TXN.get(durableObjId);
+  const durableObjId = ctx.env.USER_PROFILE.idFromName('user-profile');
+  const stub = ctx.env.USER_PROFILE.get(durableObjId);
   const getUserProfileRequest = new Request(`${USER_PROFILE_DURABLE_OBJECT}/profiles/${address}`, {
     method: 'GET',
   });
   const getUserProfileResponse = await stub.fetch(getUserProfileRequest);
+
+  console.log('getUserProfileResponse =', getUserProfileResponse);
+
   const { userProfile } = await getUserProfileResponse.json<{ userProfile: UserProfile }>();
 
   return userProfile as unknown as UserProfile;
