@@ -53,7 +53,7 @@ export class IscnTxn implements DurableObject {
           stakeholder => stakeholder.contributionType === 'http://schema.org/author'
         );
 
-        if (!recordKey) {
+        if (!recordKey && author) {
           const hashtags = ((description || '') as string).match(hashTagRegex);
           const mentions = ((description || '') as string).match(mentionRegex);
           const transactionKey = `${TRANSACTION_KEY}:${ulid()}`;
