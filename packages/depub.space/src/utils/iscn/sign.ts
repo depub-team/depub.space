@@ -60,3 +60,13 @@ export async function signISCN(tx: ISCNSignPayload, signer: OfflineSigner, addre
 
   return res as BroadcastTxSuccess;
 }
+
+export async function updateISCN(tx: ISCNSignPayload, iscnId: string, signer: OfflineSigner, address: string) {
+  const signingClient = await getSigningClient();
+
+  await signingClient.connectWithSigner(PUBLIC_RPC_ENDPOINT, signer);
+
+  const res = await signingClient.updateISCNRecord(address, iscnId, tx, { memo: 'depub.space' });
+
+  return res as BroadcastTxSuccess;
+}

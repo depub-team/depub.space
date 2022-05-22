@@ -21,6 +21,22 @@ const sortByRecordTimestamp = (m: Map<string, ISCNRecord>) =>
     )
   );
 
+function findPrevIscnVersions(iscnId: string) {
+  const versionRegex = /[0-9]+$/
+  const regexResult = iscnId.match(versionRegex)
+  const version = regexResult? regexResult[0]: null
+  const results: string[] = []
+
+  if (!version) return results
+  const versionInt = parseInt(version, 10)
+
+  for (let index = 1; index < versionInt; index+=1) {
+    results.push(iscnId.replace(versionRegex, index.toString()))
+  }
+
+  return results
+}
+
 interface RecordKeys {
   transactionKey: string;
   authorTransactionKey: string;
@@ -46,8 +62,8 @@ export class IscnTxn implements DurableObject {
     // put into persistence storage
     await records
       .map(record => async () => {
-        const iscnId = record.data['@id'];
-        const { description } = record.data.contentMetadata;
+        const iscnId = record.data['@id'] as string;
+        const { description, isDeleted = false, } = record.data.contentMetadata;
         const recordKey = await this.state.storage.get(`${RECORD_KEY_KEY}:${iscnId}`);
         const author = record.data.stakeholders.find(
           stakeholder => stakeholder.contributionType === 'http://schema.org/author'
@@ -70,6 +86,23 @@ export class IscnTxn implements DurableObject {
                 `${MENTION_KEY}:${mention.toLowerCase().replace(/^@/, '')}:${ulid()}`,
               ])
             : [];
+
+          if (isDeleted) {
+            // mark prev version all deleted
+            findPrevIscnVersions(iscnId).map(async(preVersionIscn) => {
+              const preRecordKey = await this.state.storage.get<RecordKeys>(`${RECORD_KEY_KEY}:${preVersionIscn}`);
+
+              if (!preRecordKey) return
+              const preRecord = await this.state.storage.get<ISCNRecord>(preRecordKey.transactionKey);
+
+              if (!preRecord) return
+              preRecord.data.contentMetadata.isDeleted = true
+
+              await this.state.storage.put(preRecordKey.transactionKey, preRecord);
+            })
+
+            return
+          }
 
           await this.state.storage.put(transactionKey, record); // storing the message key
           await this.state.storage.put(authorTransactionKey, transactionKey);
@@ -200,7 +233,10 @@ export class IscnTxn implements DurableObject {
       });
     }
 
-    const transactions = transactionList ? Array.from(transactionList.values()) : [];
+    const transactions = transactionList ?
+      Array.from(transactionList.values())
+        .filter(txn => !txn.data.contentMetadata.isDeleted) :
+      [];
 
     return new Response(
       JSON.stringify({

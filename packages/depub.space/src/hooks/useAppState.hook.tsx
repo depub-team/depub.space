@@ -21,6 +21,7 @@ import { useWallet } from './useWallet.hook';
 import {
   dataUrlToFile,
   postMessage,
+  deleteMessage,
   getUserByDTagOrAddress,
   getLikecoinAddressByProfile,
   TwitterAccessToken,
@@ -53,6 +54,7 @@ export interface AppStateContextProps {
   isNoBalanceModalOpen: boolean;
   isPostSuccessfulModalOpen: boolean;
   isMessageComposerModalOpen: boolean;
+  editMessageIscnId: string | null;
   twitterAccessToken: TwitterAccessToken | null; // Twitter OAuth token for v1.1 API
   profile: DesmosProfile | null;
   postedMessage: PostedMessage | null; // new posted message object
@@ -68,6 +70,8 @@ export interface AppStateContextProps {
   closeImageModal: () => void;
   showMessageComposerModal: () => void;
   closeMessageComposerModal: () => void;
+  showEditMessageModal: (iscnId: string) => void;
+  closeEditMessageModal: () => void;
   showPostSuccessfulModal: (postedMessage: PostedMessage) => void;
   closePostSuccessfulModal: () => void;
 }
@@ -93,6 +97,9 @@ const initialState: AppStateContextProps = {
   closeImageModal: FunctionNever,
   showMessageComposerModal: FunctionNever,
   closeMessageComposerModal: FunctionNever,
+  editMessageIscnId: null,
+  showEditMessageModal: FunctionNever,
+  closeEditMessageModal: FunctionNever,
   showPostSuccessfulModal: FunctionNever,
   closePostSuccessfulModal: FunctionNever,
 };
@@ -108,6 +115,7 @@ const enum ActionType {
   SET_NO_BALANCE_MODAL_SHOW = 'SET_NO_BALANCE_MODAL_SHOW',
   SET_IS_MESSAGE_COMPOSER_MODAL_OPEN = 'SET_IS_MESSAGE_COMPOSER_MODAL_OPEN',
   SET_IS_POST_SUCCESSFUL_MODAL_OPEN = 'SET_IS_POST_SUCCESSFUL_MODAL_OPEN',
+  SET_EDIT_MESSAGE_ISCN_ID = 'SET_EDIT_MESSAGE_ISCN_ID',
   SET_TWITTER_ACCESS_TOKEN = 'SET_TWITTER_ACCESS_TOKEN',
 }
 
@@ -124,6 +132,7 @@ type Action =
   | { type: ActionType.SET_IS_LOADING_MODAL_OPEN; isLoadingModalOpen: boolean }
   | { type: ActionType.SET_NO_BALANCE_MODAL_SHOW; isNoBalanceModalOpen: boolean }
   | { type: ActionType.SET_IS_MESSAGE_COMPOSER_MODAL_OPEN; isMessageComposerModalOpen: boolean }
+  | { type: ActionType.SET_EDIT_MESSAGE_ISCN_ID; editMessageIscnId: string | null }
   | { type: ActionType.SET_TWITTER_ACCESS_TOKEN; twitterAccessToken: TwitterAccessToken | null }
   | {
       type: ActionType.SET_IS_POST_SUCCESSFUL_MODAL_OPEN;
@@ -164,6 +173,12 @@ const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
     case ActionType.SET_IS_MESSAGE_COMPOSER_MODAL_OPEN:
       return update(state, {
         isMessageComposerModalOpen: { $set: action.isMessageComposerModalOpen },
+      });
+    case ActionType.SET_EDIT_MESSAGE_ISCN_ID:
+      debug('SET_EDIT_MESSAGE_ISCN_ID', action)
+
+      return update(state, {
+        editMessageIscnId: { $set: action.editMessageIscnId },
       });
     case ActionType.SET_TWITTER_ACCESS_TOKEN:
       return update(state, {
@@ -206,6 +221,19 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
     dispatch({
       type: ActionType.SET_IS_MESSAGE_COMPOSER_MODAL_OPEN,
       isMessageComposerModalOpen: false,
+    });
+  },
+  showEditMessageModal: (iscnId: string) => {
+    debug('showEditMessageModal', iscnId)
+    dispatch({
+      type: ActionType.SET_EDIT_MESSAGE_ISCN_ID,
+      editMessageIscnId: iscnId,
+    });
+  },
+  closeEditMessageModal: () => {
+    dispatch({
+      type: ActionType.SET_EDIT_MESSAGE_ISCN_ID,
+      editMessageIscnId: null,
     });
   },
   showNoBalanceModal: () => {
@@ -380,7 +408,7 @@ export const AppStateProvider: FC = ({ children }) => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [alert, state.twitterAccessToken, userHandle]
+    [alert, state.twitterAccessToken, userHandle, offlineSigner]
   );
 
   const handleOkPostedMessage = useCallback(() => {
@@ -430,6 +458,15 @@ export const AppStateProvider: FC = ({ children }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectError]);
+
+  useEffect(() => {
+    if (state.editMessageIscnId && offlineSigner) {
+      void deleteMessage(offlineSigner, state.editMessageIscnId)
+        .catch(debug)
+        .then(res => debug('result', res))
+    }
+
+  }, [state.editMessageIscnId, offlineSigner])
 
   useEffect(() => {
     const handleLocalStorageChange = (event?: StorageEvent) => {

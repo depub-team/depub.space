@@ -42,7 +42,7 @@ import {
 import type { HomeScreenNavigationProps } from '../../../navigation';
 import { MessageCardContainer } from './MessageCardContainer';
 import { MessageContent } from './MessageContent';
-import { useAppState } from '../../../hooks';
+import { useAppState, useWallet } from '../../../hooks';
 
 dayjs.extend(relativeTime);
 
@@ -85,7 +85,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
     const displayName = profile?.nickname || profile?.dtag || shortenAddress;
     const abbrNickname = getAbbrNickname(displayName);
     const { onCopy } = useClipboard();
-    const { showImageModal } = useAppState();
+    const { showImageModal, showEditMessageModal } = useAppState();
+    const { walletAddress } = useWallet()
     const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>(emptyImageSizes);
     const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
     const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
@@ -96,6 +97,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
       [profile]
     );
     const imageSources = useMemo(() => images.map(image => ({ uri: image })), [images]);
+    const isOwner = from === walletAddress
 
     const iscnBadgeSource = useMemo(
       () => ({
@@ -167,6 +169,15 @@ export const MessageCard: FC<MessageCardProps> = memo(
       navigation.navigate('Post', { id: iscnId, revision });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     };
+
+    const editMessage = (e: any) => {
+      debug('handleOnPress(e: %O)', e);
+      debug(messageItem)
+
+      e.preventDefault();
+
+      showEditMessageModal(messageItem.id)
+    }
 
     useEffect(() => {
       if (!isMessageContainsUrl) {
@@ -333,6 +344,28 @@ export const MessageCard: FC<MessageCardProps> = memo(
             </Box>
 
             <HStack alignItems="center" space={1}>
+              {
+                isOwner?
+                  <IconButton
+                    _icon={{
+                      color: 'gray.400',
+                      size: 'sm',
+                    }}
+                    _pressed={{
+                      bg: 'transparent',
+                    }}
+                    borderRadius="full"
+                    icon={
+                      <Icon
+                        as={MaterialCommunityIcons}
+                        name='square-edit-outline'
+                      />
+                    }
+                    // eslint-disable-next-line  @typescript-eslint/no-misused-promises
+                    onPress={editMessage}
+                  />:
+                  null
+              }
               <Skeleton isLoaded={isLoaded} size="8">
                 <Tooltip label="Check ISCN record" openDelay={250}>
                   <NBLink href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
