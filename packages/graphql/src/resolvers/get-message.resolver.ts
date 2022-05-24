@@ -46,6 +46,11 @@ export const getMessage = async (args: GetMessageArgs, ctx: Context) => {
     }
 
     const authorAddress = getAuthorAddress(transaction);
+
+    if (!authorAddress) {
+      throw new ISCNError('No author address');
+    }
+
     const userProfile = await getUserProfile({ address: authorAddress }, ctx);
     const message = transformRecord(transaction, userProfile);
 
