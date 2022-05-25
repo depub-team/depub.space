@@ -47,6 +47,9 @@ try {
       global: 'globalThis',
     },
     plugins: [
+      alias({
+        'crypto': path.resolve(__dirname, '../../node_modules/crypto-browserify/index.js'),
+      }),
       NodeGlobalsPolyfillPlugin({
         process: true,
         buffer: true

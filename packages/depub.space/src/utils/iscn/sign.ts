@@ -1,5 +1,5 @@
 import { OfflineDirectSigner, OfflineSigner } from '@cosmjs/proto-signing';
-import { AminoTypes, BroadcastTxSuccess, SigningStargateClient } from '@cosmjs/stargate';
+import { AminoTypes, DeliverTxResponse, SigningStargateClient } from '@cosmjs/stargate';
 import { ISCNSigningClient, ISCNSignPayload } from '@likecoin/iscn-js';
 import { MsgCreateIscnRecord } from '@likecoin/iscn-message-types/dist/iscn/tx';
 
@@ -29,34 +29,31 @@ export async function signISCN(tx: ISCNSignPayload, signer: OfflineSigner, addre
     const signingStargateClient: SigningStargateClient = (signingClient as any).signingClient;
 
     (signingStargateClient as any).aminoTypes = new AminoTypes({
-      prefix: 'cosmos',
-      additions: {
-        '/likechain.iscn.MsgCreateIscnRecord': {
-          aminoType: 'likecoin-chain/MsgCreateIscnRecord',
-          toAmino: ({ from, record }: MsgCreateIscnRecord) => ({
-            from,
-            record: {
-              ...record,
-              stakeholders: record?.stakeholders.map(s => JSON.parse(s.toString())),
-              contentMetadata: JSON.parse(record?.contentMetadata.toString() || '{}'),
-            },
-          }),
-          fromAmino: ({ from, record }): MsgCreateIscnRecord => ({
-            from,
-            record: {
-              ...record,
-              stakeholders: record?.stakeholders.map((s: string) =>
-                Buffer.from(JSON.stringify(s), 'utf8')
-              ),
-              contentMetadata: Buffer.from(JSON.stringify(record?.contentMetadata || {}), 'utf8'),
-            },
-          }),
-        },
+      '/likechain.iscn.MsgCreateIscnRecord': {
+        aminoType: 'likecoin-chain/MsgCreateIscnRecord',
+        toAmino: ({ from, record }: MsgCreateIscnRecord) => ({
+          from,
+          record: {
+            ...record,
+            stakeholders: record?.stakeholders.map(s => JSON.parse(s.toString())),
+            contentMetadata: JSON.parse(record?.contentMetadata.toString() || '{}'),
+          },
+        }),
+        fromAmino: ({ from, record }): MsgCreateIscnRecord => ({
+          from,
+          record: {
+            ...record,
+            stakeholders: record?.stakeholders.map((s: string) =>
+              Buffer.from(JSON.stringify(s), 'utf8')
+            ),
+            contentMetadata: Buffer.from(JSON.stringify(record?.contentMetadata || {}), 'utf8'),
+          },
+        }),
       },
     });
   }
 
   const res = await signingClient.createISCNRecord(address, tx, { memo: 'depub.space' });
 
-  return res as BroadcastTxSuccess;
+  return res as DeliverTxResponse;
 }
