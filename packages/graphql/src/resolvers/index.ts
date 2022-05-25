@@ -304,23 +304,23 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
     });
 
     const messages = await Promise.all(
-      transactions
-        .map(async t => {
-          const authorAddress = getAuthorAddress(t);
+      transactions.map(async t => {
+        const authorAddress = getAuthorAddress(t);
 
-          if (!authorAddress) {
-            return null;
-          }
+        if (!authorAddress) {
+          return null;
+        }
 
-          const userProfile = await getProfile(authorAddress, ctx);
-          const message = transformRecord(t, userProfile);
+        const userProfile = await getProfile(authorAddress, ctx);
+        const message = transformRecord(t, userProfile);
 
-          return message;
-        })
-        .filter(message => Boolean(message))
+        return message;
+      })
     );
 
-    return messages;
+    const filteredMessages = messages.filter(message => Boolean(message));
+
+    return filteredMessages;
   } catch (ex: any) {
     // eslint-disable-next-line no-console
     console.error(ex);
