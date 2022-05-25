@@ -18,24 +18,34 @@ export class ISCNError extends ApolloError {
   }
 }
 
-const getAuthorAddress = ({ data }: ISCNRecord): string => {
+const getAuthorAddress = ({ data }: ISCNRecord): string | null => {
   const author = data.stakeholders.find(
     stakeholder => stakeholder.contributionType === 'http://schema.org/author'
   );
 
-  return author.entity['@id'];
+  if (author) {
+    return author.entity['@id'];
+  }
+
+  return null;
 };
 
 const transformRecord = (record: ISCNRecord, profile: Profile | null) => {
   const from = getAuthorAddress(record);
   const { data } = record;
+  const recordTimestamp = data.contentMetadata.recordTimestamp || data.recordTimestamp;
+
+  // XXX: data.contentMetadata.description must not be empty here, have to consider if we have to support empty message with image
+  if (!data['@id'] || !recordTimestamp || !data.contentMetadata.description || !from) {
+    return null;
+  }
 
   return {
     id: data['@id'] as string,
     message: data.contentMetadata.description || '',
     from,
     profile,
-    date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp).toISOString(),
+    date: new Date(recordTimestamp).toISOString(),
     images: data.contentFingerprints
       .filter(c => /^ipfs/.test(c))
       .map(c => `https://cloudflare-ipfs.com/ipfs/${c.split('ipfs://')[1]}`),
@@ -232,8 +242,17 @@ const getMessage = async (args: GetMessageArgs, ctx: Context) => {
     }
 
     const authorAddress = getAuthorAddress(transaction);
+
+    if (!transaction || !authorAddress) {
+      throw new ISCNError('Not found');
+    }
+
     const userProfile = await getProfile(authorAddress, ctx);
     const message = transformRecord(transaction, userProfile);
+
+    if (!message) {
+      throw new ISCNError('Not found');
+    }
 
     return message;
   } catch (ex: any) {
@@ -285,13 +304,20 @@ const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
     });
 
     const messages = await Promise.all(
-      transactions.map(async t => {
-        const authorAddress = getAuthorAddress(t);
-        const userProfile = await getProfile(authorAddress, ctx);
-        const message = transformRecord(t, userProfile);
+      transactions
+        .map(async t => {
+          const authorAddress = getAuthorAddress(t);
 
-        return message;
-      })
+          if (!authorAddress) {
+            return null;
+          }
+
+          const userProfile = await getProfile(authorAddress, ctx);
+          const message = transformRecord(t, userProfile);
+
+          return message;
+        })
+        .filter(message => Boolean(message))
     );
 
     return messages;

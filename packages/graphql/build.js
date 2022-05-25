@@ -36,7 +36,8 @@ if (process.argv[2] === 'test') {
 try {
   await build({
     bundle: true,
-    sourcemap: true,
+    sourcemap: false,
+    minify: true,
     format: 'esm',
     target: ['esnext'],
     entryPoints,
