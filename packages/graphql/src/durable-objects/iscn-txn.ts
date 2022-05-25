@@ -32,6 +32,15 @@ export class IscnTxn implements DurableObject {
     // this.state.storage.deleteAll();
   }
 
+  private validateRecord(record: ISCNRecord): boolean {
+    const hasDataId = Boolean(record.data['@id']);
+    const hasDescription = Boolean(record.data['@id']);
+    const hasRecordTime = Boolean(record.data.recordTimestamp);
+    const hasAtLeastOneStakeholder = Boolean(record.data.stakeholders.length);
+
+    return hasDataId && hasDescription && hasRecordTime && hasAtLeastOneStakeholder;
+  }
+
   public async addTransactions(request: Request) {
     const records = await request.json<ISCNRecord[]>();
     const hashTagRegex = /#[\p{L}\d_-]+/giu;
@@ -45,6 +54,7 @@ export class IscnTxn implements DurableObject {
 
     // put into persistence storage
     await records
+      .filter(record => this.validateRecord(record))
       .map(record => async () => {
         const iscnId = record.data['@id'];
         const { description } = record.data.contentMetadata;
