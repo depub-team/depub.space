@@ -33,12 +33,14 @@ export class IscnTxn implements DurableObject {
   }
 
   private validateRecord(record: ISCNRecord): boolean {
+    const hasAuthor = record.data.stakeholders.find(
+      stakeholder => stakeholder.contributionType === 'http://schema.org/author'
+    );
     const hasDataId = Boolean(record.data['@id']);
     const hasDescription = Boolean(record.data['@id']);
     const hasRecordTime = Boolean(record.data.recordTimestamp);
-    const hasAtLeastOneStakeholder = Boolean(record.data.stakeholders.length);
 
-    return hasDataId && hasDescription && hasRecordTime && hasAtLeastOneStakeholder;
+    return hasDataId && hasDescription && hasRecordTime && hasAuthor;
   }
 
   public async addTransactions(request: Request) {
