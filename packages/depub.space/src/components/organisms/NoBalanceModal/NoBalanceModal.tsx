@@ -16,7 +16,7 @@ export const NoBalanceModal: FC<NoBalanceModalProps> = props => (
             <Link href="https://faucet.like.co/" isExternal>
               Likecoin faucet
             </Link>{' '}
-            to get 0.02 LIKE to start posting your first tweet.
+            to get 0.2 LIKE to start posting your first tweet.
           </Text>
         </VStack>
       </Modal.Body>
