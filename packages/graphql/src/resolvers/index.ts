@@ -39,6 +39,7 @@ const transformRecord = (record: ISCNRecord, profile: Profile | null) => {
     images: data.contentFingerprints
       .filter(c => /^ipfs/.test(c))
       .map(c => `https://cloudflare-ipfs.com/ipfs/${c.split('ipfs://')[1]}`),
+    isDeleted: data.contentMetadata?.isDeleted || false,
   } as Message;
 };
 

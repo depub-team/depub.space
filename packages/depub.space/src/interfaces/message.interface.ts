@@ -7,4 +7,5 @@ export interface Message {
   message?: string;
   profile?: DesmosProfile;
   images?: string[];
+  isDeleted?: boolean;
 }

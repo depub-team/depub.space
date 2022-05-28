@@ -23,6 +23,7 @@ export const GRAPHQL_TYPE_MESSAGE = `{
   images
   date
   profile ${GRAPHQL_TYPE_PROFILE}
+  isDeleted
 }`;
 
 export const GRAPHQL_QUERY_MESSAGES_BY_USER = `

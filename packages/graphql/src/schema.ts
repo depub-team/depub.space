@@ -33,6 +33,7 @@ const typeDefs = gql`
     date: String!
     images: [String]
     profile: Profile
+    isDeleted: Boolean
   }
 
   type User {
