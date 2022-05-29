@@ -1,12 +1,46 @@
+import { ISCNError } from '../iscn-error';
+import { getLikecoinAddressByProfile } from '../datasources/desmos.api';
 import { Context } from '../context';
-import { QueryGetUserProfileArgs, RequireFields, UserProfile } from './generated_types';
+import type {
+  QueryGetUserProfileArgs,
+  RequireFields,
+  UserProfile,
+  DesmosProfile,
+} from './generated_types';
+import { getDesmosProfile } from './get-desmos-profile.resolver';
 
 export const USER_PROFILE_DURABLE_OBJECT = 'http://user-profile';
 
+const mergeProfile = (userProfile: UserProfile, desmosProfile: DesmosProfile | null) =>
+  ({
+    ...userProfile,
+    ...(desmosProfile
+      ? {
+          profilePic: userProfile.profilePic || desmosProfile.profilePic,
+          coverPic: userProfile.coverPic || desmosProfile.coverPic,
+          bio: userProfile.bio || desmosProfile.bio,
+          nickname: userProfile.nickname || desmosProfile.nickname,
+        }
+      : undefined),
+  } as UserProfile);
+
 export const getUserProfile = async (
-  { address }: RequireFields<QueryGetUserProfileArgs, 'address'>,
+  { dtagOrAddress }: RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>,
   ctx: Context
-): Promise<UserProfile | null> => {
+): Promise<UserProfile> => {
+  let address = dtagOrAddress;
+
+  // get desmos profile
+  const desmosProfile = await getDesmosProfile({ dtagOrAddress }, ctx);
+
+  if (desmosProfile) {
+    const likecoinAddress = getLikecoinAddressByProfile(desmosProfile);
+
+    if (likecoinAddress) {
+      address = likecoinAddress;
+    }
+  }
+
   // get user profile from durable object
   const durableObjId = ctx.env.USER_PROFILE.idFromName('user-profile');
   const stub = ctx.env.USER_PROFILE.get(durableObjId);
@@ -18,8 +52,17 @@ export const getUserProfile = async (
   if (getUserProfileResponse.status === 200) {
     const { userProfile } = await getUserProfileResponse.json<{ userProfile: UserProfile }>();
 
-    return userProfile as unknown as UserProfile;
+    return mergeProfile(userProfile, desmosProfile);
   }
 
-  return null;
+  if (!address) {
+    throw new ISCNError('Not found');
+  }
+
+  return mergeProfile(
+    {
+      address,
+    },
+    desmosProfile
+  );
 };

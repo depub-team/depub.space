@@ -1,15 +1,17 @@
 import type { UserProfile, Message } from '../resolvers/generated_types';
 import type { ISCNRecord } from '../interfaces';
-import { getAuthorAddress } from './get-author-address.util';
 
-export const transformRecord = (record: ISCNRecord, profile: UserProfile | null) => {
-  const from = getAuthorAddress(record);
+export const transformRecord = (
+  authorAddress: string,
+  record: ISCNRecord,
+  profile?: UserProfile
+) => {
   const { data } = record;
 
   return {
     id: data['@id'] as string,
     message: data.contentMetadata.description,
-    from,
+    from: authorAddress,
     profile,
     date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp).toISOString(),
     images: data.contentFingerprints

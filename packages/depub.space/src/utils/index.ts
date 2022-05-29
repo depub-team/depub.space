@@ -1,5 +1,4 @@
 export * from './arweave';
-export * from './desmos';
 export * from './iscn';
 export * from './likecoin';
 export * from './messageSanitizer';
@@ -13,3 +12,4 @@ export * from './getSystemDarkMode';
 export * from './getUrlFromContent';
 export * from './image';
 export * from './waitAsync';
+// export * from './wdyr';

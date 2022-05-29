@@ -4,7 +4,11 @@ import { MutationSetProfilePictureArgs, RequireFields, UserProfile } from './gen
 export const USER_PROFILE_DURABLE_OBJECT = 'http://user-profile';
 
 export const setProfilePicture = async (
-  { picture, address }: RequireFields<MutationSetProfilePictureArgs, 'picture' | 'address'>,
+  {
+    picture,
+    address,
+    provider,
+  }: RequireFields<MutationSetProfilePictureArgs, 'picture' | 'address'>,
   ctx: Context
 ): Promise<UserProfile> => {
   // get user profile from durable object
@@ -12,7 +16,7 @@ export const setProfilePicture = async (
   const stub = ctx.env.ISCN_TXN.get(durableObjId);
   const setUserProfileRequest = new Request(`${USER_PROFILE_DURABLE_OBJECT}/profiles/${address}`, {
     method: 'PATH',
-    body: JSON.stringify({ picture }),
+    body: JSON.stringify({ profilePic: picture, profilePicProvider: provider }),
   });
   const getUserProfileResponse = await stub.fetch(setUserProfileRequest);
   const { userProfile } = await getUserProfileResponse.json<{ userProfile: UserProfile }>();

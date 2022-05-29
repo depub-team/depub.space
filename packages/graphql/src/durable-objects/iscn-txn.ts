@@ -1,6 +1,6 @@
 import { ulidFactory } from 'ulid-workers';
-import { ISCNTrend, ISCNRecord } from '../interfaces';
-import { Bindings } from '../../bindings';
+import type { ISCNTrend, ISCNRecord } from '../interfaces';
+import type { Bindings } from '../../bindings';
 import { toCosmos } from '../utils';
 
 const ulid = ulidFactory({ monotonic: false });

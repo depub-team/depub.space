@@ -1,10 +1,10 @@
 import { Context } from '../context';
-import { DesmosProfile, GetDesmosProfileArgs } from '../interfaces';
+import type { DesmosProfile, QueryGetDesmosProfileArgs } from './generated_types';
 
 export const PROFILE_KEY = 'profile';
 
 export const getDesmosProfile = async (
-  { dtagOrAddress }: GetDesmosProfileArgs,
+  { dtagOrAddress }: QueryGetDesmosProfileArgs,
   ctx: Context
 ): Promise<DesmosProfile | null> => {
   const isDtag = !/^(cosmos1|like1)/.test(dtagOrAddress);

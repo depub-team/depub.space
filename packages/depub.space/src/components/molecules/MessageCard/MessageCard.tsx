@@ -33,12 +33,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useNavigation } from '@react-navigation/native';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
-import {
-  getUrlFromContent,
-  getAbbrNickname,
-  getShortenAddress,
-  getLikecoinAddressByProfile,
-} from '../../../utils';
+import { getUrlFromContent, getAbbrNickname, getShortenAddress } from '../../../utils';
 import type { HomeScreenNavigationProps } from '../../../navigation';
 import { MessageCardContainer } from './MessageCardContainer';
 import { MessageContent } from './MessageContent';
@@ -80,14 +75,14 @@ export const MessageCard: FC<MessageCardProps> = memo(
       : `${APP_URL}/${iscnId}/${revision}`;
     const shortenAddress = getShortenAddress(`${from.slice(0, 10)}...${from.slice(-4)}`);
     const dayFrom = dayjs(date).fromNow();
-    const [linkPreivew, setLinkPreview] = useState<LinkPreviewItem | null>(null);
+    const [linkPreview, setLinkPreview] = useState<LinkPreviewItem | null>(null);
     const isMessageContainsUrl = /https?/.test(message);
     const displayName = profile?.nickname || profile?.dtag || shortenAddress;
     const abbrNickname = getAbbrNickname(displayName);
     const { onCopy } = useClipboard();
     const { showImageModal } = useAppState();
     const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>(emptyImageSizes);
-    const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
+    const likecoinAddress = profile && profile.address;
     const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
     const isCopied = copyUrlIconState === 'copied';
     const isLoaded = !isLoading;
@@ -142,6 +137,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
         const link = e.target.getAttribute('href') as string;
 
         if (/^\/hashtag/.test(link)) {
+          // hash tag
           const execArr = /^\/hashtag\/(.+)$/.exec(link);
 
           if (execArr && execArr[1]) {
@@ -150,6 +146,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
             });
           }
         } else if (/^\/([\p{L}\d_-]+)/.test(link)) {
+          // user handle
           const execArr = /^\/(.+)$/.exec(link);
 
           if (execArr && execArr[1]) {
@@ -182,7 +179,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
             return;
           }
 
-          const myLinkPreivew = (await getLinkPreview(url, {
+          const myLinkPreview = (await getLinkPreview(url, {
             proxyUrl: `${PROXY_URL}/?`,
             timeout: 6000,
             headers: {
@@ -190,10 +187,10 @@ export const MessageCard: FC<MessageCardProps> = memo(
             },
           })) as LinkPreviewItem;
 
-          debug('useEffect() -> message: %s, myLinkPreivew: %O', message, myLinkPreivew);
+          debug('useEffect() -> message: %s, myLinkPreview: %O', message, myLinkPreview);
 
-          if (myLinkPreivew) {
-            setLinkPreview(myLinkPreivew);
+          if (myLinkPreview) {
+            setLinkPreview(myLinkPreview);
           }
         } catch (ex) {
           debug('useEffect() -> error: %O', ex);
@@ -218,18 +215,18 @@ export const MessageCard: FC<MessageCardProps> = memo(
 
     // get content container width
     useEffect(() => {
-      const handleWidnowResize = () => {
+      const handleWindowResize = () => {
         if (contentContainerRef.current) {
           setContentContainerWidth(contentContainerRef.current.clientWidth);
         }
       };
 
-      window.addEventListener('resize', handleWidnowResize);
+      window.addEventListener('resize', handleWindowResize);
 
-      handleWidnowResize();
+      handleWindowResize();
 
       return () => {
-        window.removeEventListener('resize', handleWidnowResize);
+        window.removeEventListener('resize', handleWindowResize);
       };
     }, []);
 
@@ -320,7 +317,7 @@ export const MessageCard: FC<MessageCardProps> = memo(
               </VStack>
             ) : null}
 
-            {linkPreivew ? <LinkPreview flex={1} preview={linkPreivew} /> : null}
+            {linkPreview ? <LinkPreview flex={1} preview={linkPreview} /> : null}
           </VStack>
 
           <HStack alignItems="center" justifyContent="space-between" space={4}>

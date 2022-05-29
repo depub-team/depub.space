@@ -6,9 +6,9 @@ const typeDefs = gql`
     messagesByHashTag(tag: String!, previousId: String, limit: Int): [Message]
     messagesByMentioned(mentioned: String!, previousId: String, limit: Int): [Message]
     getMessage(iscnId: String!): Message
-    getUser(address: String!, previousId: String, limit: Int): User
-    getUserProfile(address: String!): UserProfile
-    getDesmosProfile(dtagOrAddress: String!): UserProfile
+    getUser(dtagOrAddress: String!, previousId: String, limit: Int): User
+    getUserProfile(dtagOrAddress: String!): UserProfile
+    getDesmosProfile(dtagOrAddress: String!): DesmosProfile
     getChannels(countryCode: String): Channels
     getStargazeNFTsByOwner(owner: String!): [NFTAsset]
     getOmniflixNFTsByOwner(owner: String!): [NFTAsset]
@@ -23,7 +23,7 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    setProfilePicture(address: String!, picture: String!): UserProfile
+    setProfilePicture(address: String!, picture: String!, provider: String!): UserProfile
   }
 
   type Channels {
@@ -75,6 +75,20 @@ const typeDefs = gql`
     dtag: String
     nickname: String
     profilePic: String
+    profilePicProvider: String
+  }
+
+  type DesmosProfile {
+    id: ID! # Desmos address
+    address: String!
+    bio: String
+    coverPic: String
+    creationTime: String! # ISO timestamp
+    dtag: String!
+    nickname: String!
+    profilePic: String
+    chainLinks: [ChainLink]
+    profilePicProvider: String
   }
 `;
 

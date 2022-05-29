@@ -83,6 +83,7 @@
       "error",
       {
         "devDependencies": [
+          "**/build.js",
           ".storybook/**",
           "stories/**",
           "jest.config.js",

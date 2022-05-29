@@ -4,9 +4,12 @@ import { getAuthorAddress, transformRecord } from '../utils';
 import { getUserProfile } from './get-user-profile.resolver';
 import { getLatestSequence } from './get-latest-sequence';
 import { ISCNError } from '../iscn-error';
+import type { Message } from './generated_types';
 
 const PAGING_LIMIT = 12;
 const ISCN_TXN_DURABLE_OBJECT = 'http://iscn-txn';
+
+const isNotUndefined = (message: Message | undefined): message is Message => message !== undefined;
 
 const getTransactions = async (
   stub: DurableObjectStub,
@@ -107,14 +110,19 @@ export const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
     const messages = await Promise.all(
       transactions.map(async t => {
         const authorAddress = getAuthorAddress(t);
-        const userProfile = await getUserProfile({ address: authorAddress }, ctx);
-        const message = transformRecord(t, userProfile);
+
+        if (!authorAddress) {
+          return undefined;
+        }
+
+        const userProfile = await getUserProfile({ dtagOrAddress: authorAddress }, ctx);
+        const message = transformRecord(authorAddress, t, userProfile);
 
         return message;
       })
     );
 
-    return messages;
+    return messages.filter(isNotUndefined); // remove undefined;
   } catch (ex: any) {
     // eslint-disable-next-line no-console
     console.error(ex);

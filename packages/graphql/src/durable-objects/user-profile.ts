@@ -1,5 +1,5 @@
-import { UserProfile as IUserProfile } from '../resolvers/generated_types';
-import { Bindings } from '../../bindings';
+import type { UserProfile as IUserProfile } from '../resolvers/generated_types';
+import type { Bindings } from '../../bindings';
 
 const USER_PROFILE_KEY = 'profile';
 

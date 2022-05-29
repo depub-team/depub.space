@@ -30,6 +30,10 @@ main = "./index.mjs"
 tag = "v1"
 new_classes = ["IscnTxn"]
 
+[[migrations]]
+tag = "v2"
+new_classes = ["UserProfile"]
+
 [miniflare]
 durable_objects_persist = true
 
@@ -65,6 +69,14 @@ ENVIRONMENT = "production"
 NOTION_API_ENDPOINT = "https://api.notion.com/v1"
 STARGAZE_RPC_ENDPOINT = "https://rpc.stargaze-apis.com/"
 OMNIFLIX_REST_ENDPOINT = "https://data-api.omniflix.studio/"
+
+[[env.prod.migrations]]
+tag = "v1"
+new_classes = ["IscnTxn"]
+
+[[env.prod.migrations]]
+tag = "v2"
+new_classes = ["UserProfile"]
 
 # [secrets]
 # NOTION_API_SECRET

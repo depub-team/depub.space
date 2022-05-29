@@ -6,27 +6,13 @@ import { getUser } from './get-user.resolver';
 import { getMessages } from './get-messages.resolver';
 import { getMessage } from './get-message.resolver';
 import { setProfilePicture } from './set-profile-picture.resolver';
-import { toLike, changeAddressPrefix } from '../utils';
-import { Context } from '../context';
-import { NFTAsset } from '../interfaces/nft-asset.interface';
-
-const getStargazeNFTsByOwner = async (owner: string, ctx: Context): Promise<NFTAsset[]> => {
-  const starsAddress = changeAddressPrefix(owner, 'stars');
-  const stargazeAssets = await ctx.dataSources.stargazeAPI.getNFTsByOwner(starsAddress);
-
-  return stargazeAssets;
-};
-
-const getOmniflixNFTsByOwner = async (owner: string, ctx: Context): Promise<NFTAsset[]> => {
-  const omniflixAddress = changeAddressPrefix(owner, 'omniflix');
-  const omniflixAssets = await ctx.dataSources.omniflixAPI.getNFTsByOwner(omniflixAddress);
-
-  return omniflixAssets;
-};
+import { getStargazeNFTsByOwner } from './get-stargaze-nfts-by-owner';
+import { getOmniflixNFTsByOwner } from './get-omniflix-nfts-by-owner';
+import { toLike } from '../utils';
 
 const resolvers: Resolvers = {
   Query: {
-    getUser: (_parent, args, ctx) => getUser(args.address, ctx),
+    getUser: (_parent, args, ctx) => getUser(args.dtagOrAddress, ctx),
     messages: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByHashTag: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByMentioned: async (_parent, args, ctx) => getMessages(args, ctx),

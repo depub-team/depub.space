@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle, import/no-extraneous-dependencies */
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
@@ -20,8 +19,10 @@ export async function* walk (rootPath) {
   }
 }
 
+/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+/* eslint-enable @typescript-eslint/naming-convention, no-underscore-dangle */
 
 const src = path.join(__dirname, 'src', 'index.ts');
 const entryPoints = [src];
@@ -47,17 +48,16 @@ try {
       global: 'globalThis',
     },
     plugins: [
-      alias({
-        'crypto': path.resolve(__dirname, '../../node_modules/crypto-browserify/index.js'),
-      }),
+      NodeModulesPolyfillPlugin(),
       NodeGlobalsPolyfillPlugin({
         process: true,
         buffer: true
       }),
-      NodeModulesPolyfillPlugin(),
     ],
   });
-} catch {
+} catch (ex) {
+  // eslint-disable-next-line no-console
+  console.error(ex);
+
   process.exitCode = 1;
 }
-/* eslint-enable @typescript-eslint/naming-convention, no-underscore-dangle, import/no-extraneous-dependencies */

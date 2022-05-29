@@ -54,7 +54,16 @@ export const LoadingScreen: FC = () => {
   }, []);
 
   return (
-    <Flex alignItems="center" flex={1} justifyContent="center">
+    <Flex
+      alignItems="center"
+      flex={1}
+      h="100vh"
+      justifyContent="center"
+      left="0"
+      position="fixed"
+      top="0"
+      w="100vw"
+    >
       <Animated.View style={[{ width: 200, height: 200 }, logoStyle]}>
         <DepubSpinner />
       </Animated.View>

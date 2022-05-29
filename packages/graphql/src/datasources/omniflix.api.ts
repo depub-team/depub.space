@@ -41,7 +41,7 @@ export class OmniflixAPI extends DataSource {
     );
 
     await this.context.env.NFT_CONTRACTS_CACHE.put(cacheKey, JSON.stringify(result), {
-      expirationTtl: 60 * 10, // 10 mins
+      expirationTtl: 60 * 1, // 1 mins
     });
 
     return result;

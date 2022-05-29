@@ -17,7 +17,7 @@ const createServer = (graphQLOptions: GqlHandlerOptions): ApolloServer => {
       iscnQueryAPI: new ISCNQueryAPI(env.NODE_URL),
       desmosAPI: new DesmosAPI(env.DESMOS_GRAPHQL_ENDPOINT),
       notionAPI: new NotionAPI(env.NOTION_API_ENDPOINT, env.NOTION_API_SECRET),
-      stargazeAPI: new StargazeAPI(env.STARGAZE_RPC_ENDPOINT),
+      stargazeAPI: new StargazeAPI(env.STARGAZE_REST_ENDPOINT),
       omniflixAPI: new OmniflixAPI(env.OMNIFLIX_REST_ENDPOINT),
     }),
     ...graphQLOptions,

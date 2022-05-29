@@ -1,18 +1,14 @@
+import { UserProfile } from './user-profile.interface';
+
 export interface ChainLink {
   chainConfig: {
     name: string;
   };
   externalAddress: string;
 }
-export interface DesmosProfile {
-  id: string;
-  address: string;
+export interface DesmosProfile extends UserProfile {
   applicationLinks: [];
-  bio: string;
   chainLinks: ChainLink[];
   coverPic: string;
   creationTime: string; // ISO timestamp
-  dtag: string;
-  nickname: string;
-  profilePic: string;
 }

@@ -1,9 +1,10 @@
 import { Context } from '../context';
-import { ISCNRecord, GetMessageArgs } from '../interfaces';
+import { ISCNRecord } from '../interfaces';
 import { getAuthorAddress, transformRecord } from '../utils';
 import { getUserProfile } from './get-user-profile.resolver';
 import { ISCNError } from '../iscn-error';
 import { addTransactions } from './get-messages.resolver';
+import { QueryGetMessageArgs } from './generated_types';
 
 const ISCN_TXN_DURABLE_OBJECT = 'http://iscn-txn';
 
@@ -25,7 +26,7 @@ const getTransaction = async (stub: DurableObjectStub, iscnId: string) => {
   return null;
 };
 
-export const getMessage = async (args: GetMessageArgs, ctx: Context) => {
+export const getMessage = async (args: QueryGetMessageArgs, ctx: Context) => {
   try {
     const durableObjId = ctx.env.ISCN_TXN.idFromName('iscn-txn');
     const stub = ctx.env.ISCN_TXN.get(durableObjId);
@@ -51,8 +52,8 @@ export const getMessage = async (args: GetMessageArgs, ctx: Context) => {
       throw new ISCNError('No author address');
     }
 
-    const userProfile = await getUserProfile({ address: authorAddress }, ctx);
-    const message = transformRecord(transaction, userProfile);
+    const userProfile = await getUserProfile({ dtagOrAddress: authorAddress }, ctx);
+    const message = transformRecord(authorAddress, transaction, userProfile);
 
     return message;
   } catch (ex: any) {

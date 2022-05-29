@@ -24,15 +24,10 @@ import {
 } from 'native-base';
 import Debug from 'debug';
 import { Link } from '@react-navigation/native';
-import {
-  getAbbrNickname,
-  getLikecoinAddressByProfile,
-  getShortenAddress,
-  pickImageFromDevice,
-} from '../../../utils';
+import { getAbbrNickname, getShortenAddress, pickImageFromDevice } from '../../../utils';
 import { MAX_CHAR_LIMIT } from '../../../constants';
 import { ImagePreview } from './ImagePreview';
-import { DesmosProfile } from '../../../interfaces';
+import { UserProfile } from '../../../interfaces';
 import { MessageComposerContainer } from './MessageComposerContainer';
 
 const debug = Debug('web:<MessageComposer />');
@@ -53,7 +48,7 @@ export interface MessageFormType {
 export interface MessageComposerProps extends IStackProps {
   isLoading?: boolean;
   defaultValue?: string;
-  profile: DesmosProfile | null;
+  profile: UserProfile | null;
   walletAddress: string | null;
   isCollapsed?: boolean;
   autoFocus?: boolean;
@@ -100,7 +95,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     getShortenAddress(`${walletAddress.slice(0, 10)}...${walletAddress.slice(-4)}`);
   const displayName = profile?.nickname || profile?.dtag || shortenAddress || '';
   const abbrNickname = getAbbrNickname(displayName);
-  const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
+  const likecoinAddress = profile && profile.address;
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const profilePicSource = useMemo(
     () => (profile ? { uri: profile?.profilePic } : undefined),
@@ -216,6 +211,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
                 render={({ field: { onChange, value } }) => (
                   <AnimatedTextArea
                     ref={textareaRef}
+                    autoCompleteType="off"
                     borderRadius={isCollapsed ? '3xl' : 'md'}
                     defaultValue={value}
                     fontSize={textAreaFontSize}

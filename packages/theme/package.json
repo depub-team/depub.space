@@ -12,13 +12,13 @@
     "svgr": "svgr ./assets/icons -d ./src/components/atoms/icons --typescript --native --svg-props className="
   },
   "dependencies": {
-    "@expo/vector-icons": "12.0.5",
-    "native-base": "3.3.7",
-    "react": "17.0.2",
-    "react-native-svg": "12.1.1"
+    "@expo/vector-icons": "13.0.0",
+    "native-base": "3.3.11",
+    "react": "18.1.0",
+    "react-native-svg": "12.3.0"
   },
   "devDependencies": {
     "@svgr/cli": "6.2.0",
-    "@types/react": "17.0.38"
+    "@types/react": "18.0.9"
   }
 }

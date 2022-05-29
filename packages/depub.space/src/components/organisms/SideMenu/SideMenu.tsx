@@ -21,8 +21,8 @@ import { Link } from '@react-navigation/native';
 import type { SideMenuItemProps } from './SideMenuItem';
 import { SideMenuItem } from './SideMenuItem';
 import { ConnectWalletButton } from '../../atoms/ConnectWalletButton';
-import type { DesmosProfile } from '../../../interfaces';
-import { getAbbrNickname, getLikecoinAddressByProfile, getShortenAddress } from '../../../utils';
+import type { UserProfile } from '../../../interfaces';
+import { getAbbrNickname, getShortenAddress } from '../../../utils';
 
 export interface SideMenuProps extends DrawerContentComponentProps {
   onLogout?: () => void;
@@ -30,7 +30,7 @@ export interface SideMenuProps extends DrawerContentComponentProps {
   isLoading?: boolean;
   walletAddress: string | null;
   menuItems: SideMenuItemProps[];
-  profile: DesmosProfile | null;
+  profile: UserProfile | null;
 }
 
 const FadeOut: FC<{ direction?: 'up' | 'down' }> = ({ direction = 'up' }) => {
@@ -89,7 +89,7 @@ export const SideMenu: FC<SideMenuProps> = ({
   const isDarkMode = colorMode === 'dark';
   const toast = useToast();
   const { onCopy } = useClipboard();
-  const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
+  const likecoinAddress = profile && profile.address;
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const shortenAddress =
     walletAddress &&

@@ -1,4 +1,3 @@
-// import { Secp256k1Signature } from '@cosmjs/crypto';
 import { Bindings } from '../bindings';
 import { apollo, playground } from './handlers';
 import { GqlHandlerOptions } from './handlers/handler.types';
@@ -15,13 +14,6 @@ const graphQLOptions: GqlHandlerOptions = {
   kvCache: false,
 };
 
-// const verifySign = rawTxt => {
-//   const [signature, nounce] = rawTxt.split('.');
-
-//   const sign = Buffer.from(signature, 'base64');
-//   const secpSignature = Secp256k1Signature.fromFixedLength(sign);
-// };
-
 const handleRequest = async (request: Request, env: Bindings) => {
   const url = new URL(request.url);
   const isDev = env.ENVIRONMENT !== 'production';
@@ -33,7 +25,10 @@ const handleRequest = async (request: Request, env: Bindings) => {
     const authHeader = request.headers.get('Authorization');
 
     if (authHeader) {
-      // const [, authValue] = authHeader.split('Bearer ');
+      const [, authSignature] = authHeader.split('Bearer ');
+
+      // eslint-disable-next-line no-console
+      console.log('authSignature =', authSignature);
     }
 
     if (url.pathname === graphQLOptions.baseEndpoint) {

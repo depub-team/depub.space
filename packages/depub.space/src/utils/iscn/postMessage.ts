@@ -38,15 +38,15 @@ export const postMessage = async (
       },
       {
         entity: {
-          '@id': 'https://depub.SPACE',
-          name: 'depub.SPACE',
+          '@id': 'https://depub.space',
+          name: 'depub.space',
         },
         contributionType: 'http://schema.org/publisher',
         rewardProportion: 0.025,
       },
     ],
     name: `depub.space-${recordTimestamp}`,
-    recordNotes: 'A Message posted on depub.SPACE',
+    recordNotes: 'A Message posted on depub.space',
     type: 'Article',
     author: wallet.address,
     description: message,
