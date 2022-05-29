@@ -7,9 +7,9 @@ import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Layout, ListHeaderContainer, MessageList, useAlert, UserHeader } from '../components';
-import { Message } from '../interfaces';
+import { Message, UserProfile } from '../interfaces';
 import { useAppState, useWallet } from '../hooks';
-import { getMessagesByOwner } from '../utils';
+import { checkIsNFTProfilePicture, getMessagesByOwner } from '../utils';
 import { getShortenAddress } from '../utils/getShortenAddress';
 import { MainStackParamList } from '../navigation/MainStackParamList';
 import { RootStackParamList } from '../navigation/RootStackParamList';
@@ -33,7 +33,8 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   const [isLoading, setIsLoading] = useState(false);
   const [isHeaderHide, setIsHeaderHide] = useState(false);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
-  const { profile, showProfilePictureModal } = useAppState();
+  const { showProfilePictureModal } = useAppState();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
   const [messages, setMessages] = useState<Message[]>(emptyMessages);
   const alert = useAlert();
@@ -82,6 +83,15 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
           if (newMessages) {
             if (!refresh) {
               setMessages(msgs => update(msgs, { $push: newMessages }));
+
+              if (res.data?.profile) {
+                setProfile({
+                  ...res.data.profile,
+                  isNFTProfilePicture: checkIsNFTProfilePicture(
+                    res.data.profile.profilePicProvider || ''
+                  ),
+                });
+              }
             } else {
               setMessages(msgs => update(msgs, { $set: newMessages }));
             }
