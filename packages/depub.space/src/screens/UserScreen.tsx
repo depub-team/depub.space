@@ -83,6 +83,8 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
           if (newMessages) {
             if (!refresh) {
               setMessages(msgs => update(msgs, { $push: newMessages }));
+            } else {
+              setMessages(msgs => update(msgs, { $set: newMessages }));
 
               if (res.data?.profile) {
                 setProfile({
@@ -92,8 +94,6 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
                   ),
                 });
               }
-            } else {
-              setMessages(msgs => update(msgs, { $set: newMessages }));
             }
           }
         }
