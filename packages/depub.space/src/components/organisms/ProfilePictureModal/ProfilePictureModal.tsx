@@ -18,18 +18,23 @@ import {
   useBreakpointValue,
 } from 'native-base';
 import React, { useRef, FC, useState, useCallback, useEffect } from 'react';
+import { checkIsNFTProfilePicture } from '../../../utils';
 import { MAX_WIDTH } from '../../../constants';
 import {
   getDesmosProfile,
   getStargazeNFTsByOwner,
   getOmniflixNFTsByOwner,
 } from '../../../utils/queries';
-import { HexShapedSvg } from './HexShapedSvg';
+
+export interface SelectedProfilePicture {
+  image: string;
+  platform: Platform;
+}
 
 export interface PostedMessageModalProps {
   isOpen?: boolean;
   onClose: () => void;
-  onOk: () => void;
+  onOk: (selectedProfilePicture: SelectedProfilePicture) => void;
   address: string;
   avatarName: string;
   defaultPlatform?: string;
@@ -62,9 +67,16 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
     md: 3,
     lg: 4,
   });
-  const isNFTPlatform = previewPlatform && ['stargaze', 'omniflix'].includes(previewPlatform);
+  const isNFTPlatform = previewPlatform && checkIsNFTProfilePicture(previewPlatform);
 
-  console.log('colPerRow =', colPerRow);
+  const handleOnOkPressed = useCallback(() => {
+    if (preview && previewPlatform)
+      onOk({
+        image: preview.uri,
+        platform: previewPlatform,
+      });
+  }, [onOk, preview, previewPlatform]);
+
   const handleOnImagePressed = useCallback(
     (imageSource: { uri: string }) => () => {
       setPreviewPlatform(platform);
@@ -127,10 +139,12 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
         void handleOnPlatformChange(defaultPlatform as Platform);
       }
     } else {
-      setPreview(undefined);
-      setPlatform(undefined);
-      setPreviewPlatform(undefined);
-      setNfts([]);
+      setTimeout(() => {
+        setPreview(undefined);
+        setPlatform(undefined);
+        setPreviewPlatform(undefined);
+        setNfts([]);
+      }, 1000);
     }
   }, [defaultAvatar, defaultPlatform, handleOnPlatformChange, isOpen]);
 
@@ -150,21 +164,22 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
           >
             <Center>
               <Avatar
-                bg="transparent"
+                backgroundColor={preview ? 'transparent' : 'gray.300'}
                 borderRadius={isNFTPlatform ? 'none' : 'full'}
-                size="2xl"
+                size="3xl"
                 source={preview}
                 style={
                   isNFTPlatform
                     ? ({
-                        clipPath: 'url(#hexShapedPath)',
+                        maskImage: 'url(/images/hex.svg)',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
                       } as any) // FIXME: type error, cannot use web style here
                     : undefined
                 }
               >
                 {avatarName}
               </Avatar>
-              <HexShapedSvg height={0} width={0} />
             </Center>
             <Select
               accessibilityLabel="Choose Platform"
@@ -268,7 +283,15 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
         </AlertDialog.Body>
         <AlertDialog.Footer>
           <Button.Group space={2}>
-            <Button ref={cancelRef} colorScheme="primary" onPress={onOk}>
+            <Button
+              ref={cancelRef}
+              _disabled={{
+                colorScheme: 'gray',
+              }}
+              colorScheme="primary"
+              isDisabled={!preview || !previewPlatform}
+              onPress={handleOnOkPressed}
+            >
               OK
             </Button>
           </Button.Group>

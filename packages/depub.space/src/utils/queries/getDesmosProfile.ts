@@ -1,4 +1,4 @@
-import { queryClient } from './queryClient';
+import { graphqlClient } from '../graphqlClient';
 import { UserProfile } from '../../interfaces';
 
 import { GRAPHQL_QUERY_GET_DESMOS_PROFILE } from '../../constants';
@@ -8,7 +8,7 @@ export interface GetDesmosProfileResponse {
 }
 
 export const getDesmosProfile = async (dtagOrAddress: string) => {
-  const { data } = await queryClient.post<{ data: GetDesmosProfileResponse }>('', {
+  const { data } = await graphqlClient.post<{ data: GetDesmosProfileResponse }>('', {
     variables: {
       dtagOrAddress,
     },

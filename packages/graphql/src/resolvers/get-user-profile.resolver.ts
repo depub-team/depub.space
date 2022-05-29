@@ -52,7 +52,7 @@ export const getUserProfile = async (
   if (getUserProfileResponse.status === 200) {
     const { userProfile } = await getUserProfileResponse.json<{ userProfile: UserProfile }>();
 
-    return mergeProfile(userProfile, desmosProfile);
+    return mergeProfile({ ...userProfile, address }, desmosProfile);
   }
 
   if (!address) {

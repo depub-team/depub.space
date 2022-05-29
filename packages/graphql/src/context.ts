@@ -7,6 +7,8 @@ type ContextFunctionParams = {
 
 type Context = {
   env: Bindings;
+  authSignature: string;
+  authPublicKey: string;
   dataSources: {
     iscnQueryAPI: ISCNQueryAPI;
     desmosAPI: DesmosAPI;

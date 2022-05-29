@@ -180,10 +180,19 @@ export const SideMenu: FC<SideMenuProps> = ({
               <HStack alignItems="center" flex={1} space={3}>
                 <Link to={toUserRoute}>
                   <Avatar
-                    borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
-                    borderWidth={2}
+                    backgroundColor={profilePicSource ? 'transparent' : 'gray.300'}
+                    borderRadius={profile?.isNFTProfilePicture ? 'none' : 'full'}
                     size="sm"
                     source={profilePicSource}
+                    style={
+                      profile?.isNFTProfilePicture
+                        ? ({
+                            maskImage: 'url(/images/hex.svg)',
+                            maskRepeat: 'no-repeat',
+                            maskPosition: 'center',
+                          } as any) // FIXME: type error, cannot use web style here
+                        : undefined
+                    }
                   >
                     {abbrNickname}
                   </Avatar>

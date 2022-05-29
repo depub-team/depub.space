@@ -11,4 +11,6 @@ export interface Bindings {
   CACHE_TTL: number;
   ENVIRONMENT: string;
   AUTH_TOKEN: string;
+  STARGAZE_REST_ENDPOINT: string;
+  SIGN_MESSAGE: string;
 }

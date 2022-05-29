@@ -8,4 +8,3 @@ export * from './getMessagesByOwner';
 export * from './getOmniflixNFTsByOwner';
 export * from './getStargazeNFTsByOwner';
 export * from './getUserByDTagOrAddress';
-export * from './queryClient';

@@ -17,28 +17,9 @@ export class UserProfile implements DurableObject {
       ...profileToUpdate,
     };
 
-    if (!userProfile) {
-      return new Response('User profile not found', { status: 404 });
-    }
-
     this.state.storage.put(userProfileKey, updatedProfile);
 
     return new Response(JSON.stringify(updatedProfile));
-  }
-
-  public async createUserProfile(request: Request) {
-    const profileToCreate = await request.json<IUserProfile>();
-
-    if (!profileToCreate.address) {
-      return new Response('Address is required', { status: 400 });
-    }
-
-    const { address } = profileToCreate;
-    const userProfileKey = `${USER_PROFILE_KEY}:${address}`;
-
-    this.state.storage.put(userProfileKey, profileToCreate);
-
-    return new Response(undefined, { status: 201 });
   }
 
   public async getUserProfile(request: Request) {
@@ -75,10 +56,6 @@ export class UserProfile implements DurableObject {
 
         if (request.method === 'GET') {
           return await this.getUserProfile(request);
-        }
-      } else if (url.pathname === '/profiles') {
-        if (request.method === 'POST') {
-          return await this.createUserProfile(request);
         }
       }
     } catch (ex) {

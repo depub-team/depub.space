@@ -26,6 +26,7 @@ export const theme = extendTheme({
   },
   sizes: {
     '2xs': 8,
+    '3xl': 240,
   },
   fonts: {
     body: '"Montserrat", sans-serif',

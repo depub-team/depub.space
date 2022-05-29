@@ -22,13 +22,14 @@ const handleRequest = async (request: Request, env: Bindings) => {
 
   try {
     // Authentication with signed message
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get('authorization');
+    let authSignature = '';
+    let authPublicKey = '';
 
     if (authHeader) {
-      const [, authSignature] = authHeader.split('Bearer ');
+      const [, authSignatureAndPublicKey] = authHeader.split('Bearer ');
 
-      // eslint-disable-next-line no-console
-      console.log('authSignature =', authSignature);
+      [authSignature, authPublicKey] = Buffer.from(authSignatureAndPublicKey, 'base64').toString().split('.');
     }
 
     if (url.pathname === graphQLOptions.baseEndpoint) {
@@ -39,7 +40,8 @@ const handleRequest = async (request: Request, env: Bindings) => {
               ...graphQLOptions,
               context: () => ({
                 env,
-                signedAddress: authHeader,
+                authSignature,
+                authPublicKey,
               }),
             });
 

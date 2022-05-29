@@ -1,13 +1,13 @@
 import { GRAPHQL_QUERY_STARGAZE_NFT_BY_USER } from '../../constants';
 import type { NFTAsset } from '../../interfaces';
-import { queryClient } from './queryClient';
+import { graphqlClient } from '../graphqlClient';
 
 export interface GetStargazeNFTsByOwnerResponse {
   getStargazeNFTsByOwner: NFTAsset[];
 }
 
 export const getStargazeNFTsByOwner = async (owner: string): Promise<NFTAsset[]> => {
-  const { data } = await queryClient.post<{ data: GetStargazeNFTsByOwnerResponse }>('', {
+  const { data } = await graphqlClient.post<{ data: GetStargazeNFTsByOwnerResponse }>('', {
     variables: {
       owner,
     },

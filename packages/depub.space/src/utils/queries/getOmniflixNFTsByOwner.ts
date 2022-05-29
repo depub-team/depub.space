@@ -1,13 +1,13 @@
 import { GRAPHQL_QUERY_OMNIFLIX_NFT_BY_USER } from '../../constants';
 import type { NFTAsset } from '../../interfaces';
-import { queryClient } from './queryClient';
+import { graphqlClient } from '../graphqlClient';
 
 export interface GetOmniflixNFTsByOwnerResponse {
   getOmniflixNFTsByOwner: NFTAsset[];
 }
 
 export const getOmniflixNFTsByOwner = async (owner: string): Promise<NFTAsset[]> => {
-  const { data } = await queryClient.post<{ data: GetOmniflixNFTsByOwnerResponse }>('', {
+  const { data } = await graphqlClient.post<{ data: GetOmniflixNFTsByOwnerResponse }>('', {
     variables: {
       owner,
     },

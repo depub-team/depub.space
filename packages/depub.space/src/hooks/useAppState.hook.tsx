@@ -24,6 +24,9 @@ import {
   getUserByDTagOrAddress,
   TwitterAccessToken,
   getAbbrNickname,
+  generateAuthSignature,
+  setProfilePicture,
+  checkIsNFTProfilePicture,
 } from '../utils';
 import { getLikeCoinBalance } from '../utils/likecoin';
 import * as twitter from '../utils/twitter';
@@ -32,7 +35,10 @@ import { ImageModal } from '../components/organisms/ImageModal';
 import { MessageFormType } from '../components/molecules/MessageComposer';
 import { MessageComposerModal } from '../components/organisms/MessageComposerModal';
 import { PostedMessageModal } from '../components/organisms/PostedMessageModal';
-import { ProfilePictureModal } from '../components/organisms/ProfilePictureModal';
+import {
+  ProfilePictureModal,
+  SelectedProfilePicture,
+} from '../components/organisms/ProfilePictureModal';
 
 const debug = Debug('web:useAppState');
 
@@ -146,7 +152,16 @@ const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
   switch (action.type) {
     case ActionType.SET_PROFILE:
       return update(state, {
-        profile: { $set: action.profile },
+        profile: {
+          $set: action.profile
+            ? {
+                ...action.profile,
+                isNFTProfilePicture: checkIsNFTProfilePicture(
+                  action.profile?.profilePicProvider || ''
+                ),
+              }
+            : null,
+        },
       });
     case ActionType.SET_HASHTAGS:
       return update(state, {
@@ -327,9 +342,60 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offlineSigner]);
 
-  const updateProfilePicture = useCallback(() => {
-    debug('updateProfilePicture()');
-  }, []);
+  const updateProfilePicture = useCallback(
+    async (selectedProfilePicture: SelectedProfilePicture) => {
+      debug('updateProfilePicture(selectedProfilePicture)', selectedProfilePicture);
+
+      actions.showLoading();
+
+      try {
+        if (offlineSigner && walletAddress) {
+          const authHeader = await generateAuthSignature(offlineSigner);
+
+          await setProfilePicture(
+            walletAddress,
+            selectedProfilePicture.image,
+            selectedProfilePicture.platform,
+            authHeader
+          );
+
+          // update user profile
+          const user = await getUserByDTagOrAddress(walletAddress);
+
+          if (user && user.profile) {
+            dispatch({
+              type: ActionType.SET_PROFILE,
+              profile: user.profile,
+            });
+          } else {
+            dispatch({ type: ActionType.SET_PROFILE, profile: null });
+          }
+
+          // reset
+          actions.closeProfilePictureModal();
+          actions.closeLoading();
+        }
+      } catch (ex) {
+        let errorMessage = 'Failed to prove ownership! please try again later.';
+
+        if (ex.message === 'Request rejected') {
+          errorMessage = ex.message;
+        } else if (ex.message === 'Invalid signature') {
+          errorMessage = 'Invalid signature!';
+        }
+
+        actions.closeLoading();
+
+        alert.show({
+          title: errorMessage,
+          status: 'error',
+        });
+
+        Sentry.captureException(ex);
+      }
+    },
+    [actions, alert, walletAddress, offlineSigner]
+  );
 
   const postAndUpload = useCallback(
     async (data: MessageFormType, image?: string | null) => {
@@ -390,6 +456,7 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
           twitterUrl,
         });
 
+        // reset
         actions.closeMessageComposerModal();
         actions.closeLoading();
       } catch (ex) {
@@ -429,8 +496,8 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
     // get user profile and balance
     void (async () => {
       if (walletAddress) {
-        const user = await getUserByDTagOrAddress(walletAddress);
         const balance = await getLikeCoinBalance(walletAddress);
+        const user = await getUserByDTagOrAddress(walletAddress);
 
         if (user && user.profile) {
           dispatch({ type: ActionType.SET_PROFILE, profile: user.profile });
@@ -535,6 +602,7 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
           }
           isOpen={state.isProfilePictureModalOpen}
           onClose={actions.closeProfilePictureModal}
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onOk={updateProfilePicture}
         />
       )}

@@ -7,8 +7,8 @@ import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Layout, ListHeaderContainer, MessageList, useAlert, UserHeader } from '../components';
-import { Message, UserProfile } from '../interfaces';
-import { useWallet } from '../hooks';
+import { Message } from '../interfaces';
+import { useAppState, useWallet } from '../hooks';
 import { getMessagesByOwner } from '../utils';
 import { getShortenAddress } from '../utils/getShortenAddress';
 import { MainStackParamList } from '../navigation/MainStackParamList';
@@ -33,14 +33,17 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   const [isLoading, setIsLoading] = useState(false);
   const [isHeaderHide, setIsHeaderHide] = useState(false);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const { profile, showProfilePictureModal } = useAppState();
   const shortenAccount = account ? getShortenAddress(account) : '';
   const [messages, setMessages] = useState<Message[]>(emptyMessages);
   const alert = useAlert();
   const { walletAddress, isLoading: isConnectLoading } = useWallet();
   const isLoggedIn = Boolean(walletAddress && !isConnectLoading);
   const isEditable = walletAddress === profile?.address;
-  const profilePic = profile?.profilePic;
+  const profilePic = useMemo(
+    () => (profile?.profilePic ? { uri: profile.profilePic } : undefined),
+    [profile]
+  );
   const nickname = profile?.nickname || shortenAccount;
   const isWalletAddress = /^(cosmos1|like1)/.test(account);
   const bio = profile?.bio;
@@ -80,10 +83,6 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
             if (!refresh) {
               setMessages(msgs => update(msgs, { $push: newMessages }));
             } else {
-              if (res.data?.profile) {
-                setProfile(res.data.profile);
-              }
-
               setMessages(msgs => update(msgs, { $set: newMessages }));
             }
           }
@@ -119,8 +118,10 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
         collapse={isHeaderHide}
         dtag={dtag}
         editable={isEditable}
+        isNFTProfilePicture={profile?.isNFTProfilePicture}
         nickname={nickname}
         profilePic={profilePic}
+        onEditProfilePicture={showProfilePictureModal}
       />
     </ListHeaderContainer>
   );
@@ -142,7 +143,6 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
       });
 
       setIsReady(false);
-      setProfile(null);
       setMessages(emptyMessages);
       setIsListReachedEnd(false);
 

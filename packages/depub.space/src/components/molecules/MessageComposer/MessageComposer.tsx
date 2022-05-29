@@ -61,7 +61,7 @@ export interface MessageComposerProps extends IStackProps {
 
 export const MessageComposer: FC<MessageComposerProps> = ({
   onSubmit,
-  defaultValue,
+  defaultValue = '',
   isLoading,
   walletAddress,
   profile,
@@ -187,18 +187,23 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     <MessageComposerContainer ref={containerRef} isCollapsed={isCollapsed} {...props}>
       <HStack flex={1} space={stackSpacing}>
         <Link to={`/${handle}`}>
-          <Tooltip
-            label={
-              likecoinAddress
-                ? 'This profile has linked to Likecoin'
-                : 'This profile has not linked to Likecoin'
+          <Avatar
+            backgroundColor={profilePicSource?.uri ? 'transparent' : 'gray.300'}
+            borderRadius={profile?.isNFTProfilePicture ? 'none' : 'full'}
+            size={42}
+            source={profilePicSource}
+            style={
+              profile?.isNFTProfilePicture
+                ? ({
+                    maskImage: 'url(/images/hex.svg)',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center',
+                  } as any) // FIXME: type error, cannot use web style here
+                : undefined
             }
-            openDelay={250}
           >
-            <Avatar size={42} source={profilePicSource}>
-              {abbrNickname}
-            </Avatar>
-          </Tooltip>
+            {abbrNickname}
+          </Avatar>
         </Link>
 
         <VStack flex={2} space={4}>
@@ -213,7 +218,6 @@ export const MessageComposer: FC<MessageComposerProps> = ({
                     ref={textareaRef}
                     autoCompleteType="off"
                     borderRadius={isCollapsed ? '3xl' : 'md'}
-                    defaultValue={value}
                     fontSize={textAreaFontSize}
                     isReadOnly={isLoading}
                     maxLength={MAX_CHAR_LIMIT}

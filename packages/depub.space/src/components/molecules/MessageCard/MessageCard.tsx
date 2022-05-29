@@ -33,7 +33,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useNavigation } from '@react-navigation/native';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
-import { getUrlFromContent, getAbbrNickname, getShortenAddress } from '../../../utils';
+import {
+  getUrlFromContent,
+  getAbbrNickname,
+  getShortenAddress,
+  checkIsNFTProfilePicture,
+} from '../../../utils';
 import type { HomeScreenNavigationProps } from '../../../navigation';
 import { MessageCardContainer } from './MessageCardContainer';
 import { MessageContent } from './MessageContent';
@@ -91,6 +96,8 @@ export const MessageCard: FC<MessageCardProps> = memo(
       [profile]
     );
     const imageSources = useMemo(() => images.map(image => ({ uri: image })), [images]);
+    const isNFTProfilePicture =
+      profile?.isNFTProfilePicture || checkIsNFTProfilePicture(profile?.profilePicProvider || '');
 
     const iscnBadgeSource = useMemo(
       () => ({
@@ -235,23 +242,23 @@ export const MessageCard: FC<MessageCardProps> = memo(
         <Box alignSelf="flex-start">
           <Skeleton isLoaded={isLoaded} rounded="full" size="12">
             <Link to={`/${handle}`}>
-              <Tooltip
-                label={
-                  likecoinAddress
-                    ? 'This profile has linked to Likecoin'
-                    : 'This profile has not linked to Likecoin'
+              <Avatar
+                backgroundColor={profilePicSource?.uri ? 'transparent' : 'gray.300'}
+                borderRadius={isNFTProfilePicture ? 'none' : 'full'}
+                size="md"
+                source={profilePicSource}
+                style={
+                  isNFTProfilePicture
+                    ? ({
+                        maskImage: 'url(/images/hex.svg)',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                      } as any) // FIXME: type error, cannot use web style here
+                    : undefined
                 }
-                openDelay={250}
               >
-                <Avatar
-                  borderColor={likecoinAddress ? 'primary.500' : 'gray.200'}
-                  borderWidth={2}
-                  size="md"
-                  source={profilePicSource}
-                >
-                  {abbrNickname}
-                </Avatar>
-              </Tooltip>
+                {abbrNickname}
+              </Avatar>
             </Link>
           </Skeleton>
         </Box>

@@ -1,4 +1,4 @@
-import { toBech32, fromBech32 } from 'cosmwasm';
+import { toBech32, fromBech32 } from '@cosmjs/encoding';
 
 export const changeAddressPrefix = (address: string, targetPrefix: string) => {
   try {

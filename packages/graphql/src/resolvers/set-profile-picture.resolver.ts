@@ -1,3 +1,5 @@
+import { fromBech32 } from '@cosmjs/encoding';
+import { verifyArbitrary } from '../utils/verify-arbitrary';
 import { Context } from '../context';
 import { MutationSetProfilePictureArgs, RequireFields, UserProfile } from './generated_types';
 
@@ -11,15 +13,30 @@ export const setProfilePicture = async (
   }: RequireFields<MutationSetProfilePictureArgs, 'picture' | 'address'>,
   ctx: Context
 ): Promise<UserProfile> => {
+  const { prefix } = fromBech32(address);
+  const isVerified = await verifyArbitrary(
+    ctx.env.SIGN_MESSAGE,
+    ctx.authPublicKey,
+    ctx.authSignature,
+    prefix
+  );
+
+  if (!isVerified) {
+    throw new Error('Invalid signature');
+  }
+
   // get user profile from durable object
-  const durableObjId = ctx.env.ISCN_TXN.idFromName('user-profile');
-  const stub = ctx.env.ISCN_TXN.get(durableObjId);
+  const durableObjId = ctx.env.USER_PROFILE.idFromName('user-profile');
+  const stub = ctx.env.USER_PROFILE.get(durableObjId);
   const setUserProfileRequest = new Request(`${USER_PROFILE_DURABLE_OBJECT}/profiles/${address}`, {
-    method: 'PATH',
+    method: 'PATCH',
     body: JSON.stringify({ profilePic: picture, profilePicProvider: provider }),
   });
-  const getUserProfileResponse = await stub.fetch(setUserProfileRequest);
-  const { userProfile } = await getUserProfileResponse.json<{ userProfile: UserProfile }>();
+  const setUserProfileResponse = await stub.fetch(setUserProfileRequest);
+  const userProfile = await setUserProfileResponse.json<UserProfile>();
 
-  return userProfile as unknown as UserProfile;
+  return {
+    ...userProfile,
+    address,
+  } as unknown as UserProfile;
 };

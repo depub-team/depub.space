@@ -44,8 +44,9 @@ ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
 ENVIRONMENT = "staging"
 NOTION_API_ENDPOINT = "https://api.notion.com/v1"
-STARGAZE_RPC_ENDPOINT = "https://rpc.stargaze-apis.com/"
 OMNIFLIX_REST_ENDPOINT = "https://data-api.omniflix.studio/"
+STARGAZE_REST_ENDPOINT = "https://nft-api.stargaze-apis.com/"
+SIGN_MESSAGE = "Welcome to depub.space"
 
 # Override values for `--env production` usage
 [env.prod]
@@ -67,8 +68,9 @@ ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
 ENVIRONMENT = "production"
 NOTION_API_ENDPOINT = "https://api.notion.com/v1"
-STARGAZE_RPC_ENDPOINT = "https://rpc.stargaze-apis.com/"
 OMNIFLIX_REST_ENDPOINT = "https://data-api.omniflix.studio/"
+STARGAZE_REST_ENDPOINT = "https://nft-api.stargaze-apis.com/"
+SIGN_MESSAGE = "Welcome to depub.space"
 
 [[env.prod.migrations]]
 tag = "v1"

@@ -95,3 +95,9 @@ export const GRAPHQL_QUERY_GET_DESMOS_PROFILE = `
     getDesmosProfile(dtagOrAddress: $dtagOrAddress) ${GRAPHQL_TYPE_PROFILE}
   }
 `;
+
+export const GRAPHQL_MUTATION_SET_PROFILE_PICTURE = `
+  mutation SetProfilePicture($address: String!, $picture: String!, $provider: String!) {
+    setProfilePicture(address: $address, picture: $picture, provider: $provider) ${GRAPHQL_TYPE_PROFILE}
+  }
+`;

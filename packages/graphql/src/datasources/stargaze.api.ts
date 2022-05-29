@@ -47,8 +47,6 @@ export class StargazeAPI extends DataSource {
       address: token.collection.contractAddress,
     }));
 
-    console.log('tokens =', tokens);
-
     await this.context.env.NFT_CONTRACTS_CACHE.put(cacheKey, JSON.stringify(tokens), {
       expirationTtl: 60 * 1, // 1 mins
     });

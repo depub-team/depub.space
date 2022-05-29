@@ -1,15 +1,16 @@
 import { Avatar, Box, Text, Heading, Stack, VStack, View, Button } from 'native-base';
-import React, { FC, memo, useCallback } from 'react';
-import { useAppState } from '../../../hooks';
+import React, { FC, memo } from 'react';
 import { getAbbrNickname } from '../../../utils';
 
 export interface UserHeaderProps {
   collapse?: boolean;
   bio?: string;
   dtag?: string;
-  profilePic?: string;
+  profilePic?: { uri: string };
   nickname: string;
+  isNFTProfilePicture?: boolean;
   editable?: boolean;
+  onEditProfilePicture?: () => void;
   // cover?: string;
 }
 
@@ -22,13 +23,17 @@ const areEqual = (prevProps: UserHeaderProps, nextProps: UserHeaderProps) => {
 };
 
 export const UserHeader: FC<UserHeaderProps> = memo(
-  ({ collapse, dtag, nickname, profilePic, bio, editable }) => {
+  ({
+    collapse,
+    dtag,
+    nickname,
+    profilePic,
+    bio,
+    isNFTProfilePicture,
+    editable,
+    onEditProfilePicture,
+  }) => {
     const abbrNickname = getAbbrNickname(nickname);
-    const { showProfilePictureModal } = useAppState();
-
-    const handleOnEditProfilePicture = useCallback(() => {
-      showProfilePictureModal();
-    }, [showProfilePictureModal]);
 
     return (
       <Box flex={1}>
@@ -42,20 +47,40 @@ export const UserHeader: FC<UserHeaderProps> = memo(
         >
           <View position="relative" w={collapse ? '12' : 'auto'}>
             <Avatar
+              backgroundColor={profilePic?.uri ? 'transparent' : 'gray.300'}
+              borderRadius={isNFTProfilePicture ? 'none' : 'full'}
               mr={collapse ? 4 : 0}
               size={collapse ? 'md' : 'xl'}
-              source={profilePic ? { uri: profilePic } : undefined}
+              source={profilePic}
+              style={
+                isNFTProfilePicture
+                  ? ({
+                      maskImage: 'url(/images/hex.svg)',
+                      maskRepeat: 'no-repeat',
+                      maskPosition: 'center',
+                    } as any) // FIXME: type error, cannot use web style here
+                  : undefined
+              }
             >
               {abbrNickname}
             </Avatar>
 
             {editable && !collapse && (
               <View
-                borderRadius="full"
+                borderRadius={isNFTProfilePicture ? 'none' : 'full'}
                 h="100%"
                 left={0}
                 overflow="hidden"
                 position="absolute"
+                style={
+                  isNFTProfilePicture
+                    ? ({
+                        maskImage: 'url(/images/hex.svg)',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                      } as any) // FIXME: type error, cannot use web style here
+                    : undefined
+                }
                 top={0}
                 w="100%"
               >
@@ -79,7 +104,7 @@ export const UserHeader: FC<UserHeaderProps> = memo(
                   position="absolute"
                   variant="unstyled"
                   w="100%"
-                  onPress={handleOnEditProfilePicture}
+                  onPress={onEditProfilePicture}
                 >
                   Edit
                 </Button>

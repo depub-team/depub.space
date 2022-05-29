@@ -6,4 +6,5 @@ export interface UserProfile {
   nickname?: string;
   profilePic?: string;
   profilePicProvider?: string;
+  isNFTProfilePicture?: boolean;
 }
