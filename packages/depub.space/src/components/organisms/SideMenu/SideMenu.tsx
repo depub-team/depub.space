@@ -27,9 +27,9 @@ export interface SideMenuProps extends DrawerContentComponentProps {
   onLogout?: () => void;
   onConnectWallet?: () => void;
   isLoading?: boolean;
-  walletAddress: string | null;
+  walletAddress?: string;
   menuItems: SideMenuItemProps[];
-  profile: UserProfile | null;
+  profile?: UserProfile;
 }
 
 const FadeOut: FC<{ direction?: 'up' | 'down' }> = ({ direction = 'up' }) => {

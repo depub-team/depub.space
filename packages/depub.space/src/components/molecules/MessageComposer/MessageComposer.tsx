@@ -48,15 +48,15 @@ export interface MessageFormType {
 export interface MessageComposerProps extends IStackProps {
   isLoading?: boolean;
   defaultValue?: string;
-  profile: UserProfile | null;
-  walletAddress: string | null;
+  profile: UserProfile | undefined;
+  walletAddress: string | undefined;
   isCollapsed?: boolean;
   autoFocus?: boolean;
   isTwitterLoggedIn?: boolean;
   onFocus?: () => void;
   onTwitterLogin?: () => void;
   onTwitterLogout?: () => void;
-  onSubmit?: (data: MessageFormType, image?: string | null) => Promise<void> | void;
+  onSubmit?: (data: MessageFormType, image?: string | undefined) => Promise<void> | void;
 }
 
 export const MessageComposer: FC<MessageComposerProps> = ({
@@ -75,7 +75,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<string | undefined>();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [totalLines, setTotalLines] = useState(1);
   const blurTimeout = useRef(0);
@@ -159,8 +159,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     // reset state
     if (isSubmitted) {
       reset({ message: '' });
-      setImage(null);
-
+      setImage(undefined);
       setIsSubmitted(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -233,7 +232,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
             </Stack>
           </FormControl>
 
-          {image ? <ImagePreview image={image} onRemoveImage={() => setImage(null)} /> : null}
+          {image && <ImagePreview image={image} onRemoveImage={() => setImage(undefined)} />}
         </VStack>
       </HStack>
 

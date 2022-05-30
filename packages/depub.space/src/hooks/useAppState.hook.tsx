@@ -61,12 +61,12 @@ export interface AppStateContextProps {
   isPostSuccessfulModalOpen: boolean;
   isMessageComposerModalOpen: boolean;
   isProfilePictureModalOpen: boolean;
-  twitterAccessToken: TwitterAccessToken | null; // Twitter OAuth token for v1.1 API
-  profile: UserProfile | null;
-  postedMessage: PostedMessage | null; // new posted message object
+  twitterAccessToken?: TwitterAccessToken; // Twitter OAuth token for v1.1 API
+  profile?: UserProfile;
+  postedMessage?: PostedMessage; // new posted message object
   list: List[];
-  image: string | null; // image modal
-  imageAspectRatio: number | null; // image modal
+  image?: string; // image modal
+  imageAspectRatio?: number; // image modal
   hashTags: HashTag[];
   setList: (list: List[]) => void;
   setHashTags: (hashTags: HashTag[]) => void;
@@ -85,17 +85,12 @@ export interface AppStateContextProps {
 const initialState: AppStateContextProps = {
   list: [],
   hashTags: [],
-  twitterAccessToken: null,
   isImageModalOpen: false,
   isLoadingModalOpen: false,
   isProfilePictureModalOpen: false,
   isPostSuccessfulModalOpen: false,
   isNoBalanceModalOpen: false,
   isMessageComposerModalOpen: false,
-  postedMessage: null,
-  image: null,
-  imageAspectRatio: null,
-  profile: null,
   setList: FunctionNever,
   setHashTags: FunctionNever,
   showLoading: FunctionNever,
@@ -126,24 +121,27 @@ const enum ActionType {
 }
 
 type Action =
-  | { type: ActionType.SET_PROFILE; profile: UserProfile | null }
+  | { type: ActionType.SET_PROFILE; profile: UserProfile | undefined }
   | { type: ActionType.SET_LIST; list: List[] }
   | { type: ActionType.SET_HASHTAGS; hashTags: HashTag[] }
   | {
       type: ActionType.SET_IS_IMAGE_MODAL_OPEN;
       isImageModalOpen: boolean;
-      image: string | null;
-      aspectRatio: number | null;
+      image: string | undefined;
+      aspectRatio: number | undefined;
     }
   | { type: ActionType.SET_IS_LOADING_MODAL_OPEN; isLoadingModalOpen: boolean }
   | { type: ActionType.SET_NO_BALANCE_MODAL_SHOW; isNoBalanceModalOpen: boolean }
   | { type: ActionType.SET_IS_MESSAGE_COMPOSER_MODAL_OPEN; isMessageComposerModalOpen: boolean }
-  | { type: ActionType.SET_TWITTER_ACCESS_TOKEN; twitterAccessToken: TwitterAccessToken | null }
+  | {
+      type: ActionType.SET_TWITTER_ACCESS_TOKEN;
+      twitterAccessToken: TwitterAccessToken | undefined;
+    }
   | { type: ActionType.SET_IS_PROFILE_PICTURE_MODAL_OPEN; isProfilePictureModalOpen: boolean }
   | {
       type: ActionType.SET_IS_POST_SUCCESSFUL_MODAL_OPEN;
       isPostSuccessfulModalOpen: boolean;
-      postedMessage: PostedMessage | null;
+      postedMessage: PostedMessage | undefined;
     };
 
 const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
@@ -153,14 +151,10 @@ const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
     case ActionType.SET_PROFILE:
       return update(state, {
         profile: {
-          $set: action.profile
-            ? {
-                ...action.profile,
-                isNFTProfilePicture: checkIsNFTProfilePicture(
-                  action.profile?.profilePicProvider || ''
-                ),
-              }
-            : null,
+          $set: action.profile && {
+            ...action.profile,
+            isNFTProfilePicture: checkIsNFTProfilePicture(action.profile?.profilePicProvider || ''),
+          },
         },
       });
     case ActionType.SET_HASHTAGS:
@@ -216,7 +210,7 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
   closeLoading: () => {
     dispatch({ type: ActionType.SET_IS_LOADING_MODAL_OPEN, isLoadingModalOpen: false });
   },
-  showImageModal: (image: string, aspectRatio: number | null) => {
+  showImageModal: (image: string, aspectRatio?: number) => {
     dispatch({
       type: ActionType.SET_IS_IMAGE_MODAL_OPEN,
       isImageModalOpen: true,
@@ -265,7 +259,7 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
     dispatch({
       type: ActionType.SET_IS_POST_SUCCESSFUL_MODAL_OPEN,
       isPostSuccessfulModalOpen: false,
-      postedMessage: null,
+      postedMessage: undefined,
     });
   },
   setList: (list: List[]) => {
@@ -278,8 +272,8 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
     dispatch({
       type: ActionType.SET_IS_IMAGE_MODAL_OPEN,
       isImageModalOpen: false,
-      image: null,
-      aspectRatio: null,
+      image: undefined,
+      aspectRatio: undefined,
     });
   },
 });
@@ -308,7 +302,7 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
 
     dispatch({
       type: ActionType.SET_TWITTER_ACCESS_TOKEN,
-      twitterAccessToken: null,
+      twitterAccessToken: undefined,
     });
 
     actions.closeLoading();
@@ -368,7 +362,7 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
               profile: user.profile,
             });
           } else {
-            dispatch({ type: ActionType.SET_PROFILE, profile: null });
+            dispatch({ type: ActionType.SET_PROFILE, profile: undefined });
           }
 
           // reset
@@ -502,7 +496,7 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
         if (user && user.profile) {
           dispatch({ type: ActionType.SET_PROFILE, profile: user.profile });
         } else {
-          dispatch({ type: ActionType.SET_PROFILE, profile: null });
+          dispatch({ type: ActionType.SET_PROFILE, profile: undefined });
         }
 
         if (!balance) {
@@ -537,7 +531,7 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
         if (event?.newValue === null) {
           dispatch({
             type: ActionType.SET_TWITTER_ACCESS_TOKEN,
-            twitterAccessToken: null,
+            twitterAccessToken: undefined,
           });
 
           return;
