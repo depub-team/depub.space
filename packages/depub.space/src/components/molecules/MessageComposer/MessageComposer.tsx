@@ -19,13 +19,13 @@ import {
   Switch,
   Tooltip,
   Collapse,
-  Avatar,
   Box,
 } from 'native-base';
 import Debug from 'debug';
 import { Link } from '@react-navigation/native';
 import { getAbbrNickname, getShortenAddress, pickImageFromDevice } from '../../../utils';
 import { MAX_CHAR_LIMIT } from '../../../constants';
+import { Avatar } from '../../atoms';
 import { ImagePreview } from './ImagePreview';
 import { UserProfile } from '../../../interfaces';
 import { MessageComposerContainer } from './MessageComposerContainer';
@@ -188,19 +188,9 @@ export const MessageComposer: FC<MessageComposerProps> = ({
       <HStack flex={1} space={stackSpacing}>
         <Link to={`/${handle}`}>
           <Avatar
-            backgroundColor={profilePicSource?.uri ? 'transparent' : 'gray.300'}
-            borderRadius={profile?.isNFTProfilePicture ? 'none' : 'full'}
+            isNFTProfilePicture={profile?.isNFTProfilePicture}
             size={42}
             source={profilePicSource}
-            style={
-              profile?.isNFTProfilePicture
-                ? ({
-                    maskImage: 'url(/images/hex.svg)',
-                    maskRepeat: 'no-repeat',
-                    maskPosition: 'center',
-                  } as any) // FIXME: type error, cannot use web style here
-                : undefined
-            }
           >
             {abbrNickname}
           </Avatar>

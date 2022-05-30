@@ -10,7 +10,6 @@ import {
   Text,
   PresenceTransition,
   Spinner,
-  Avatar,
   Image,
   HStack,
   AspectRatio,
@@ -25,6 +24,7 @@ import {
   getStargazeNFTsByOwner,
   getOmniflixNFTsByOwner,
 } from '../../../utils/queries';
+import { Avatar } from '../../atoms';
 
 export interface SelectedProfilePicture {
   image: string;
@@ -163,21 +163,7 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
             w="100%"
           >
             <Center>
-              <Avatar
-                backgroundColor={preview ? 'transparent' : 'gray.300'}
-                borderRadius={isNFTPlatform ? 'none' : 'full'}
-                size="3xl"
-                source={preview}
-                style={
-                  isNFTPlatform
-                    ? ({
-                        maskImage: 'url(/images/hex.svg)',
-                        maskRepeat: 'no-repeat',
-                        maskPosition: 'center',
-                      } as any) // FIXME: type error, cannot use web style here
-                    : undefined
-                }
-              >
+              <Avatar isNFTProfilePicture={isNFTPlatform} size="3xl" source={preview}>
                 {avatarName}
               </Avatar>
             </Center>
@@ -238,6 +224,7 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
                                 <Pressable onPress={handleOnImagePressed(source)}>
                                   <AspectRatio ratio={1}>
                                     <Image
+                                      backgroundColor="gray.500"
                                       h="100%"
                                       resizeMode="cover"
                                       source={source}

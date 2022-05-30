@@ -1,6 +1,7 @@
-import { Avatar, Box, Text, Heading, Stack, VStack, View, Button } from 'native-base';
+import { Box, Text, Heading, Stack, VStack, View, Button } from 'native-base';
 import React, { FC, memo } from 'react';
 import { getAbbrNickname } from '../../../utils';
+import { Avatar } from '../../atoms';
 
 export interface UserHeaderProps {
   collapse?: boolean;
@@ -47,20 +48,10 @@ export const UserHeader: FC<UserHeaderProps> = memo(
         >
           <View position="relative" w={collapse ? '12' : 'auto'}>
             <Avatar
-              backgroundColor={profilePic?.uri ? 'transparent' : 'gray.300'}
-              borderRadius={isNFTProfilePicture ? 'none' : 'full'}
+              isNFTProfilePicture={isNFTProfilePicture}
               mr={collapse ? 4 : 0}
               size={collapse ? 'md' : 'xl'}
               source={profilePic}
-              style={
-                isNFTProfilePicture
-                  ? ({
-                      maskImage: 'url(/images/hex.svg)',
-                      maskRepeat: 'no-repeat',
-                      maskPosition: 'center',
-                    } as any) // FIXME: type error, cannot use web style here
-                  : undefined
-              }
             >
               {abbrNickname}
             </Avatar>

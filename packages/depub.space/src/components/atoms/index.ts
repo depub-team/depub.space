@@ -1,3 +1,4 @@
+export * from './Avatar';
 export * from './CloseButton';
 export * from './ConnectWalletButton';
 export * from './ListEmpty';

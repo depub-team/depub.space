@@ -1,6 +1,5 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import {
-  Avatar,
   useToast,
   Box,
   Button,
@@ -19,9 +18,9 @@ import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-nav
 import { HLogoText } from '@depub/theme';
 import { Link } from '@react-navigation/native';
 import type { SideMenuItemProps } from './SideMenuItem';
-import { SideMenuItem } from './SideMenuItem';
-import { ConnectWalletButton } from '../../atoms/ConnectWalletButton';
 import type { UserProfile } from '../../../interfaces';
+import { SideMenuItem } from './SideMenuItem';
+import { Avatar, ConnectWalletButton } from '../../atoms';
 import { getAbbrNickname, getShortenAddress } from '../../../utils';
 
 export interface SideMenuProps extends DrawerContentComponentProps {
@@ -180,19 +179,9 @@ export const SideMenu: FC<SideMenuProps> = ({
               <HStack alignItems="center" flex={1} space={3}>
                 <Link to={toUserRoute}>
                   <Avatar
-                    backgroundColor={profilePicSource ? 'transparent' : 'gray.300'}
-                    borderRadius={profile?.isNFTProfilePicture ? 'none' : 'full'}
+                    isNFTProfilePicture={profile?.isNFTProfilePicture}
                     size="sm"
                     source={profilePicSource}
-                    style={
-                      profile?.isNFTProfilePicture
-                        ? ({
-                            maskImage: 'url(/images/hex.svg)',
-                            maskRepeat: 'no-repeat',
-                            maskPosition: 'center',
-                          } as any) // FIXME: type error, cannot use web style here
-                        : undefined
-                    }
                   >
                     {abbrNickname}
                   </Avatar>
