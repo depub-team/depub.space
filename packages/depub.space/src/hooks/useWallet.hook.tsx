@@ -29,11 +29,11 @@ type ConnectedWalletType = 'keplr' | 'likerland_app';
 
 export class WalletStateError extends Error {}
 export interface WalletContextProps {
-  walletAddress: string | null;
-  offlineSigner: OfflineSigner | null;
-  connector: WalletConnect | null;
+  walletAddress: string | undefined;
+  offlineSigner: OfflineSigner | undefined;
+  connector: WalletConnect | undefined;
   isLoading: boolean;
-  error: string | null;
+  error: string | undefined;
   isWalletModalOpen: boolean;
   showWalletModal: () => void;
   closeWalletModal: () => void;
@@ -52,11 +52,11 @@ const enum ActionType {
 }
 
 type Action =
-  | { type: ActionType.SET_WALLET_ADDRESS; walletAddress: string | null }
-  | { type: ActionType.SET_OFFLINE_SIGNER; offlineSigner: OfflineSigner | null }
-  | { type: ActionType.SET_CONNECTOR; connector: WalletConnect | null }
+  | { type: ActionType.SET_WALLET_ADDRESS; walletAddress: string | undefined }
+  | { type: ActionType.SET_OFFLINE_SIGNER; offlineSigner: OfflineSigner | undefined }
+  | { type: ActionType.SET_CONNECTOR; connector: WalletConnect | undefined }
   | { type: ActionType.SET_IS_LOADING; isLoading: boolean }
-  | { type: ActionType.SET_ERROR; error: string | null }
+  | { type: ActionType.SET_ERROR; error: string | undefined }
   | { type: ActionType.SET_IS_WALLET_MODAL_OPEN; isWalletModalOpen: boolean };
 
 const reducer: Reducer<WalletContextProps, Action> = (state, action) => {
@@ -194,17 +194,17 @@ export const getChainInfo = () => {
 };
 
 const initialState = {
-  walletAddress: null,
-  offlineSigner: null,
+  walletAddress: undefined,
+  offlineSigner: undefined,
   isLoading: false,
   isWalletModalOpen: false,
-  connector: null,
-  error: null,
-  showWalletModal: null as never,
-  closeWalletModal: null as never,
-  connectKeplr: null as never,
-  connectWalletConnect: null as never,
-  disconnect: null as never,
+  connector: undefined,
+  error: undefined,
+  showWalletModal: undefined as never,
+  closeWalletModal: undefined as never,
+  connectKeplr: undefined as never,
+  connectWalletConnect: undefined as never,
+  disconnect: undefined as never,
 };
 
 export const WalletContext = createContext<WalletContextProps>(initialState);
@@ -219,18 +219,18 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
   const setIsLoading = (isLoading: boolean) =>
     dispatch({ type: ActionType.SET_IS_LOADING, isLoading });
 
-  const setError = (error: string | null) => dispatch({ type: ActionType.SET_ERROR, error });
+  const setError = (error: string | undefined) => dispatch({ type: ActionType.SET_ERROR, error });
 
-  const setWalletAddress = (walletAddress: string | null) =>
+  const setWalletAddress = (walletAddress: string | undefined) =>
     dispatch({ type: ActionType.SET_WALLET_ADDRESS, walletAddress });
 
-  const setOfflineSigner = (offlineSigner: OfflineSigner | null) =>
+  const setOfflineSigner = (offlineSigner: OfflineSigner | undefined) =>
     dispatch({ type: ActionType.SET_OFFLINE_SIGNER, offlineSigner });
 
   const setIsWalletModalOpen = (isWalletModalOpen: boolean) =>
     dispatch({ type: ActionType.SET_IS_WALLET_MODAL_OPEN, isWalletModalOpen });
 
-  const setConnector = (connector: WalletConnect | null) =>
+  const setConnector = (connector: WalletConnect | undefined) =>
     dispatch({ type: ActionType.SET_CONNECTOR, connector });
 
   const suggestChain = async () => {
@@ -290,13 +290,13 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
 
     if (state.connector?.connected) {
       void state.connector.killSession();
-      setConnector(null);
+      setConnector(undefined);
     }
 
-    setWalletAddress(null);
-    setOfflineSigner(null);
+    setWalletAddress(undefined);
+    setOfflineSigner(undefined);
     setIsLoading(false);
-    setError(null);
+    setError(undefined);
   };
 
   const initWalletConnect = async () => {

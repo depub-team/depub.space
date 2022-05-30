@@ -6,6 +6,7 @@ import { Link as NBLink, Box, VStack, Text } from 'native-base';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { fromBech32, toBech32 } from '@cosmjs/encoding';
 import { Layout, ListHeaderContainer, MessageList, useAlert, UserHeader } from '../components';
 import { Message, UserProfile } from '../interfaces';
 import { useAppState, useWallet } from '../hooks';
@@ -27,6 +28,19 @@ export type UserScreenProps = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
+const compareAddress = (addressA?: string, addressB?: string) => {
+  if (!addressA || !addressB) {
+    return false;
+  }
+
+  const { data: dataA } = fromBech32(addressA);
+  const { data: dataB } = fromBech32(addressB);
+  const likePrefixedAddressA = toBech32('like', dataA);
+  const likePrefixedAddressB = toBech32('like', dataB);
+
+  return likePrefixedAddressA === likePrefixedAddressB;
+};
+
 export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navigation }) => {
   const { account } = route.params;
   const [isReady, setIsReady] = useState(false);
@@ -40,7 +54,7 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   const alert = useAlert();
   const { walletAddress, isLoading: isConnectLoading } = useWallet();
   const isLoggedIn = Boolean(walletAddress && !isConnectLoading);
-  const isEditable = walletAddress === profile?.address;
+  const isEditable = compareAddress(walletAddress, profile?.address); // unify the prefix of addresses to compare
   const profilePic = useMemo(
     () => (profile?.profilePic ? { uri: profile.profilePic } : undefined),
     [profile]
