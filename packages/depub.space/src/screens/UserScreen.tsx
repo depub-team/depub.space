@@ -7,9 +7,9 @@ import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Layout, ListHeaderContainer, MessageList, useAlert, UserHeader } from '../components';
-import { Message, DesmosProfile } from '../interfaces';
-import { useWallet } from '../hooks';
-import { getLikecoinAddressByProfile, getMessagesByOwner } from '../utils';
+import { Message, UserProfile } from '../interfaces';
+import { useAppState, useWallet } from '../hooks';
+import { checkIsNFTProfilePicture, getMessagesByOwner } from '../utils';
 import { getShortenAddress } from '../utils/getShortenAddress';
 import { MainStackParamList } from '../navigation/MainStackParamList';
 import { RootStackParamList } from '../navigation/RootStackParamList';
@@ -33,18 +33,23 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
   const [isLoading, setIsLoading] = useState(false);
   const [isHeaderHide, setIsHeaderHide] = useState(false);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
-  const [profile, setProfile] = useState<DesmosProfile | null>(null);
+  const { showProfilePictureModal } = useAppState();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
   const [messages, setMessages] = useState<Message[]>(emptyMessages);
   const alert = useAlert();
   const { walletAddress, isLoading: isConnectLoading } = useWallet();
   const isLoggedIn = Boolean(walletAddress && !isConnectLoading);
-  const profilePic = profile?.profilePic;
+  const isEditable = walletAddress === profile?.address;
+  const profilePic = useMemo(
+    () => (profile?.profilePic ? { uri: profile.profilePic } : undefined),
+    [profile]
+  );
   const nickname = profile?.nickname || shortenAccount;
   const isWalletAddress = /^(cosmos1|like1)/.test(account);
   const bio = profile?.bio;
   const dtag = profile?.dtag;
-  const likecoinWalletAddress = profile && getLikecoinAddressByProfile(profile);
+  const likecoinWalletAddress = profile?.address;
   const metadata = useMemo(
     () => ({ title: `${nickname || walletAddress} on depub.space` }),
     [nickname, walletAddress]
@@ -79,11 +84,16 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
             if (!refresh) {
               setMessages(msgs => update(msgs, { $push: newMessages }));
             } else {
-              if (res.data?.profile) {
-                setProfile(res.data.profile);
-              }
-
               setMessages(msgs => update(msgs, { $set: newMessages }));
+
+              if (res.data?.profile) {
+                setProfile({
+                  ...res.data.profile,
+                  isNFTProfilePicture: checkIsNFTProfilePicture(
+                    res.data.profile.profilePicProvider || ''
+                  ),
+                });
+              }
             }
           }
         }
@@ -117,8 +127,11 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
         bio={bio}
         collapse={isHeaderHide}
         dtag={dtag}
+        editable={isEditable}
+        isNFTProfilePicture={profile?.isNFTProfilePicture}
         nickname={nickname}
         profilePic={profilePic}
+        onEditProfilePicture={showProfilePictureModal}
       />
     </ListHeaderContainer>
   );
@@ -136,11 +149,10 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
     useCallback(() => {
       // reset
       navigation.setOptions({
-        title: account,
+        title: nickname,
       });
 
       setIsReady(false);
-      setProfile(null);
       setMessages(emptyMessages);
       setIsListReachedEnd(false);
 
@@ -165,6 +177,7 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
             bio={bio}
             collapse={isHeaderHide}
             dtag={dtag}
+            editable={isEditable}
             nickname={nickname}
             profilePic={profilePic}
           />

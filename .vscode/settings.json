@@ -1,7 +1,9 @@
 {
   "cSpell.words": [
     "Arweave",
+    "Bech",
     "bignumber",
+    "codegen",
     "cosmjs",
     "cosmwasm",
     "datasource",
@@ -22,7 +24,11 @@
     "likecoin",
     "Miniflare",
     "monospace",
+    "Nativebase",
     "nextjs",
+    "omniflix",
+    "Pressable",
+    "Secp",
     "stargate",
     "stylelint",
     "superkv",
@@ -35,5 +41,5 @@
     "./packages/depub.space",
     "./packages/theme"
   ],
-  "jestrunner.configPath": "jest.config.json"
+  "jestrunner.configPath": "jest.config.js"
 }

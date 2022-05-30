@@ -1,6 +1,6 @@
 import { OfflineSigner } from '@cosmjs/proto-signing';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
-import { BroadcastTxSuccess } from '@cosmjs/stargate';
+import { DeliverTxResponse } from '@cosmjs/stargate';
 import * as Crypto from 'expo-crypto';
 import Debug from 'debug';
 import { submitToArweaveAndISCN } from '../arweave';
@@ -56,7 +56,7 @@ export const postMessage = async (
 
   debug('postMessage() -> payload: %O', payload);
 
-  let txn: TxRaw | BroadcastTxSuccess;
+  let txn: TxRaw | DeliverTxResponse;
 
   if (files) {
     txn = await submitToArweaveAndISCN(files, payload, offlineSigner, wallet.address);

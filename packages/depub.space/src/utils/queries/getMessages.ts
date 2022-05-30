@@ -1,4 +1,4 @@
-import { queryClient } from './queryClient';
+import { graphqlClient } from '../graphqlClient';
 import { Message, PaginatedResponse } from '../../interfaces';
 import { ROWS_PER_PAGE, GRAPHQL_QUERY_MESSAGES } from '../../constants';
 
@@ -10,7 +10,7 @@ export const getMessages = async (
   previousId?: string,
   limit = ROWS_PER_PAGE
 ): Promise<PaginatedResponse<Message[]>> => {
-  const { data } = await queryClient.post<{ data: MessagesQueryResponse }>(
+  const { data } = await graphqlClient.post<{ data: MessagesQueryResponse }>(
     '',
     {
       variables: {

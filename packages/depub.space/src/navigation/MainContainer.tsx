@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, ReactNode, useCallback, useEffect, useState } from 'react';
 import {
   View,
   ColorMode,
@@ -6,12 +6,12 @@ import {
   NativeBaseProvider,
   useColorMode,
   useToken,
+  INativebaseConfig,
 } from 'native-base';
 import { theme } from '@depub/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import AppLoading from 'expo-app-loading';
 import {
   DarkTheme,
   DefaultTheme,
@@ -27,15 +27,13 @@ import { RootNavigator } from './RootNavigator';
 import { getSystemDarkMode } from '../utils';
 import { linking } from './linking';
 
-void SplashScreen.preventAutoHideAsync();
-
-const nativeBaseConfig = {
+const nativeBaseConfig: INativebaseConfig = {
   dependencies: {
     'linear-gradient': LinearGradient,
   },
 };
 
-const navgiationDocumentTitle = { enabled: false };
+const navigationDocumentTitle = { enabled: false };
 
 const colorModeManager: StorageManager = {
   get: async () => {
@@ -65,7 +63,11 @@ const colorModeManager: StorageManager = {
   },
 };
 
-const NavigationThemeProvider: FC = ({ children }) => {
+export interface NavigationThemeProviderProps {
+  children?: ReactNode;
+}
+
+const NavigationThemeProvider: FC<NavigationThemeProviderProps> = ({ children }) => {
   const { colorMode } = useColorMode();
   const darkBlue900 = useToken('colors', 'darkBlue.900');
   const isDarkMode = colorMode === 'dark';
@@ -89,13 +91,14 @@ const NavigationThemeProvider: FC = ({ children }) => {
 };
 
 const MainContainer = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [appIsReady, setAppIsReady] = useState(true);
 
   useEffect(() => {
-    // eslint-disable-next-line func-names
-    void (async function () {
-      /* eslint-disable global-require, @typescript-eslint/no-var-requires */
+    async function prepare() {
       try {
+        void SplashScreen.preventAutoHideAsync();
+
+        /* eslint-disable global-require, @typescript-eslint/no-var-requires */
         void (await Promise.all([
           Font.loadAsync({
             Montserrat: require('../../public/fonts/Montserrat-Regular.ttf').default,
@@ -107,63 +110,72 @@ const MainContainer = () => {
             Montserrat_medium: require('../../public/fonts/Montserrat-Medium.ttf').default,
           }),
         ]));
+        /* eslint-enable global-require, @typescript-eslint/no-var-requires */
       } catch (e) {
-        // FontObserver timeout after 3000ms, this will fail silently
+        // eslint-disable-next-line no-console
+        console.warn(e);
+      } finally {
+        setAppIsReady(true);
       }
-      /* eslint-enable global-require, @typescript-eslint/no-var-requires */
+    }
 
-      await SplashScreen.hideAsync();
-
-      setIsLoading(false);
-    })();
+    void prepare();
   }, []);
+
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      await SplashScreen.hideAsync();
+    }
+  }, [appIsReady]);
+
+  if (!appIsReady) {
+    return null;
+  }
 
   return (
     <>
       <Meta />
 
-      {isLoading && process.browser ? (
-        <AppLoading />
-      ) : (
-        <SafeAreaProvider>
-          <NavigationContainer documentTitle={navgiationDocumentTitle} linking={linking}>
-            <NativeBaseProvider
-              colorModeManager={colorModeManager}
-              config={nativeBaseConfig}
-              theme={theme}
+      <SafeAreaProvider>
+        <NavigationContainer documentTitle={navigationDocumentTitle} linking={linking}>
+          <NativeBaseProvider
+            colorModeManager={colorModeManager}
+            config={nativeBaseConfig}
+            theme={theme}
+          >
+            <View
+              _dark={{
+                bg: 'darkBlue.900',
+              }}
+              _light={{
+                bg: 'white',
+              }}
+              flex={1}
+              // eslint-disable-next-line @typescript-eslint/no-misused-promises
+              onLayout={onLayoutRootView}
             >
-              <View
-                _dark={{
-                  bg: 'darkBlue.900',
-                }}
-                _light={{
-                  bg: 'white',
-                }}
-                flex={1}
-              >
-                <AlertProvider>
-                  <WalletProvider>
-                    <AppStateProvider>
-                      <NavigationThemeProvider>
-                        <View
-                          _web={{
-                            maxW: '1440px',
-                          }}
-                          alignSelf="center"
-                          flex={1}
-                          w="100%"
-                        >
-                          <RootNavigator />
-                        </View>
-                      </NavigationThemeProvider>
-                    </AppStateProvider>
-                  </WalletProvider>
-                </AlertProvider>
-              </View>
-            </NativeBaseProvider>
-          </NavigationContainer>
-        </SafeAreaProvider>
-      )}
+              <AlertProvider>
+                <WalletProvider>
+                  <AppStateProvider>
+                    <NavigationThemeProvider>
+                      <View
+                        _web={{
+                          maxW: '1440px',
+                        }}
+                        alignSelf="center"
+                        flex={1}
+                        w="100%"
+                      >
+                        <RootNavigator />
+                      </View>
+                    </NavigationThemeProvider>
+                  </AppStateProvider>
+                </WalletProvider>
+              </AlertProvider>
+            </View>
+          </NativeBaseProvider>
+        </NavigationContainer>
+      </SafeAreaProvider>
     </>
   );
 };

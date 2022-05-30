@@ -8,13 +8,13 @@ import React, {
   useEffect,
   useReducer,
   useCallback,
+  ReactNode,
 } from 'react';
 import update from 'immutability-helper';
 import { useNavigation } from '@react-navigation/native';
 import Debug from 'debug';
 import type { HomeScreenNavigationProps } from '../navigation/MainStackParamList';
-
-import type { ISCNCreateRawLog, DesmosProfile, HashTag, List } from '../interfaces';
+import type { ISCNCreateRawLog, UserProfile, HashTag, List } from '../interfaces';
 import { useAlert } from '../components/molecules/Alert';
 import { NoBalanceModal } from '../components/organisms/NoBalanceModal';
 import { useWallet } from './useWallet.hook';
@@ -22,8 +22,11 @@ import {
   dataUrlToFile,
   postMessage,
   getUserByDTagOrAddress,
-  getLikecoinAddressByProfile,
   TwitterAccessToken,
+  getAbbrNickname,
+  generateAuthSignature,
+  setProfilePicture,
+  checkIsNFTProfilePicture,
 } from '../utils';
 import { getLikeCoinBalance } from '../utils/likecoin';
 import * as twitter from '../utils/twitter';
@@ -32,6 +35,10 @@ import { ImageModal } from '../components/organisms/ImageModal';
 import { MessageFormType } from '../components/molecules/MessageComposer';
 import { MessageComposerModal } from '../components/organisms/MessageComposerModal';
 import { PostedMessageModal } from '../components/organisms/PostedMessageModal';
+import {
+  ProfilePictureModal,
+  SelectedProfilePicture,
+} from '../components/organisms/ProfilePictureModal';
 
 const debug = Debug('web:useAppState');
 
@@ -53,8 +60,9 @@ export interface AppStateContextProps {
   isNoBalanceModalOpen: boolean;
   isPostSuccessfulModalOpen: boolean;
   isMessageComposerModalOpen: boolean;
+  isProfilePictureModalOpen: boolean;
   twitterAccessToken: TwitterAccessToken | null; // Twitter OAuth token for v1.1 API
-  profile: DesmosProfile | null;
+  profile: UserProfile | null;
   postedMessage: PostedMessage | null; // new posted message object
   list: List[];
   image: string | null; // image modal
@@ -70,6 +78,8 @@ export interface AppStateContextProps {
   closeMessageComposerModal: () => void;
   showPostSuccessfulModal: (postedMessage: PostedMessage) => void;
   closePostSuccessfulModal: () => void;
+  showProfilePictureModal: () => void;
+  closeProfilePictureModal: () => void;
 }
 
 const initialState: AppStateContextProps = {
@@ -78,6 +88,7 @@ const initialState: AppStateContextProps = {
   twitterAccessToken: null,
   isImageModalOpen: false,
   isLoadingModalOpen: false,
+  isProfilePictureModalOpen: false,
   isPostSuccessfulModalOpen: false,
   isNoBalanceModalOpen: false,
   isMessageComposerModalOpen: false,
@@ -95,6 +106,8 @@ const initialState: AppStateContextProps = {
   closeMessageComposerModal: FunctionNever,
   showPostSuccessfulModal: FunctionNever,
   closePostSuccessfulModal: FunctionNever,
+  showProfilePictureModal: FunctionNever,
+  closeProfilePictureModal: FunctionNever,
 };
 
 export const AppStateContext = createContext<AppStateContextProps>(initialState);
@@ -105,6 +118,7 @@ const enum ActionType {
   SET_HASHTAGS = 'SET_HASHTAGS',
   SET_IS_LOADING_MODAL_OPEN = 'SET_IS_LOADING_MODAL_OPEN',
   SET_IS_IMAGE_MODAL_OPEN = 'SET_IS_IMAGE_MODAL_OPEN',
+  SET_IS_PROFILE_PICTURE_MODAL_OPEN = 'SET_IS_PROFILE_PICTURE_MODAL_OPEN',
   SET_NO_BALANCE_MODAL_SHOW = 'SET_NO_BALANCE_MODAL_SHOW',
   SET_IS_MESSAGE_COMPOSER_MODAL_OPEN = 'SET_IS_MESSAGE_COMPOSER_MODAL_OPEN',
   SET_IS_POST_SUCCESSFUL_MODAL_OPEN = 'SET_IS_POST_SUCCESSFUL_MODAL_OPEN',
@@ -112,7 +126,7 @@ const enum ActionType {
 }
 
 type Action =
-  | { type: ActionType.SET_PROFILE; profile: DesmosProfile | null }
+  | { type: ActionType.SET_PROFILE; profile: UserProfile | null }
   | { type: ActionType.SET_LIST; list: List[] }
   | { type: ActionType.SET_HASHTAGS; hashTags: HashTag[] }
   | {
@@ -125,6 +139,7 @@ type Action =
   | { type: ActionType.SET_NO_BALANCE_MODAL_SHOW; isNoBalanceModalOpen: boolean }
   | { type: ActionType.SET_IS_MESSAGE_COMPOSER_MODAL_OPEN; isMessageComposerModalOpen: boolean }
   | { type: ActionType.SET_TWITTER_ACCESS_TOKEN; twitterAccessToken: TwitterAccessToken | null }
+  | { type: ActionType.SET_IS_PROFILE_PICTURE_MODAL_OPEN; isProfilePictureModalOpen: boolean }
   | {
       type: ActionType.SET_IS_POST_SUCCESSFUL_MODAL_OPEN;
       isPostSuccessfulModalOpen: boolean;
@@ -137,7 +152,16 @@ const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
   switch (action.type) {
     case ActionType.SET_PROFILE:
       return update(state, {
-        profile: { $set: action.profile },
+        profile: {
+          $set: action.profile
+            ? {
+                ...action.profile,
+                isNFTProfilePicture: checkIsNFTProfilePicture(
+                  action.profile?.profilePicProvider || ''
+                ),
+              }
+            : null,
+        },
       });
     case ActionType.SET_HASHTAGS:
       return update(state, {
@@ -174,6 +198,10 @@ const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
         isPostSuccessfulModalOpen: { $set: action.isPostSuccessfulModalOpen },
         postedMessage: { $set: action.postedMessage },
       });
+    case ActionType.SET_IS_PROFILE_PICTURE_MODAL_OPEN:
+      return update(state, {
+        isProfilePictureModalOpen: { $set: action.isProfilePictureModalOpen },
+      });
     default:
       throw new AppStateError(`Cannot match action type ${(action as any).type}`);
   }
@@ -194,6 +222,12 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
       isImageModalOpen: true,
       image,
       aspectRatio,
+    });
+  },
+  showProfilePictureModal: () => {
+    dispatch({
+      type: ActionType.SET_IS_PROFILE_PICTURE_MODAL_OPEN,
+      isProfilePictureModalOpen: true,
     });
   },
   showMessageComposerModal: () => {
@@ -221,6 +255,12 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
       postedMessage,
     });
   },
+  closeProfilePictureModal: () => {
+    dispatch({
+      type: ActionType.SET_IS_PROFILE_PICTURE_MODAL_OPEN,
+      isProfilePictureModalOpen: false,
+    });
+  },
   closePostSuccessfulModal: () => {
     dispatch({
       type: ActionType.SET_IS_POST_SUCCESSFUL_MODAL_OPEN,
@@ -244,15 +284,19 @@ const useAppActions = (dispatch: React.Dispatch<Action>) => ({
   },
 });
 
-export const AppStateProvider: FC = ({ children }) => {
+export interface AppStateProviderProps {
+  children: ReactNode;
+}
+
+export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const navigation = useNavigation<HomeScreenNavigationProps>();
   const alert = useAlert();
   const { offlineSigner, walletAddress, error: connectError } = useWallet();
   const actions = useAppActions(dispatch);
-  const likecoinAddress = state.profile && getLikecoinAddressByProfile(state.profile);
+  const likecoinAddress = state.profile && state.profile.address;
   const userHandle = likecoinAddress && state.profile?.dtag ? state.profile.dtag : walletAddress;
-  const imageModalSoure = useMemo(
+  const imageModalSource = useMemo(
     () => (state.image ? { uri: state.image } : undefined),
     [state.image]
   );
@@ -297,6 +341,61 @@ export const AppStateProvider: FC = ({ children }) => {
     actions.closeLoading();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offlineSigner]);
+
+  const updateProfilePicture = useCallback(
+    async (selectedProfilePicture: SelectedProfilePicture) => {
+      debug('updateProfilePicture(selectedProfilePicture)', selectedProfilePicture);
+
+      actions.showLoading();
+
+      try {
+        if (offlineSigner && walletAddress) {
+          const authHeader = await generateAuthSignature(offlineSigner);
+
+          await setProfilePicture(
+            walletAddress,
+            selectedProfilePicture.image,
+            selectedProfilePicture.platform,
+            authHeader
+          );
+
+          // update user profile
+          const user = await getUserByDTagOrAddress(walletAddress);
+
+          if (user && user.profile) {
+            dispatch({
+              type: ActionType.SET_PROFILE,
+              profile: user.profile,
+            });
+          } else {
+            dispatch({ type: ActionType.SET_PROFILE, profile: null });
+          }
+
+          // reset
+          actions.closeProfilePictureModal();
+          actions.closeLoading();
+        }
+      } catch (ex) {
+        let errorMessage = 'Failed to prove ownership! please try again later.';
+
+        if (ex.message === 'Request rejected') {
+          errorMessage = ex.message;
+        } else if (ex.message === 'Invalid signature') {
+          errorMessage = 'Invalid signature!';
+        }
+
+        actions.closeLoading();
+
+        alert.show({
+          title: errorMessage,
+          status: 'error',
+        });
+
+        Sentry.captureException(ex);
+      }
+    },
+    [actions, alert, walletAddress, offlineSigner]
+  );
 
   const postAndUpload = useCallback(
     async (data: MessageFormType, image?: string | null) => {
@@ -357,6 +456,7 @@ export const AppStateProvider: FC = ({ children }) => {
           twitterUrl,
         });
 
+        // reset
         actions.closeMessageComposerModal();
         actions.closeLoading();
       } catch (ex) {
@@ -396,8 +496,8 @@ export const AppStateProvider: FC = ({ children }) => {
     // get user profile and balance
     void (async () => {
       if (walletAddress) {
-        const user = await getUserByDTagOrAddress(walletAddress);
         const balance = await getLikeCoinBalance(walletAddress);
+        const user = await getUserByDTagOrAddress(walletAddress);
 
         if (user && user.profile) {
           dispatch({ type: ActionType.SET_PROFILE, profile: user.profile });
@@ -489,9 +589,23 @@ export const AppStateProvider: FC = ({ children }) => {
       <ImageModal
         aspectRatio={state.imageAspectRatio || 1}
         isOpen={state.isImageModalOpen}
-        source={imageModalSoure}
+        source={imageModalSource}
         onClose={actions.closeImageModal}
       />
+      {walletAddress && (
+        <ProfilePictureModal
+          address={walletAddress}
+          avatarName={getAbbrNickname(state.profile?.nickname || state.profile?.address || '')}
+          defaultAvatar={state.profile?.profilePic}
+          defaultPlatform={
+            state.profile?.profilePicProvider || (state.profile?.profilePic ? 'desmos' : undefined)
+          }
+          isOpen={state.isProfilePictureModalOpen}
+          onClose={actions.closeProfilePictureModal}
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          onOk={updateProfilePicture}
+        />
+      )}
       <LoadingModal isOpen={state.isLoadingModalOpen} />
       <NoBalanceModal isOpen={state.isNoBalanceModalOpen} onClose={actions.closeNoBalanceModal} />
       <MessageComposerModal

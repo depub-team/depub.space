@@ -1,5 +1,5 @@
 import { OfflineSigner } from '@cosmjs/proto-signing';
-import { assertIsBroadcastTxSuccess, SigningStargateClient } from '@cosmjs/stargate';
+import { assertIsDeliverTxSuccess, SigningStargateClient } from '@cosmjs/stargate';
 import BigNumber from 'bignumber.js';
 import Debug from 'debug';
 
@@ -43,7 +43,7 @@ export async function sendLIKE(
 
   debug('sendLike() -> res: %O', res);
 
-  assertIsBroadcastTxSuccess(res);
+  assertIsDeliverTxSuccess(res);
 
   return res;
 }

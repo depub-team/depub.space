@@ -6,6 +6,7 @@ import React, {
   useContext,
   useEffect,
   useReducer,
+  ReactNode,
 } from 'react';
 import update from 'immutability-helper';
 import WalletConnect from '@walletconnect/client';
@@ -491,7 +492,11 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
   };
 };
 
-export const WalletProvider: FC = ({ children }) => {
+export interface WalletProviderProps {
+  children: ReactNode;
+}
+
+export const WalletProvider: FC<WalletProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const actions = useWalletActions(state, dispatch);
 

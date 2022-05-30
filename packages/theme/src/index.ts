@@ -24,6 +24,10 @@ export const theme = extendTheme({
       900: '#047356',
     },
   },
+  sizes: {
+    '2xs': 8,
+    '3xl': 240,
+  },
   fonts: {
     body: '"Montserrat", sans-serif',
     heading: 'Montserrat_bold, sans-serif',
@@ -103,6 +107,15 @@ export const theme = extendTheme({
     Heading: {
       baseStyle: {
         color: 'primary.500',
+      },
+    },
+    AlertDialog: {
+      defaultProps: {
+        _backdrop: {
+          _dark: {
+            opacity: 0.85,
+          },
+        },
       },
     },
     Modal: {

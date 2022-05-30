@@ -1,4 +1,4 @@
-import { queryClient } from './queryClient';
+import { graphqlClient } from '../graphqlClient';
 import { Message, PaginatedResponse, User } from '../../interfaces';
 
 import { ROWS_PER_PAGE, GRAPHQL_QUERY_MESSAGES_BY_USER } from '../../constants';
@@ -15,7 +15,7 @@ export const getMessagesByOwner = async (
   previousId?: string,
   limit = ROWS_PER_PAGE
 ): Promise<PaginatedResponse<GetUserWithMessagesResponse | null>> => {
-  const { data } = await queryClient.post<{ data: MessagesByOwnerResponse }>('', {
+  const { data } = await graphqlClient.post<{ data: MessagesByOwnerResponse }>('', {
     variables: {
       dtagOrAddress: owner,
       previousId,
@@ -24,15 +24,8 @@ export const getMessagesByOwner = async (
     query: GRAPHQL_QUERY_MESSAGES_BY_USER,
   });
 
-  if (data && data.data.getUser.messages.length) {
-    return {
-      data: data.data.getUser,
-      hasMore: data.data.getUser.messages.length >= limit,
-    };
-  }
-
   return {
-    data: null,
-    hasMore: false,
+    data: data.data.getUser,
+    hasMore: data.data.getUser.messages.length >= limit,
   };
 };

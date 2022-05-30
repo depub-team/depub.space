@@ -1,6 +1,6 @@
-import { DesmosProfile } from './desmos-profile.interface';
+import { UserProfile } from './user-profile.interface';
 
 export interface User {
   id: string;
-  profile?: DesmosProfile;
+  profile?: UserProfile;
 }

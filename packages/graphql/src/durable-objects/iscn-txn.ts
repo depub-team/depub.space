@@ -1,6 +1,6 @@
 import { ulidFactory } from 'ulid-workers';
-import { ISCNTrend, ISCNRecord } from '../interfaces';
-import { Bindings } from '../../bindings';
+import type { ISCNTrend, ISCNRecord } from '../interfaces';
+import type { Bindings } from '../../bindings';
 import { toCosmos } from '../utils';
 
 const ulid = ulidFactory({ monotonic: false });
@@ -297,36 +297,48 @@ export class IscnTxn implements DurableObject {
   public async fetch(request: Request) {
     const url = new URL(request.url);
 
-    if (url.pathname === '/sequence') {
-      if (request.method === 'PUT') {
-        return this.updateSequence(request);
+    try {
+      if (url.pathname === '/sequence') {
+        if (request.method === 'PUT') {
+          return await this.updateSequence(request);
+        }
+
+        if (request.method === 'GET') {
+          return await this.getSequence(request);
+        }
       }
 
-      if (request.method === 'GET') {
-        return this.getSequence(request);
-      }
-    }
+      if (url.pathname === '/transactions') {
+        if (request.method === 'PUT') {
+          return await this.addTransactions(request);
+        }
 
-    if (url.pathname === '/transactions') {
-      if (request.method === 'PUT') {
-        return this.addTransactions(request);
+        if (request.method === 'GET') {
+          return await this.getTransactions(request);
+        }
       }
 
-      if (request.method === 'GET') {
-        return this.getTransactions(request);
+      if (url.pathname === '/hashTags') {
+        if (request.method === 'GET') {
+          return await this.getHashTags();
+        }
       }
-    }
 
-    if (url.pathname === '/hashTags') {
-      if (request.method === 'GET') {
-        return this.getHashTags();
+      if (/^\/transactions\/.+/.test(url.pathname)) {
+        if (request.method === 'GET') {
+          return await this.getTransaction(request);
+        }
       }
-    }
+    } catch (ex) {
+      // eslint-disable-next-line no-console
+      console.error(ex);
 
-    if (/^\/transactions\/.+/.test(url.pathname)) {
-      if (request.method === 'GET') {
-        return this.getTransaction(request);
-      }
+      return new Response(
+        JSON.stringify({
+          error: ex instanceof Error ? ex.message : 'Unknown error',
+        }),
+        { status: 500 }
+      );
     }
 
     return new Response(undefined, { status: 403 });

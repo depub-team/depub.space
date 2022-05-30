@@ -1,4 +1,4 @@
-import { queryClient } from './queryClient';
+import { graphqlClient } from '../graphqlClient';
 import { User } from '../../interfaces';
 
 import { GRAPHQL_QUERY_GET_USER } from '../../constants';
@@ -8,7 +8,7 @@ export interface GetUserResponse {
 }
 
 export const getUserByDTagOrAddress = async (dtagOrAddress: string) => {
-  const { data } = await queryClient.post<{ data: GetUserResponse }>('', {
+  const { data } = await graphqlClient.post<{ data: GetUserResponse }>('', {
     variables: {
       dtagOrAddress,
     },

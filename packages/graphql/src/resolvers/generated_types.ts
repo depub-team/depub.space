@@ -34,6 +34,20 @@ export type Channels = {
   list: Array<Maybe<List>>;
 };
 
+export type DesmosProfile = {
+  __typename?: 'DesmosProfile';
+  address: Scalars['String'];
+  bio?: Maybe<Scalars['String']>;
+  chainLinks?: Maybe<Array<Maybe<ChainLink>>>;
+  coverPic?: Maybe<Scalars['String']>;
+  creationTime: Scalars['String'];
+  dtag: Scalars['String'];
+  id: Scalars['ID'];
+  nickname: Scalars['String'];
+  profilePic?: Maybe<Scalars['String']>;
+  profilePicProvider?: Maybe<Scalars['String']>;
+};
+
 export type HashTag = {
   __typename?: 'HashTag';
   count: Scalars['Int'];
@@ -53,28 +67,39 @@ export type Message = {
   id: Scalars['ID'];
   images?: Maybe<Array<Maybe<Scalars['String']>>>;
   message: Scalars['String'];
-  profile?: Maybe<Profile>;
+  profile?: Maybe<UserProfile>;
 };
 
-export type Profile = {
-  __typename?: 'Profile';
+export type Mutation = {
+  __typename?: 'Mutation';
+  setProfilePicture?: Maybe<UserProfile>;
+};
+
+
+export type MutationSetProfilePictureArgs = {
   address: Scalars['String'];
-  bio?: Maybe<Scalars['String']>;
-  chainLinks?: Maybe<Array<Maybe<ChainLink>>>;
-  coverPic?: Maybe<Scalars['String']>;
-  creationTime: Scalars['String'];
-  dtag: Scalars['String'];
-  id: Scalars['ID'];
-  nickname: Scalars['String'];
-  profilePic?: Maybe<Scalars['String']>;
+  picture: Scalars['String'];
+  provider: Scalars['String'];
+};
+
+export type NftAsset = {
+  __typename?: 'NFTAsset';
+  address: Scalars['String'];
+  media: Scalars['String'];
+  mediaType: Scalars['String'];
+  name: Scalars['String'];
+  tokenId: Scalars['String'];
 };
 
 export type Query = {
   __typename?: 'Query';
   getChannels?: Maybe<Channels>;
+  getDesmosProfile?: Maybe<DesmosProfile>;
   getMessage?: Maybe<Message>;
+  getOmniflixNFTsByOwner?: Maybe<Array<Maybe<NftAsset>>>;
+  getStargazeNFTsByOwner?: Maybe<Array<Maybe<NftAsset>>>;
   getUser?: Maybe<User>;
-  getUserProfile?: Maybe<Profile>;
+  getUserProfile?: Maybe<UserProfile>;
   messages?: Maybe<Array<Maybe<Message>>>;
   messagesByHashTag?: Maybe<Array<Maybe<Message>>>;
   messagesByMentioned?: Maybe<Array<Maybe<Message>>>;
@@ -86,8 +111,23 @@ export type QueryGetChannelsArgs = {
 };
 
 
+export type QueryGetDesmosProfileArgs = {
+  dtagOrAddress: Scalars['String'];
+};
+
+
 export type QueryGetMessageArgs = {
   iscnId: Scalars['String'];
+};
+
+
+export type QueryGetOmniflixNfTsByOwnerArgs = {
+  owner: Scalars['String'];
+};
+
+
+export type QueryGetStargazeNfTsByOwnerArgs = {
+  owner: Scalars['String'];
 };
 
 
@@ -124,15 +164,27 @@ export type QueryMessagesByMentionedArgs = {
 
 export type User = {
   __typename?: 'User';
-  id: Scalars['ID'];
+  address: Scalars['String'];
+  desmosProfile?: Maybe<UserProfile>;
   messages?: Maybe<Array<Maybe<Message>>>;
-  profile?: Maybe<Profile>;
+  profile?: Maybe<UserProfile>;
 };
 
 
 export type UserMessagesArgs = {
   limit?: InputMaybe<Scalars['Int']>;
   previousId?: InputMaybe<Scalars['String']>;
+};
+
+export type UserProfile = {
+  __typename?: 'UserProfile';
+  address: Scalars['String'];
+  bio?: Maybe<Scalars['String']>;
+  coverPic?: Maybe<Scalars['String']>;
+  dtag?: Maybe<Scalars['String']>;
+  nickname?: Maybe<Scalars['String']>;
+  profilePic?: Maybe<Scalars['String']>;
+  profilePicProvider?: Maybe<Scalars['String']>;
 };
 
 
@@ -208,15 +260,18 @@ export type ResolversTypes = {
   ChainConfig: ResolverTypeWrapper<ChainConfig>;
   ChainLink: ResolverTypeWrapper<ChainLink>;
   Channels: ResolverTypeWrapper<Channels>;
+  DesmosProfile: ResolverTypeWrapper<DesmosProfile>;
   HashTag: ResolverTypeWrapper<HashTag>;
   ID: ResolverTypeWrapper<Scalars['ID']>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
   List: ResolverTypeWrapper<List>;
   Message: ResolverTypeWrapper<Message>;
-  Profile: ResolverTypeWrapper<Profile>;
+  Mutation: ResolverTypeWrapper<{}>;
+  NFTAsset: ResolverTypeWrapper<NftAsset>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']>;
   User: ResolverTypeWrapper<User>;
+  UserProfile: ResolverTypeWrapper<UserProfile>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -225,15 +280,18 @@ export type ResolversParentTypes = {
   ChainConfig: ChainConfig;
   ChainLink: ChainLink;
   Channels: Channels;
+  DesmosProfile: DesmosProfile;
   HashTag: HashTag;
   ID: Scalars['ID'];
   Int: Scalars['Int'];
   List: List;
   Message: Message;
-  Profile: Profile;
+  Mutation: {};
+  NFTAsset: NftAsset;
   Query: {};
   String: Scalars['String'];
   User: User;
+  UserProfile: UserProfile;
 };
 
 export type ChainConfigResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ChainConfig'] = ResolversParentTypes['ChainConfig']> = {
@@ -255,6 +313,20 @@ export type ChannelsResolvers<ContextType = Context, ParentType extends Resolver
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type DesmosProfileResolvers<ContextType = Context, ParentType extends ResolversParentTypes['DesmosProfile'] = ResolversParentTypes['DesmosProfile']> = {
+  address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  bio?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  chainLinks?: Resolver<Maybe<Array<Maybe<ResolversTypes['ChainLink']>>>, ParentType, ContextType>;
+  coverPic?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  creationTime?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dtag?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  nickname?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  profilePic?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  profilePicProvider?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type HashTagResolvers<ContextType = Context, ParentType extends ResolversParentTypes['HashTag'] = ResolversParentTypes['HashTag']> = {
   count?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -273,37 +345,52 @@ export type MessageResolvers<ContextType = Context, ParentType extends Resolvers
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   images?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  profile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType>;
+  profile?: Resolver<Maybe<ResolversTypes['UserProfile']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type ProfileResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Profile'] = ResolversParentTypes['Profile']> = {
+export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  setProfilePicture?: Resolver<Maybe<ResolversTypes['UserProfile']>, ParentType, ContextType, RequireFields<MutationSetProfilePictureArgs, 'address' | 'picture' | 'provider'>>;
+};
+
+export type NftAssetResolvers<ContextType = Context, ParentType extends ResolversParentTypes['NFTAsset'] = ResolversParentTypes['NFTAsset']> = {
   address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  bio?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  chainLinks?: Resolver<Maybe<Array<Maybe<ResolversTypes['ChainLink']>>>, ParentType, ContextType>;
-  coverPic?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  creationTime?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  dtag?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  nickname?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  profilePic?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  media?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  mediaType?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  tokenId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   getChannels?: Resolver<Maybe<ResolversTypes['Channels']>, ParentType, ContextType, Partial<QueryGetChannelsArgs>>;
+  getDesmosProfile?: Resolver<Maybe<ResolversTypes['DesmosProfile']>, ParentType, ContextType, RequireFields<QueryGetDesmosProfileArgs, 'dtagOrAddress'>>;
   getMessage?: Resolver<Maybe<ResolversTypes['Message']>, ParentType, ContextType, RequireFields<QueryGetMessageArgs, 'iscnId'>>;
+  getOmniflixNFTsByOwner?: Resolver<Maybe<Array<Maybe<ResolversTypes['NFTAsset']>>>, ParentType, ContextType, RequireFields<QueryGetOmniflixNfTsByOwnerArgs, 'owner'>>;
+  getStargazeNFTsByOwner?: Resolver<Maybe<Array<Maybe<ResolversTypes['NFTAsset']>>>, ParentType, ContextType, RequireFields<QueryGetStargazeNfTsByOwnerArgs, 'owner'>>;
   getUser?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryGetUserArgs, 'dtagOrAddress'>>;
-  getUserProfile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType, RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>>;
+  getUserProfile?: Resolver<Maybe<ResolversTypes['UserProfile']>, ParentType, ContextType, RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>>;
   messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<QueryMessagesArgs>>;
   messagesByHashTag?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, RequireFields<QueryMessagesByHashTagArgs, 'tag'>>;
   messagesByMentioned?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, RequireFields<QueryMessagesByMentionedArgs, 'mentioned'>>;
 };
 
 export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  desmosProfile?: Resolver<Maybe<ResolversTypes['UserProfile']>, ParentType, ContextType>;
   messages?: Resolver<Maybe<Array<Maybe<ResolversTypes['Message']>>>, ParentType, ContextType, Partial<UserMessagesArgs>>;
-  profile?: Resolver<Maybe<ResolversTypes['Profile']>, ParentType, ContextType>;
+  profile?: Resolver<Maybe<ResolversTypes['UserProfile']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserProfileResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserProfile'] = ResolversParentTypes['UserProfile']> = {
+  address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  bio?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  coverPic?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  dtag?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  nickname?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  profilePic?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  profilePicProvider?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -311,11 +398,14 @@ export type Resolvers<ContextType = Context> = {
   ChainConfig?: ChainConfigResolvers<ContextType>;
   ChainLink?: ChainLinkResolvers<ContextType>;
   Channels?: ChannelsResolvers<ContextType>;
+  DesmosProfile?: DesmosProfileResolvers<ContextType>;
   HashTag?: HashTagResolvers<ContextType>;
   List?: ListResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
-  Profile?: ProfileResolvers<ContextType>;
+  Mutation?: MutationResolvers<ContextType>;
+  NFTAsset?: NftAssetResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
+  UserProfile?: UserProfileResolvers<ContextType>;
 };
 
