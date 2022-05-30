@@ -1,4 +1,4 @@
-![depub.SPACE](/packages/depub.space/public/app-logo.png)
+![depub.space](/packages/depub.space/public/app-logo.png)
 
 # DePub
 
@@ -6,7 +6,7 @@ This is monorepo for depub products
 
 ## Packages
 
-### depub.SPACE
+### depub.space
 
 - Production: [https://depub.space](https://depub.space)
 - Staging: [https://stag.depub.space](https://stag.depub.space)
@@ -37,4 +37,4 @@ Please find the .env.sample under individual package.
 
 ## Deployment
 
-- **_depub.SPACE_** is deploying to IPFS via fleek.co
+- **_depub.space_** is deploying to IPFS via fleek.co
