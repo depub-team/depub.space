@@ -96,7 +96,7 @@ export const SideMenu: FC<SideMenuProps> = ({
   const displayName = profile?.nickname || profile?.dtag || shortenAddress;
   const abbrNickname = getAbbrNickname(displayName || '');
   const profilePicSource = useMemo(
-    () => (profile ? { uri: profile.profilePic } : undefined),
+    () => (profile?.profilePic ? { uri: profile.profilePic } : undefined),
     [profile]
   );
   const toUserRoute = useMemo(
