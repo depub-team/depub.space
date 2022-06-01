@@ -88,7 +88,7 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
   const isCopied = copyUrlIconState === 'copied';
   const profilePicSource = useMemo(
-    () => (profile ? { uri: profile?.profilePic } : undefined),
+    () => (profile && profile?.profilePic ? { uri: profile.profilePic } : undefined),
     [profile]
   );
   const imageSources = useMemo(() => images.map(image => ({ uri: image })), [images]);
