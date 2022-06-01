@@ -245,7 +245,11 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
 
               {!isLoading && nfts.length < 1 && (
                 <Center>
-                  <Text fontSize="sm">No NFT found. Please try another platform.</Text>
+                  <Text fontSize="sm">
+                    {isNFTPlatform
+                      ? 'No NFT found. Please try another platform.'
+                      : 'No profile picture in your Desmos profile'}
+                  </Text>
                 </Center>
               )}
 
