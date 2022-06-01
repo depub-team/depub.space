@@ -1,5 +1,5 @@
 import { DrawerScreenProps } from '@react-navigation/drawer';
-import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
+import { CompositeScreenProps, findFocusedRoute, useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Debug from 'debug';
 import { FC, useCallback } from 'react';
@@ -20,22 +20,20 @@ export const HomeScreen: FC<HomeScreenProps> = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       const [firstItem] = list;
+      const focusedRoute = findFocusedRoute(navigation.getState());
 
       debug('useFocusEffect() -> firstItem: %O', firstItem);
 
-      if (!firstItem) {
+      if (!firstItem || focusedRoute?.name === 'WorldFeed') {
         return;
       }
 
       void (async () => {
-        await waitAsync(10);
+        await waitAsync(1);
 
-        navigation.navigate('HashTag', {
-          name: firstItem.hashTag,
-        });
+        navigation.navigate('WorldFeed');
       })();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [list])
+    }, [list, navigation])
   );
 
   return null;
