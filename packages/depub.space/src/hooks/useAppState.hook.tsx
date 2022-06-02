@@ -474,7 +474,7 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [alert, state.twitterAccessToken, userHandle]
+    [alert, state.twitterAccessToken, userHandle, offlineSigner]
   );
 
   const handleOkPostedMessage = useCallback(() => {
