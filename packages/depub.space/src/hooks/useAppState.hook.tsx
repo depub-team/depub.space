@@ -25,6 +25,7 @@ import {
   getUserByDTagOrAddress,
   getLikecoinAddressByProfile,
   TwitterAccessToken,
+  getMessageById,
 } from '../utils';
 import { getLikeCoinBalance } from '../utils/likecoin';
 import * as twitter from '../utils/twitter';
@@ -32,6 +33,7 @@ import { LoadingModal } from '../components/organisms/LoadingModal';
 import { ImageModal } from '../components/organisms/ImageModal';
 import { MessageFormType } from '../components/molecules/MessageComposer';
 import { MessageComposerModal } from '../components/organisms/MessageComposerModal';
+import { MessageUpdateModal } from '../components/organisms/MessageUpdateModal';
 import { PostedMessageModal } from '../components/organisms/PostedMessageModal';
 
 const debug = Debug('web:useAppState');
@@ -303,6 +305,10 @@ export const AppStateProvider: FC = ({ children }) => {
     actions.closeMessageComposerModal();
   }, [actions]);
 
+  const handleOnMessageUpdateModalClose = useCallback(() => {
+    actions.closeEditMessageModal();
+  }, [actions]);
+
   const handleOnTwitterLogin = useCallback(async () => {
     if (!offlineSigner) {
       return;
@@ -459,14 +465,34 @@ export const AppStateProvider: FC = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectError]);
 
+  const isMessageUpdateModalOpen = useMemo(
+    () => !!state.editMessageIscnId,
+    [state.editMessageIscnId]
+  )
+
+  const onDeleteMessage = async() => {
+    if (!offlineSigner || ! state.editMessageIscnId) return
+    void await deleteMessage(offlineSigner, state.editMessageIscnId)
+      .catch(debug)
+      .then(res => debug('result', res))
+
+  }
+
   useEffect(() => {
-    if (state.editMessageIscnId && offlineSigner) {
-      void deleteMessage(offlineSigner, state.editMessageIscnId)
-        .catch(debug)
-        .then(res => debug('result', res))
+    async function getEditOriginalMessage(iscnId: string) {
+      // actions.showLoading()
+      const message = await getMessageById(iscnId);
+
+      debug(message)
+
+      // actions.closeLoading()
     }
 
-  }, [state.editMessageIscnId, offlineSigner])
+    if (state.editMessageIscnId) {
+      void getEditOriginalMessage(state.editMessageIscnId)
+    }
+
+  }, [state.editMessageIscnId,])
 
   useEffect(() => {
     const handleLocalStorageChange = (event?: StorageEvent) => {
@@ -542,6 +568,16 @@ export const AppStateProvider: FC = ({ children }) => {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onTwitterLogin={handleOnTwitterLogin}
         onTwitterLogout={handleOnTwitterLogout}
+      />
+      <MessageUpdateModal
+        isLoading={state.isLoadingModalOpen}
+        isOpen={isMessageUpdateModalOpen}
+        isTwitterLoggedIn={Boolean(state.twitterAccessToken)}
+        profile={state.profile}
+        walletAddress={walletAddress}
+        onClose={handleOnMessageUpdateModalClose}
+        onDelete={onDeleteMessage}
+        // onSubmit={postAndUpload}
       />
       {state.isPostSuccessfulModalOpen && state.postedMessage && (
         <PostedMessageModal
