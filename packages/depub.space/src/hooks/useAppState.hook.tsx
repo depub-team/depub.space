@@ -546,8 +546,7 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
         Sentry.captureException(ex);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [alert, state.twitterAccessToken, userHandle]
+    [actions, alert, offlineSigner, state.twitterAccessToken, userHandle, walletAddress]
   );
 
   const handleOkPostedMessage = useCallback(() => {

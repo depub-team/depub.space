@@ -169,9 +169,8 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
       setIsReady(false);
       setMessages(emptyMessages);
       setIsListReachedEnd(false);
-
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [account, revision])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [navigation, revision, nickname])
   );
 
   return account ? (
