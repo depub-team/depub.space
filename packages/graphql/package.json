@@ -22,9 +22,9 @@
     "@cosmjs/crypto": "0.28.4",
     "@cosmjs/encoding": "0.28.4",
     "apollo-datasource": "3.3.1",
-    "apollo-server-cloudflare": "3.6.3",
+    "apollo-server-cloudflare": "3.8.1",
     "apollo-server-errors": "3.3.1",
-    "graphql": "16.3.0",
+    "graphql": "16.5.0",
     "ulid-workers": "2.0.0"
   },
   "devDependencies": {

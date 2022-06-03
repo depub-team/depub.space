@@ -2,6 +2,7 @@ import { fromBech32 } from '@cosmjs/encoding';
 import { verifyArbitrary } from '../utils/verify-arbitrary';
 import { Context } from '../context';
 import { MutationSetProfilePictureArgs, RequireFields, UserProfile } from './generated_types';
+import { toLike } from '../utils';
 
 export const USER_PROFILE_DURABLE_OBJECT = 'http://user-profile';
 
@@ -28,10 +29,14 @@ export const setProfilePicture = async (
   // get user profile from durable object
   const durableObjId = ctx.env.USER_PROFILE.idFromName('user-profile');
   const stub = ctx.env.USER_PROFILE.get(durableObjId);
-  const setUserProfileRequest = new Request(`${USER_PROFILE_DURABLE_OBJECT}/profiles/${address}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ profilePic: picture, profilePicProvider: provider }),
-  });
+  const likePrefixedAddress = /^like/.test(address) ? address : toLike(address);
+  const setUserProfileRequest = new Request(
+    `${USER_PROFILE_DURABLE_OBJECT}/profiles/${likePrefixedAddress}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ profilePic: picture, profilePicProvider: provider }),
+    }
+  );
   const setUserProfileResponse = await stub.fetch(setUserProfileRequest);
   const userProfile = await setUserProfileResponse.json<UserProfile>();
 

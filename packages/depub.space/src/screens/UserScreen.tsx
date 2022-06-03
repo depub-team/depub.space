@@ -42,7 +42,7 @@ const compareAddress = (addressA?: string, addressB?: string) => {
 };
 
 export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navigation }) => {
-  const { account } = route.params;
+  const { account, revision } = route.params;
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isHeaderHide, setIsHeaderHide] = useState(false);
@@ -171,7 +171,7 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
       setIsListReachedEnd(false);
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [account])
+    }, [account, revision])
   );
 
   return account ? (

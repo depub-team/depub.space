@@ -8,6 +8,7 @@ import type {
   DesmosProfile,
 } from './generated_types';
 import { getDesmosProfile } from './get-desmos-profile.resolver';
+import { toLike } from '../utils';
 
 export const USER_PROFILE_DURABLE_OBJECT = 'http://user-profile';
 
@@ -39,6 +40,15 @@ export const getUserProfile = async (
     if (likecoinAddress) {
       address = likecoinAddress;
     }
+  }
+
+  if (!/^(like|cosmos)/.test(address)) {
+    throw new ISCNError('Not found');
+  }
+
+  // unify to be likecoin address
+  if (!address.startsWith('like')) {
+    address = toLike(address);
   }
 
   // get user profile from durable object

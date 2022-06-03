@@ -336,6 +336,14 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offlineSigner]);
 
+  const navigateToUserProfile = useCallback(() => {
+    if (!userHandle) {
+      return;
+    }
+
+    navigation.navigate('User', { account: userHandle, revision: Math.random() });
+  }, [navigation, userHandle]);
+
   const updateProfilePicture = useCallback(
     async (selectedProfilePicture: SelectedProfilePicture) => {
       debug('updateProfilePicture(selectedProfilePicture)', selectedProfilePicture);
@@ -361,6 +369,15 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
               type: ActionType.SET_PROFILE,
               profile: user.profile,
             });
+
+            alert.show({
+              title: 'Your profile picture has been updated!',
+              status: 'success',
+            });
+
+            setTimeout(() => {
+              navigateToUserProfile();
+            }, 3000);
           } else {
             dispatch({ type: ActionType.SET_PROFILE, profile: undefined });
           }
@@ -388,7 +405,7 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
         Sentry.captureException(ex);
       }
     },
-    [actions, alert, walletAddress, offlineSigner]
+    [actions, offlineSigner, walletAddress, alert, navigateToUserProfile]
   );
 
   const postAndUpload = useCallback(
@@ -479,10 +496,10 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
 
   const handleOkPostedMessage = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    navigation.navigate('User', { account: userHandle! });
+    navigateToUserProfile();
 
     actions.closePostSuccessfulModal();
-  }, [actions, navigation, userHandle]);
+  }, [actions, navigateToUserProfile]);
 
   useEffect(() => {
     let showModalTimeout = 0;
