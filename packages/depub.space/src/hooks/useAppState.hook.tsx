@@ -48,6 +48,12 @@ const TWITTER_ACCESS_TOKEN_STORAGE_KEY = 'TWITTER_ACCESS_TOKEN';
 
 export class AppStateError extends Error {}
 
+declare global {
+  interface Window {
+    dataLayer: Record<string, any>[];
+  }
+}
+
 const FunctionNever = null as never;
 
 interface PostedMessage {
@@ -203,6 +209,28 @@ const reducer: Reducer<AppStateContextProps, Action> = (state, action) => {
 
 export const useAppState = () => useContext(AppStateContext);
 
+const pushGtmEvent = (
+  event: string,
+  walletAddress: string | undefined,
+  eventPayload?: Record<string, any>
+) => {
+  window.dataLayer = window.dataLayer || [];
+
+  try {
+    window.dataLayer.push({
+      event,
+      pagePath: window.location.href,
+      pageTitle: window.document.title,
+      userId: walletAddress,
+      likePrefixed: walletAddress && /like/.test(walletAddress),
+      visitorType: walletAddress ? 'user-with-wallet' : 'user-without-wallet',
+      ...eventPayload,
+    });
+  } catch {
+    // do nothing
+  }
+};
+
 const useAppActions = (dispatch: React.Dispatch<Action>) => ({
   showLoading: () => {
     dispatch({ type: ActionType.SET_IS_LOADING_MODAL_OPEN, isLoadingModalOpen: true });
@@ -354,6 +382,10 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
         if (offlineSigner && walletAddress) {
           const authHeader = await generateAuthSignature(offlineSigner);
 
+          pushGtmEvent('updatingProfilePicture', walletAddress, {
+            ...selectedProfilePicture,
+          });
+
           await setProfilePicture(
             walletAddress,
             selectedProfilePicture.image,
@@ -375,6 +407,10 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
               status: 'success',
             });
 
+            pushGtmEvent('updatedProfilePicture', walletAddress, {
+              ...selectedProfilePicture,
+            });
+
             setTimeout(() => {
               navigateToUserProfile();
             }, 3000);
@@ -388,6 +424,10 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
         }
       } catch (ex) {
         let errorMessage = 'Failed to prove ownership! please try again later.';
+
+        pushGtmEvent('failedToUpdateProfilePicture', walletAddress, {
+          error: ex.message,
+        });
 
         if (ex.message === 'Request rejected') {
           errorMessage = ex.message;
@@ -429,6 +469,11 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
       actions.showLoading();
 
       try {
+        pushGtmEvent('postingTweet', walletAddress, {
+          hasAttachment: !!file,
+          bodyLength: data.message.length,
+        });
+
         const txn = await postMessage(offlineSigner, data.message, file && [file]);
         const rawLog = JSON.parse(txn.rawLog || '[]') as ISCNCreateRawLog[];
         const iscnRecord = rawLog[0].events.find(event => event.type === 'iscn_record');
@@ -458,8 +503,15 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
               title: 'Failed to post to Twitter, please try again later',
               status: 'error',
             });
+
+            Sentry.captureException(error);
           }
         }
+
+        pushGtmEvent('postedTweet', walletAddress, {
+          postedOnTwitter: !!twitterUrl,
+          hasAttachment: !!file,
+        });
 
         actions.showPostSuccessfulModal({
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -471,6 +523,10 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
         actions.closeMessageComposerModal();
         actions.closeLoading();
       } catch (ex) {
+        pushGtmEvent('failedToPostTweet', walletAddress, {
+          error: ex.message,
+        });
+
         debug('postMessage() -> error: %O', ex);
         let errorMessage = 'Failed to post message! please try again later.';
 
