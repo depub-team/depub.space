@@ -176,7 +176,7 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
             >
               <Select.Item label="Desmos" value="desmos" />
               {/* <Select.Item label="Stargaze" value="stargaze" /> */}
-              <Select.Item label="Omniflix" value="omniflix" />
+              <Select.Item label="OmniFlix" value="omniflix" />
             </Select>
 
             <Box>
