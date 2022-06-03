@@ -90,6 +90,7 @@ export const UserHeader: FC<UserHeaderProps> = memo(
                   bottom="0"
                   direction="column"
                   h="25%"
+                  id="user-profile-picture-edit-button"
                   left="0"
                   p={0}
                   position="absolute"

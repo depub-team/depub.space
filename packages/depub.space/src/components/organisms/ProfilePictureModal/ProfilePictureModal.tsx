@@ -280,6 +280,7 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
                 colorScheme: 'gray',
               }}
               colorScheme="primary"
+              id="submit-update-profile-picture-button"
               isDisabled={!preview || !previewPlatform}
               onPress={handleOnOkPressed}
             >

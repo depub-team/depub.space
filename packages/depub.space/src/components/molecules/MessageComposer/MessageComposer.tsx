@@ -264,6 +264,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
             {(messageText || '').length} / {MAX_CHAR_LIMIT}
           </Text>
           <Button
+            id="post-tweet-submit-button"
             isLoading={isLoading}
             leftIcon={<Icon as={Ionicons} name="send" size="xs" />}
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
