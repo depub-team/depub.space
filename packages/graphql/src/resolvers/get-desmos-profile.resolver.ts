@@ -3,7 +3,7 @@ import type { DesmosProfile, QueryGetDesmosProfileArgs } from './generated_types
 
 export const PROFILE_KEY = 'profile';
 
-export const getDesmosProfile = async (
+export const getDesmosProfileResolver = async (
   { dtagOrAddress }: QueryGetDesmosProfileArgs,
   ctx: Context
 ): Promise<DesmosProfile | null> => {

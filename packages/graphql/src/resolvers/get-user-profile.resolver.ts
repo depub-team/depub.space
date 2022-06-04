@@ -7,13 +7,50 @@ import type {
   UserProfile,
   DesmosProfile,
 } from './generated_types';
-import { getDesmosProfile } from './get-desmos-profile.resolver';
-import { toLike } from '../utils';
+import { getDesmosProfileResolver } from './get-desmos-profile.resolver';
+import { changeAddressPrefix, toLike } from '../utils';
 
 export const USER_PROFILE_DURABLE_OBJECT = 'http://user-profile';
 
-const mergeProfile = (userProfile: UserProfile, desmosProfile: DesmosProfile | null) =>
-  ({
+const getNftImagesByOwnerOnOmniflix = async (address: string, ctx: Context) => {
+  const omniflixAddress = changeAddressPrefix(address, 'omniflix');
+  const nfts = await ctx.dataSources.omniflixAPI.getNFTsByOwner(omniflixAddress);
+
+  return nfts.map(nft => nft.media);
+};
+
+const getNftImagesByOwnerOnStargaze = async (address: string, ctx: Context) => {
+  const stargazeAddress = changeAddressPrefix(address, 'stars');
+  const nfts = await ctx.dataSources.stargazeAPI.getNFTsByOwner(stargazeAddress);
+
+  return nfts.map(nft => nft.media);
+};
+
+const updateProfilePicture = async (
+  stub: DurableObjectStub,
+  likePrefixedAddress: string,
+  picture: string,
+  provider: string
+) => {
+  const setUserProfileRequest = new Request(
+    `${USER_PROFILE_DURABLE_OBJECT}/profiles/${likePrefixedAddress}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ profilePic: picture, profilePicProvider: provider }),
+    }
+  );
+  const setUserProfileResponse = await stub.fetch(setUserProfileRequest);
+  const userProfile = await setUserProfileResponse.json<UserProfile>();
+
+  return userProfile;
+};
+
+const mergeProfile = (userProfile: UserProfile, desmosProfile: DesmosProfile | null) => {
+  const hasDesmosProfilePic = !!desmosProfile?.profilePic;
+  const profilePicProvider =
+    userProfile.profilePicProvider || (hasDesmosProfilePic ? 'desmos' : '');
+
+  return {
     ...userProfile,
     ...(desmosProfile
       ? {
@@ -21,18 +58,20 @@ const mergeProfile = (userProfile: UserProfile, desmosProfile: DesmosProfile | n
           coverPic: userProfile.coverPic || desmosProfile.coverPic,
           bio: userProfile.bio || desmosProfile.bio,
           nickname: userProfile.nickname || desmosProfile.nickname,
+          profilePicProvider,
         }
       : undefined),
-  } as UserProfile);
+  } as UserProfile;
+};
 
-export const getUserProfile = async (
+export const getUserProfileResolver = async (
   { dtagOrAddress }: RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>,
   ctx: Context
 ): Promise<UserProfile> => {
   let address = dtagOrAddress;
 
   // get desmos profile
-  const desmosProfile = await getDesmosProfile({ dtagOrAddress }, ctx);
+  const desmosProfile = await getDesmosProfileResolver({ dtagOrAddress }, ctx);
 
   if (desmosProfile) {
     const likecoinAddress = getLikecoinAddressByProfile(desmosProfile);
@@ -61,6 +100,33 @@ export const getUserProfile = async (
 
   if (getUserProfileResponse.status === 200) {
     const { userProfile } = await getUserProfileResponse.json<{ userProfile: UserProfile }>();
+    const { profilePic } = userProfile;
+    const { profilePicProvider } = userProfile;
+
+    if (profilePic && profilePicProvider !== 'desmos') {
+      const defaultProfilePic = desmosProfile?.profilePic || '';
+      const defaultProfilePicProvider = defaultProfilePic ? 'desmos' : '';
+
+      if (profilePicProvider === 'omniflix') {
+        const nfts = await getNftImagesByOwnerOnOmniflix(address, ctx);
+
+        if (!nfts.includes(profilePic)) {
+          await updateProfilePicture(stub, address, defaultProfilePic, defaultProfilePicProvider);
+        }
+
+        userProfile.profilePic = defaultProfilePic;
+        userProfile.profilePicProvider = defaultProfilePicProvider;
+      } else if (profilePicProvider === 'stargaze') {
+        const nfts = await getNftImagesByOwnerOnStargaze(address, ctx);
+
+        if (!nfts.includes(profilePic)) {
+          await updateProfilePicture(stub, address, defaultProfilePic, defaultProfilePicProvider);
+        }
+
+        userProfile.profilePic = defaultProfilePic;
+        userProfile.profilePicProvider = defaultProfilePicProvider;
+      }
+    }
 
     return mergeProfile({ ...userProfile, address }, desmosProfile);
   }
@@ -69,6 +135,7 @@ export const getUserProfile = async (
     throw new ISCNError('Not found');
   }
 
+  // return basic profile
   return mergeProfile(
     {
       address,

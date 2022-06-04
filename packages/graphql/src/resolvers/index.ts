@@ -1,7 +1,7 @@
 import { Resolvers } from './generated_types';
 import { getChannels } from './get-channels.resolver';
-import { getDesmosProfile } from './get-desmos-profile.resolver';
-import { getUserProfile } from './get-user-profile.resolver';
+import { getDesmosProfileResolver } from './get-desmos-profile.resolver';
+import { getUserProfileResolver } from './get-user-profile.resolver';
 import { getUser } from './get-user.resolver';
 import { getMessages } from './get-messages.resolver';
 import { getMessage } from './get-message.resolver';
@@ -16,8 +16,8 @@ const resolvers: Resolvers = {
     messages: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByHashTag: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByMentioned: async (_parent, args, ctx) => getMessages(args, ctx),
-    getDesmosProfile: (_parent, args, ctx) => getDesmosProfile(args, ctx),
-    getUserProfile: (_parent, args, ctx) => getUserProfile(args, ctx),
+    getDesmosProfile: (_parent, args, ctx) => getDesmosProfileResolver(args, ctx),
+    getUserProfile: (_parent, args, ctx) => getUserProfileResolver(args, ctx),
     getMessage: (_parent, args, ctx) => getMessage(args, ctx),
     getChannels: (_parent, args, ctx) => getChannels(args, ctx),
     getOmniflixNFTsByOwner: (_parent, args, ctx) => getOmniflixNFTsByOwner(args.owner, ctx),
