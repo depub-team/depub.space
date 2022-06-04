@@ -120,6 +120,22 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     }
   }, []);
 
+  const handleMessage = useCallback((onChange: any) => {
+    debug('handleMessage()');
+
+    return (message: string) => {
+      let decodedMessage = message
+
+      try {
+        decodedMessage = decodeURI(message)
+      } catch (error) {
+        debug(error)
+      }
+
+      onChange(decodedMessage)
+    }
+  }, [])
+
   const handleOnSubmit = useCallback(async () => {
     debug('handleOnSubmit()');
 
@@ -219,7 +235,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
                     totalLines={totalLines}
                     value={value}
                     whiteSpace={isCollapsed ? 'nowrap' : 'normal'}
-                    onChangeText={onChange}
+                    onChangeText={handleMessage(onChange)}
                     onFocus={onFocus}
                     // eslint-disable-next-line @typescript-eslint/no-misused-promises
                     onSubmitEditing={handleOnSubmit}
