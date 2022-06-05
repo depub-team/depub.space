@@ -22,7 +22,11 @@ export const parameters = {
   },
 };
 
-const StyledWrapper: FC = ({ children }) => {
+export interface StyledWrapperProps {
+  children: React.ReactNode;
+}
+
+const StyledWrapper: FC<StyledWrapperProps> = ({ children }) => {
   const { setColorMode } = useColorMode();
   const isDarkMode = useDarkMode();
 

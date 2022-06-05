@@ -1,6 +1,6 @@
 import { OfflineSigner } from '@cosmjs/proto-signing';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
-import { BroadcastTxSuccess } from '@cosmjs/stargate';
+import { DeliverTxResponse } from '@cosmjs/stargate';
 import * as Crypto from 'expo-crypto';
 import Debug from 'debug';
 import { submitToArweaveAndISCN } from '../arweave';
@@ -32,15 +32,15 @@ async function genPayload(authorAddress: string, message: string, version = 1, i
       },
       {
         entity: {
-          '@id': 'https://depub.SPACE',
-          name: 'depub.SPACE',
+          '@id': 'https://depub.space',
+          name: 'depub.space',
         },
         contributionType: 'http://schema.org/publisher',
         rewardProportion: 0.025,
       },
     ],
     name: `depub.space-${recordTimestamp}`,
-    recordNotes: 'A Message posted on depub.SPACE',
+    recordNotes: 'A Message posted on depub.space',
     type: 'Article',
     author: authorAddress,
     description: message,
@@ -63,7 +63,7 @@ export const postMessage = async (
 
   debug('postMessage() -> payload: %O', payload);
 
-  let txn: TxRaw | BroadcastTxSuccess;
+  let txn: TxRaw | DeliverTxResponse;
 
   if (files) {
     txn = await submitToArweaveAndISCN(files, payload, offlineSigner, wallet.address);
@@ -83,7 +83,7 @@ export const deleteMessage = async(
   const [wallet] = await offlineSigner.getAccounts();
   const payload = await genPayload(wallet.address, originalMessage, version+1, true)
 
-  const txn: TxRaw | BroadcastTxSuccess = await updateISCN(payload, iscnId, offlineSigner, wallet.address)
+  const txn: TxRaw | DeliverTxResponse = await updateISCN(payload, iscnId, offlineSigner, wallet.address)
 
   return txn
 }

@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { ReactNode, FC, useCallback, useState } from 'react';
 import { Text, Box, HStack, Icon, Pressable, Collapse, VStack } from 'native-base';
 import { useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
@@ -26,6 +26,7 @@ export interface SideMenuItemProps {
   items?: SideMenuItemProps[];
   isActive?: boolean;
   onPress?: () => void;
+  children?: ReactNode;
 }
 
 export const SideMenuItem: FC<SideMenuItemProps> = ({

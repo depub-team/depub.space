@@ -1,8 +1,12 @@
 import { BlurView } from 'expo-blur';
 import { useColorMode } from 'native-base';
-import React, { FC } from 'react';
+import React, { FC, ReactNode } from 'react';
 
-export const ListHeaderContainer: FC = ({ children }) => {
+export interface NavigationThemeProviderProps {
+  children?: ReactNode;
+}
+
+export const ListHeaderContainer: FC<NavigationThemeProviderProps> = ({ children }) => {
   const { colorMode } = useColorMode();
   const isDarkMode = colorMode === 'dark';
 

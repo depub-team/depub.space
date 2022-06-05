@@ -1,14 +1,14 @@
 import React, { ComponentProps, FC } from 'react';
 import { Modal, IStackProps } from 'native-base';
-import { DesmosProfile } from '../../../interfaces';
+import { UserProfile } from '../../../interfaces';
 import { MessageComposer, MessageFormType } from '../../molecules/MessageComposer';
 import { MAX_WIDTH } from '../../../constants';
 
 export interface MessageUpdateModalProps extends IStackProps {
   isLoading?: boolean;
   defaultValue?: string;
-  profile: DesmosProfile | null;
-  walletAddress: string | null;
+  profile: UserProfile | undefined;
+  walletAddress: string | undefined;
   isCollapsed?: boolean;
   autoFocus?: boolean;
   isTwitterLoggedIn?: boolean;

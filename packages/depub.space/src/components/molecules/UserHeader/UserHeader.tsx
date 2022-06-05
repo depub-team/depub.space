@@ -1,18 +1,22 @@
-import { Avatar, Box, Text, Heading, Stack, VStack } from 'native-base';
+import { Box, Text, Heading, Stack, VStack, View, Button } from 'native-base';
 import React, { FC, memo } from 'react';
 import { getAbbrNickname } from '../../../utils';
+import { Avatar } from '../../atoms';
 
 export interface UserHeaderProps {
   collapse?: boolean;
   bio?: string;
   dtag?: string;
-  profilePic?: string;
+  profilePic?: { uri: string };
   nickname: string;
+  isNFTProfilePicture?: boolean;
+  editable?: boolean;
+  onEditProfilePicture?: () => void;
   // cover?: string;
 }
 
 const areEqual = (prevProps: UserHeaderProps, nextProps: UserHeaderProps) => {
-  const keys = ['collapse', 'bio', 'dtag', 'profilePic', 'nickname'] as Array<
+  const keys = ['collapse', 'bio', 'dtag', 'profilePic', 'nickname', 'editable'] as Array<
     keyof UserHeaderProps
   >;
 
@@ -20,7 +24,16 @@ const areEqual = (prevProps: UserHeaderProps, nextProps: UserHeaderProps) => {
 };
 
 export const UserHeader: FC<UserHeaderProps> = memo(
-  ({ collapse, dtag, nickname, profilePic, bio }) => {
+  ({
+    collapse,
+    dtag,
+    nickname,
+    profilePic,
+    bio,
+    isNFTProfilePicture,
+    editable,
+    onEditProfilePicture,
+  }) => {
     const abbrNickname = getAbbrNickname(nickname);
 
     return (
@@ -33,13 +46,63 @@ export const UserHeader: FC<UserHeaderProps> = memo(
           py={4}
           space={4}
         >
-          <Avatar
-            mr={collapse ? 4 : 0}
-            size={collapse ? 'md' : 'lg'}
-            source={profilePic ? { uri: profilePic } : undefined}
-          >
-            {abbrNickname}
-          </Avatar>
+          <View position="relative" w={collapse ? '12' : 'auto'}>
+            <Avatar
+              isNFTProfilePicture={isNFTProfilePicture}
+              mr={collapse ? 4 : 0}
+              size={collapse ? 'md' : 'xl'}
+              source={profilePic}
+            >
+              {abbrNickname}
+            </Avatar>
+
+            {editable && !collapse && (
+              <View
+                borderRadius={isNFTProfilePicture ? 'none' : 'full'}
+                h="100%"
+                left={0}
+                overflow="hidden"
+                position="absolute"
+                style={
+                  isNFTProfilePicture
+                    ? ({
+                        maskImage: 'url(/images/hex.svg)',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                      } as any) // FIXME: type error, cannot use web style here
+                    : undefined
+                }
+                top={0}
+                w="100%"
+              >
+                <Button
+                  _hover={{
+                    backgroundColor: 'primary.500',
+                  }}
+                  _text={{
+                    color: 'white',
+                    fontSize: 'xs',
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase',
+                  }}
+                  backgroundColor="rgba(0, 0, 0, 0.4)"
+                  borderRadius="none"
+                  bottom="0"
+                  direction="column"
+                  h="25%"
+                  id="user-profile-picture-edit-button"
+                  left="0"
+                  p={0}
+                  position="absolute"
+                  variant="unstyled"
+                  w="100%"
+                  onPress={onEditProfilePicture}
+                >
+                  Edit
+                </Button>
+              </View>
+            )}
+          </View>
           <VStack
             alignItems={collapse ? 'flex-start' : 'center'}
             px={{ base: 3, md: 4, lg: 6 }}

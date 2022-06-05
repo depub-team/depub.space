@@ -3,7 +3,7 @@ import { apollo, playground } from './handlers';
 import { GqlHandlerOptions } from './handlers/handler.types';
 import { setCorsHeaders as setCors } from './utils';
 
-export { IscnTxn } from './durable-objects';
+export { IscnTxn, UserProfile } from './durable-objects';
 
 const graphQLOptions: GqlHandlerOptions = {
   baseEndpoint: '/',
@@ -21,6 +21,17 @@ const handleRequest = async (request: Request, env: Bindings) => {
   const refererUrl = referer && new URL(referer);
 
   try {
+    // Authentication with signed message
+    const authHeader = request.headers.get('authorization');
+    let authSignature = '';
+    let authPublicKey = '';
+
+    if (authHeader) {
+      const [, authSignatureAndPublicKey] = authHeader.split('Bearer ');
+
+      [authSignature, authPublicKey] = Buffer.from(authSignatureAndPublicKey, 'base64').toString().split('.');
+    }
+
     if (url.pathname === graphQLOptions.baseEndpoint) {
       const response =
         request.method === 'OPTIONS'
@@ -29,9 +40,12 @@ const handleRequest = async (request: Request, env: Bindings) => {
               ...graphQLOptions,
               context: () => ({
                 env,
+                authSignature,
+                authPublicKey,
               }),
             });
 
+      // CORS
       if (graphQLOptions.cors) {
         let allowOrigin = '*';
 

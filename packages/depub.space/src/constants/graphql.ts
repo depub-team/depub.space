@@ -1,18 +1,11 @@
 export const GRAPHQL_TYPE_PROFILE = `{
-  id
   address
   dtag
   nickname
   bio
   coverPic
-  creationTime
   profilePic
-  chainLinks {
-    chainConfig {
-      name
-    }
-    externalAddress
-  }
+  profilePicProvider
 }
 `;
 
@@ -27,11 +20,32 @@ export const GRAPHQL_TYPE_MESSAGE = `{
 }`;
 
 export const GRAPHQL_QUERY_MESSAGES_BY_USER = `
-  query GetUserWithMessagess($dtagOrAddress: String!, $previousId: String, $limit: Int) { 
+  query GetUser($dtagOrAddress: String!, $previousId: String, $limit: Int) { 
     getUser(dtagOrAddress: $dtagOrAddress) {
-      id
       profile ${GRAPHQL_TYPE_PROFILE}
       messages(previousId: $previousId, limit: $limit) ${GRAPHQL_TYPE_MESSAGE}
+    }
+  }
+`;
+
+export const GRAPHQL_QUERY_STARGAZE_NFT_BY_USER = `
+  query GetStargazeNFTsByOwner($owner: String!) {
+    getStargazeNFTsByOwner(owner: $owner) {
+      address
+      media
+      mediaType
+      tokenId
+    }
+  }
+`;
+
+export const GRAPHQL_QUERY_OMNIFLIX_NFT_BY_USER = `
+  query GetOmniflixNFTsByOwner($owner: String!) {
+    getOmniflixNFTsByOwner(owner: $owner) {
+      address
+      media
+      mediaType
+      tokenId
     }
   }
 `;
@@ -39,7 +53,6 @@ export const GRAPHQL_QUERY_MESSAGES_BY_USER = `
 export const GRAPHQL_QUERY_GET_USER = `
   query GetUser($dtagOrAddress: String!) {
     getUser(dtagOrAddress: $dtagOrAddress) {
-      id
       profile ${GRAPHQL_TYPE_PROFILE}
     }
   }
@@ -75,5 +88,17 @@ export const GRAPHQL_QUERY_CHANNELS = `
         count
       }
     }
+  }
+`;
+
+export const GRAPHQL_QUERY_GET_DESMOS_PROFILE = `
+  query GetDesmosProfile($dtagOrAddress: String!) {
+    getDesmosProfile(dtagOrAddress: $dtagOrAddress) ${GRAPHQL_TYPE_PROFILE}
+  }
+`;
+
+export const GRAPHQL_MUTATION_SET_PROFILE_PICTURE = `
+  mutation SetProfilePicture($address: String!, $picture: String!, $provider: String!) {
+    setProfilePicture(address: $address, picture: $picture, provider: $provider) ${GRAPHQL_TYPE_PROFILE}
   }
 `;

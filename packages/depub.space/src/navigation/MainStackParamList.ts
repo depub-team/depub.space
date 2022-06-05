@@ -8,6 +8,7 @@ export type MainStackParamList = {
   WorldFeed: undefined;
   User: {
     account: string;
+    revision?: number; // random number for force reload the screen
   };
   HashTag: {
     name: string;

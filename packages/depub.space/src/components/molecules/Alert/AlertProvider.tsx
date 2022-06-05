@@ -1,11 +1,15 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import Debug from 'debug';
 import { Alert, AlertProps } from './Alert';
 import { AlertContext, AlertContextProps } from './AlertContext';
 
 const debug = Debug('web:<AlertProvider />');
 
-export const AlertProvider: FC = ({ children }) => {
+export interface AlertProviderProps {
+  children: ReactNode;
+}
+
+export const AlertProvider: FC<AlertProviderProps> = ({ children }) => {
   const [alert, setAlert] = useState<AlertProps | null>(null);
   const show = useCallback((a: AlertProps) => {
     debug('show(alert: %O)', a);

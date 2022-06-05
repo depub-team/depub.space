@@ -23,7 +23,7 @@ export const PostScreen: FC<PostScreenProps> = ({ route, navigation }) => {
   const revision = decodeURIComponent(route.params.revision);
   const iscnId = `${ISCN_SCHEME}/${id}/${revision}`;
   const messageBody = message?.message;
-  const abbrvMessage =
+  const excerpt =
     `${messageBody?.slice(0, 30)}${(messageBody?.length || 0) > 30 ? '...' : ''}` || '';
   const profile = message?.profile;
   const from = message?.from;
@@ -31,9 +31,9 @@ export const PostScreen: FC<PostScreenProps> = ({ route, navigation }) => {
   const displayName = profile?.nickname || profile?.dtag || shortenAddress;
   const metadata = useMemo(
     () => ({
-      title: `${displayName}: ${abbrvMessage}`,
+      title: `${displayName}: ${excerpt}`,
     }),
-    [abbrvMessage, displayName]
+    [excerpt, displayName]
   );
 
   const handleOnClose = () => {
@@ -54,7 +54,7 @@ export const PostScreen: FC<PostScreenProps> = ({ route, navigation }) => {
         if (newMessage) {
           setMessage(newMessage);
         } else {
-          navigation.navigate('NotFound');
+          navigation.replace('NotFound');
         }
       } catch (ex) {
         alert.show({

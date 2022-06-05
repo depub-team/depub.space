@@ -9,12 +9,14 @@ compatibility_flags = []
 workers_dev = true
 compatibility_date = "2022-02-04"
 kv_namespaces = [
-  { binding = "WORKERS_GRAPHQL_CACHE", id = "9cf0a6d5091e448c9411e8ee8c65acb6" }
+  { binding = "WORKERS_GRAPHQL_CACHE", id = "9cf0a6d5091e448c9411e8ee8c65acb6" },
+  { binding = "NFT_CONTRACTS_CACHE", id = "c486e49e358c4e3c9353fb34588d46ef" }
 ]
 
 [durable_objects]
 bindings = [
-  { name = "ISCN_TXN", class_name = "IscnTxn" }
+  { name = "ISCN_TXN", class_name = "IscnTxn" },
+  { name = "USER_PROFILE", class_name = "UserProfile" }
 ]
 
 [build]
@@ -28,6 +30,10 @@ main = "./index.mjs"
 tag = "v1"
 new_classes = ["IscnTxn"]
 
+[[migrations]]
+tag = "v2"
+new_classes = ["UserProfile"]
+
 [miniflare]
 durable_objects_persist = true
 
@@ -38,18 +44,22 @@ ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
 ENVIRONMENT = "staging"
 NOTION_API_ENDPOINT = "https://api.notion.com/v1"
-STARGAZE_RPC_ENDPOINT = "https://rpc.stargaze-apis.com/"
+OMNIFLIX_REST_ENDPOINT = "https://data-api.omniflix.studio/"
+STARGAZE_REST_ENDPOINT = "https://nft-api.stargaze-apis.com/"
+SIGN_MESSAGE = "Welcome to depub.space"
 
 # Override values for `--env production` usage
 [env.prod]
 name = "depub-space-graphql"
 kv_namespaces = [
-  { binding = "WORKERS_GRAPHQL_CACHE", id = "5acfb215b0d34d8fa20d921d1e40c699" }
+  { binding = "WORKERS_GRAPHQL_CACHE", id = "5acfb215b0d34d8fa20d921d1e40c699" },
+  { binding = "NFT_CONTRACTS_CACHE", id = "c486e49e358c4e3c9353fb34588d46ef" }
 ]
 
 [env.prod.durable_objects]
 bindings = [
-  { name = "ISCN_TXN", class_name = "IscnTxn" }
+  { name = "ISCN_TXN", class_name = "IscnTxn" },
+  { name = "USER_PROFILE", class_name = "UserProfile" }
 ]
 
 [env.prod.vars]
@@ -58,7 +68,17 @@ ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
 ENVIRONMENT = "production"
 NOTION_API_ENDPOINT = "https://api.notion.com/v1"
-STARGAZE_RPC_ENDPOINT = "https://rpc.stargaze-apis.com/"
+OMNIFLIX_REST_ENDPOINT = "https://data-api.omniflix.studio/"
+STARGAZE_REST_ENDPOINT = "https://nft-api.stargaze-apis.com/"
+SIGN_MESSAGE = "Welcome to depub.space"
+
+[[env.prod.migrations]]
+tag = "v1"
+new_classes = ["IscnTxn"]
+
+[[env.prod.migrations]]
+tag = "v2"
+new_classes = ["UserProfile"]
 
 # [secrets]
 # NOTION_API_SECRET

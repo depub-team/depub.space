@@ -1,5 +1,5 @@
 import { HashTag, List } from '../../interfaces';
-import { queryClient } from './queryClient';
+import { graphqlClient } from '../graphqlClient';
 import { GRAPHQL_QUERY_CHANNELS } from '../../constants';
 
 export interface GetChannelsResponse {
@@ -12,7 +12,7 @@ export interface ChannelsQueryResponse {
 }
 
 export const getChannels = async (countryCode?: string): Promise<GetChannelsResponse> => {
-  const { data } = await queryClient.post<{ data: ChannelsQueryResponse }>('', {
+  const { data } = await graphqlClient.post<{ data: ChannelsQueryResponse }>('', {
     variables: {
       countryCode: countryCode || null, // graphql not accepts undefined
     },

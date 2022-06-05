@@ -24,7 +24,7 @@ const navigatorScreenOptions: StackNavigationOptions = {
 export const RootNavigator: FC = () => {
   const timeRef = useRef(new Date().getTime());
   const [isLoading, setIsLoading] = useState(true);
-  const [isInitialized, setisInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { setHashTags, setList } = useAppState();
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export const RootNavigator: FC = () => {
         setList(list);
       }
 
-      setisInitialized(true);
+      setIsInitialized(true);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialized]);

@@ -6,10 +6,11 @@ import { Link as NBLink, Box, VStack, Text } from 'native-base';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { fromBech32, toBech32 } from '@cosmjs/encoding';
 import { Layout, ListHeaderContainer, MessageList, useAlert, UserHeader } from '../components';
-import { Message, DesmosProfile } from '../interfaces';
-import { useWallet } from '../hooks';
-import { getLikecoinAddressByProfile, getMessagesByOwner } from '../utils';
+import { Message, UserProfile } from '../interfaces';
+import { useAppState, useWallet } from '../hooks';
+import { checkIsNFTProfilePicture, getMessagesByOwner } from '../utils';
 import { getShortenAddress } from '../utils/getShortenAddress';
 import { MainStackParamList } from '../navigation/MainStackParamList';
 import { RootStackParamList } from '../navigation/RootStackParamList';
@@ -27,26 +28,44 @@ export type UserScreenProps = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
+const compareAddress = (addressA?: string, addressB?: string) => {
+  if (!addressA || !addressB) {
+    return false;
+  }
+
+  const { data: dataA } = fromBech32(addressA);
+  const { data: dataB } = fromBech32(addressB);
+  const likePrefixedAddressA = toBech32('like', dataA);
+  const likePrefixedAddressB = toBech32('like', dataB);
+
+  return likePrefixedAddressA === likePrefixedAddressB;
+};
+
 export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navigation }) => {
-  const { account } = route.params;
+  const { account, revision } = route.params;
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isHeaderHide, setIsHeaderHide] = useState(false);
   const [isListReachedEnd, setIsListReachedEnd] = useState(false);
-  const [profile, setProfile] = useState<DesmosProfile | null>(null);
+  const { showProfilePictureModal } = useAppState();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const shortenAccount = account ? getShortenAddress(account) : '';
   const [messages, setMessages] = useState<Message[]>(emptyMessages);
   const alert = useAlert();
   const { walletAddress, isLoading: isConnectLoading } = useWallet();
   const isLoggedIn = Boolean(walletAddress && !isConnectLoading);
-  const profilePic = profile?.profilePic;
+  const isEditable = compareAddress(walletAddress, profile?.address); // unify the prefix of addresses to compare
+  const profilePic = useMemo(
+    () => (profile?.profilePic ? { uri: profile.profilePic } : undefined),
+    [profile]
+  );
   const nickname = profile?.nickname || shortenAccount;
   const isWalletAddress = /^(cosmos1|like1)/.test(account);
   const bio = profile?.bio;
   const dtag = profile?.dtag;
-  const likecoinWalletAddress = profile && getLikecoinAddressByProfile(profile);
+  const likecoinWalletAddress = profile?.address;
   const metadata = useMemo(
-    () => ({ title: `${nickname || walletAddress} on depub.SPACE` }),
+    () => ({ title: `${nickname || walletAddress} on depub.space` }),
     [nickname, walletAddress]
   );
 
@@ -79,11 +98,16 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
             if (!refresh) {
               setMessages(msgs => update(msgs, { $push: newMessages }));
             } else {
-              if (res.data?.profile) {
-                setProfile(res.data.profile);
-              }
-
               setMessages(msgs => update(msgs, { $set: newMessages }));
+
+              if (res.data?.profile) {
+                setProfile({
+                  ...res.data.profile,
+                  isNFTProfilePicture: checkIsNFTProfilePicture(
+                    res.data.profile.profilePicProvider || ''
+                  ),
+                });
+              }
             }
           }
         }
@@ -117,8 +141,11 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
         bio={bio}
         collapse={isHeaderHide}
         dtag={dtag}
+        editable={isEditable}
+        isNFTProfilePicture={profile?.isNFTProfilePicture}
         nickname={nickname}
         profilePic={profilePic}
+        onEditProfilePicture={showProfilePictureModal}
       />
     </ListHeaderContainer>
   );
@@ -136,16 +163,14 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
     useCallback(() => {
       // reset
       navigation.setOptions({
-        title: account,
+        title: nickname,
       });
 
       setIsReady(false);
-      setProfile(null);
       setMessages(emptyMessages);
       setIsListReachedEnd(false);
-
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [account])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [navigation, revision, nickname])
   );
 
   return account ? (
@@ -165,6 +190,7 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
             bio={bio}
             collapse={isHeaderHide}
             dtag={dtag}
+            editable={isEditable}
             nickname={nickname}
             profilePic={profilePic}
           />

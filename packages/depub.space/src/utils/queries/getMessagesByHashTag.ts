@@ -1,4 +1,4 @@
-import { queryClient } from './queryClient';
+import { graphqlClient } from '../graphqlClient';
 import { Message, PaginatedResponse } from '../../interfaces';
 
 import { ROWS_PER_PAGE, GRAPHQL_QUERY_MESSAGES_BY_TAG } from '../../constants';
@@ -12,7 +12,7 @@ export const getMessagesByHashTag = async (
   previousId?: string,
   limit = ROWS_PER_PAGE
 ): Promise<PaginatedResponse<Message[]>> => {
-  const { data } = await queryClient.post<{ data: MessagesByHashTagQueryResponse }>('', {
+  const { data } = await graphqlClient.post<{ data: MessagesByHashTagQueryResponse }>('', {
     variables: {
       tag: channel,
       previousId,

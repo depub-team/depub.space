@@ -1,11 +1,11 @@
-import { DesmosProfile } from './desmos-profile.interface';
+import { UserProfile } from './user-profile.interface';
 
 export interface Message {
   id: string;
   from: string;
   date: Date;
   message?: string;
-  profile?: DesmosProfile;
+  profile?: UserProfile;
   images?: string[];
   isDeleted?: boolean;
 }

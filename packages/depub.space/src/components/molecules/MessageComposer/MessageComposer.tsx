@@ -19,20 +19,15 @@ import {
   Switch,
   Tooltip,
   Collapse,
-  Avatar,
   Box,
 } from 'native-base';
 import Debug from 'debug';
 import { Link } from '@react-navigation/native';
-import {
-  getAbbrNickname,
-  getLikecoinAddressByProfile,
-  getShortenAddress,
-  pickImageFromDevice,
-} from '../../../utils';
+import { getAbbrNickname, getShortenAddress, pickImageFromDevice } from '../../../utils';
 import { MAX_CHAR_LIMIT } from '../../../constants';
+import { Avatar } from '../../atoms';
 import { ImagePreview } from './ImagePreview';
-import { DesmosProfile } from '../../../interfaces';
+import { UserProfile } from '../../../interfaces';
 import { MessageComposerContainer } from './MessageComposerContainer';
 
 const debug = Debug('web:<MessageComposer />');
@@ -53,20 +48,20 @@ export interface MessageFormType {
 export interface MessageComposerProps extends IStackProps {
   isLoading?: boolean;
   defaultValue?: string;
-  profile: DesmosProfile | null;
-  walletAddress: string | null;
+  profile: UserProfile | undefined;
+  walletAddress: string | undefined;
   isCollapsed?: boolean;
   autoFocus?: boolean;
   isTwitterLoggedIn?: boolean;
   onFocus?: () => void;
   onTwitterLogin?: () => void;
   onTwitterLogout?: () => void;
-  onSubmit?: (data: MessageFormType, image?: string | null) => Promise<void> | void;
+  onSubmit?: (data: MessageFormType, image?: string | undefined) => Promise<void> | void;
 }
 
 export const MessageComposer: FC<MessageComposerProps> = ({
   onSubmit,
-  defaultValue,
+  defaultValue = '',
   isLoading,
   walletAddress,
   profile,
@@ -80,7 +75,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<string | undefined>();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [totalLines, setTotalLines] = useState(1);
   const blurTimeout = useRef(0);
@@ -100,7 +95,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     getShortenAddress(`${walletAddress.slice(0, 10)}...${walletAddress.slice(-4)}`);
   const displayName = profile?.nickname || profile?.dtag || shortenAddress || '';
   const abbrNickname = getAbbrNickname(displayName);
-  const likecoinAddress = profile && getLikecoinAddressByProfile(profile);
+  const likecoinAddress = profile && profile.address;
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const profilePicSource = useMemo(
     () => (profile ? { uri: profile?.profilePic } : undefined),
@@ -164,8 +159,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     // reset state
     if (isSubmitted) {
       reset({ message: '' });
-      setImage(null);
-
+      setImage(undefined);
       setIsSubmitted(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -192,18 +186,13 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     <MessageComposerContainer ref={containerRef} isCollapsed={isCollapsed} {...props}>
       <HStack flex={1} space={stackSpacing}>
         <Link to={`/${handle}`}>
-          <Tooltip
-            label={
-              likecoinAddress
-                ? 'This profile has linked to Likecoin'
-                : 'This profile has not linked to Likecoin'
-            }
-            openDelay={250}
+          <Avatar
+            isNFTProfilePicture={profile?.isNFTProfilePicture}
+            size={42}
+            source={profilePicSource}
           >
-            <Avatar size={42} source={profilePicSource}>
-              {abbrNickname}
-            </Avatar>
-          </Tooltip>
+            {abbrNickname}
+          </Avatar>
         </Link>
 
         <VStack flex={2} space={4}>
@@ -216,8 +205,8 @@ export const MessageComposer: FC<MessageComposerProps> = ({
                 render={({ field: { onChange, value } }) => (
                   <AnimatedTextArea
                     ref={textareaRef}
+                    autoCompleteType="off"
                     borderRadius={isCollapsed ? '3xl' : 'md'}
-                    defaultValue={value}
                     fontSize={textAreaFontSize}
                     isReadOnly={isLoading}
                     maxLength={MAX_CHAR_LIMIT}
@@ -243,7 +232,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
             </Stack>
           </FormControl>
 
-          {image ? <ImagePreview image={image} onRemoveImage={() => setImage(null)} /> : null}
+          {image && <ImagePreview image={image} onRemoveImage={() => setImage(undefined)} />}
         </VStack>
       </HStack>
 
@@ -275,6 +264,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
             {(messageText || '').length} / {MAX_CHAR_LIMIT}
           </Text>
           <Button
+            id="post-tweet-submit-button"
             isLoading={isLoading}
             leftIcon={<Icon as={Ionicons} name="send" size="xs" />}
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
