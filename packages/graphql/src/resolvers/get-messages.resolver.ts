@@ -1,7 +1,7 @@
 import { Context } from '../context';
 import type { GetTransactionsOptions, GetMessagesArgs, ISCNRecord } from '../interfaces';
 import { getAuthorAddress, transformRecord } from '../utils';
-import { getUserProfile } from './get-user-profile.resolver';
+import { getUserProfileResolver } from './get-user-profile.resolver';
 import { getLatestSequence } from './get-latest-sequence';
 import { ISCNError } from '../iscn-error';
 import type { Message } from './generated_types';
@@ -115,7 +115,7 @@ export const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
           return undefined;
         }
 
-        const userProfile = await getUserProfile({ dtagOrAddress: authorAddress }, ctx);
+        const userProfile = await getUserProfileResolver({ dtagOrAddress: authorAddress }, ctx);
         const message = transformRecord(authorAddress, t, userProfile);
 
         return message;

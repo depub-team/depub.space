@@ -1,7 +1,7 @@
 import { Context } from '../context';
 import { ISCNRecord } from '../interfaces';
 import { getAuthorAddress, transformRecord } from '../utils';
-import { getUserProfile } from './get-user-profile.resolver';
+import { getUserProfileResolver } from './get-user-profile.resolver';
 import { ISCNError } from '../iscn-error';
 import { addTransactions } from './get-messages.resolver';
 import { QueryGetMessageArgs } from './generated_types';
@@ -52,7 +52,7 @@ export const getMessage = async (args: QueryGetMessageArgs, ctx: Context) => {
       throw new ISCNError('No author address');
     }
 
-    const userProfile = await getUserProfile({ dtagOrAddress: authorAddress }, ctx);
+    const userProfile = await getUserProfileResolver({ dtagOrAddress: authorAddress }, ctx);
     const message = transformRecord(authorAddress, transaction, userProfile);
 
     return message;
