@@ -15,7 +15,7 @@ export const transformRecord = (
     profile,
     date: new Date(data.contentMetadata.recordTimestamp || data.recordTimestamp).toISOString(),
     images: data.contentFingerprints
-      .filter(c => /^ipfs/.test(c))
-      .map(c => `https://cloudflare-ipfs.com/ipfs/${c.split('ipfs://')[1]}`),
+      .filter(c => /^ar/.test(c))
+      .map(c => `https://arweave.net/${c.split('ar://')[1]}`),
   } as Message;
 };
