@@ -351,6 +351,8 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
     try {
       const loginUrl = await twitter.getLoginUrl();
 
+      pushGtmEvent('twitterAuthorize', walletAddress);
+
       window.open(
         loginUrl,
         'twitter',

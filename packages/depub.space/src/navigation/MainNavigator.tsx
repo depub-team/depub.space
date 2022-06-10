@@ -125,8 +125,12 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
     // compose the side menu items
     setMenuItems(items =>
       update(items, {
-        $set: Object.keys(hashTagMap)
-          .map<SideMenuItemProps>(key => ({
+        $set: [
+          {
+            ...defaultMenuItem,
+            isActive: activeRoute?.screen === 'WorldFeed',
+          },
+          ...Object.keys(hashTagMap).map<SideMenuItemProps>(key => ({
             name: key,
             items: hashTagMap[key].map(hashTag => {
               const isScreenMatches = activeRoute?.screen === 'HashTag';
@@ -146,11 +150,8 @@ export const MainNavigator: FC<MainNavigatorProps> = ({ navigation }) => {
                 },
               };
             }),
-          }))
-          .concat({
-            ...defaultMenuItem,
-            isActive: activeRoute?.screen === 'WorldFeed',
-          }),
+          })),
+        ],
       })
     );
   }, [list, activeRoute]);
