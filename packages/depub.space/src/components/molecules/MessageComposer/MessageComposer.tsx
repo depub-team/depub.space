@@ -23,6 +23,7 @@ import {
 } from 'native-base';
 import Debug from 'debug';
 import { Link } from '@react-navigation/native';
+import twttr from 'twitter-text'
 import { getAbbrNickname, getShortenAddress, pickImageFromDevice } from '../../../utils';
 import { MAX_CHAR_LIMIT } from '../../../constants';
 import { Avatar } from '../../atoms';
@@ -79,11 +80,21 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [totalLines, setTotalLines] = useState(1);
   const blurTimeout = useRef(0);
+  const parseTwitterPostLength = (message: string | undefined): number => {
+    const { weightedLength } = twttr.parseTweet(message || '')
+
+    return weightedLength
+  }
+
   const formSchema = Yup.object().shape({
     message: Yup.string()
       .required('Message is required')
       .min(4, 'Message length should be at least 4 characters')
-      .max(MAX_CHAR_LIMIT, `Message must not exceed ${MAX_CHAR_LIMIT} characters`),
+      .test(
+        'twitter-char-count',
+        `Message must not exceed ${MAX_CHAR_LIMIT} characters`,
+        (value) => parseTwitterPostLength(value) <= MAX_CHAR_LIMIT
+      )
   });
   const validationOpt = { resolver: yupResolver(formSchema) };
   const { reset, formState, control, handleSubmit, watch } =
@@ -101,6 +112,10 @@ export const MessageComposer: FC<MessageComposerProps> = ({
     () => (profile ? { uri: profile?.profilePic } : undefined),
     [profile]
   );
+  const charCount = useMemo(
+    () => parseTwitterPostLength(messageText),
+    [messageText]
+  )
 
   const pickImage = useCallback(async () => {
     debug('pickImage()');
@@ -274,8 +289,8 @@ export const MessageComposer: FC<MessageComposerProps> = ({
           </HStack>
 
           <Text color="gray.400" fontSize="xs" ml="auto" textAlign="right">
-            {(messageText || '').length} / {MAX_CHAR_LIMIT}
-          </Text>
+            {charCount} / {MAX_CHAR_LIMIT}
+         </Text>
           <Button
             id="post-tweet-submit-button"
             isLoading={isLoading}

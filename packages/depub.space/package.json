@@ -33,6 +33,7 @@
     "@react-navigation/native-stack": "6.6.2",
     "@react-navigation/stack": "6.2.1",
     "@sentry/nextjs": "6.19.7",
+    "@types/twitter-text": "^3.1.1",
     "@walletconnect/client": "1.7.8",
     "@walletconnect/qrcode-modal": "1.7.8",
     "@walletconnect/utils": "1.7.8",
@@ -73,6 +74,7 @@
     "react-native-svg": "12.3.0",
     "react-native-web": "0.17.7",
     "styled-jsx": "5.0.2",
+    "twitter-text": "^3.1.0",
     "yup": "0.32.11"
   },
   "devDependencies": {
