@@ -65,21 +65,16 @@ const recordsToXML = (records: ISCNRecord[]) => {
   return sitemap;
 };
 
-const indexSitemap = (filenameAndLastModDates: Record<string, string>) => {
-  const sitemapItems = Object.keys(filenameAndLastModDates).map(filename => ({
-    sitemap: [
-      { loc: `https://depub.space/${filename}` },
-      { lastmod: filenameAndLastModDates[filename] },
-    ],
-  }));
-  const sitemapObject = {
-    urlset: [
-      {
-        _attr: {
-          xmlns: 'http://www.sitemaps.org/schemas/sitemap/0.9',
+const createHomePageSitemap = () => {
+  fs.writeFileSync(
+    path.join(__dirname, '../../.out/sitemap_home.xml'),
+    `<?xml version='1.0' encoding='UTF-8'?>${xml({
+      urlset: [
+        {
+          _attr: {
+            xmlns: 'http://www.sitemaps.org/schemas/sitemap/0.9',
+          },
         },
-      },
-      [
         {
           url: [
             {
@@ -91,7 +86,18 @@ const indexSitemap = (filenameAndLastModDates: Record<string, string>) => {
           ],
         },
       ],
+    })}`
+  );
+};
+
+const indexSitemap = (filenameAndLastModDates: Record<string, string>) => {
+  const sitemapItems = Object.keys(filenameAndLastModDates).map(filename => ({
+    sitemap: [
+      { loc: `https://depub.space/${filename}` },
+      { lastmod: filenameAndLastModDates[filename] },
     ],
+  }));
+  const sitemapObject = {
     sitemapindex: [
       {
         _attr: {
@@ -113,11 +119,17 @@ const updateSitemap = async () => {
   let nextSequence = '0';
   const sitemapPageFiles = {} as Record<string, string>;
 
+  // eslint-disable-next-line prefer-destructuring
+  sitemapPageFiles['sitemap_home.xml'] = new Date().toISOString().split('T')[0];
+
+  createHomePageSitemap();
+
   // eslint-disable-next-line no-unreachable-loop, no-constant-condition
   while (true) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-await-in-loop
     const messages = await getMessages(nextSequence);
-    const filename = path.join(__dirname, `../../.out/sitemap${nextSequence}.xml`);
+    const filename = `sitemap${nextSequence}.xml`;
+    const filepath = path.join(__dirname, `../../.out/${filename}`);
 
     if (nextSequence === messages.next_sequence) {
       break;
@@ -134,7 +146,7 @@ const updateSitemap = async () => {
     sitemapPageFiles[filename] = latestDate;
 
     // eslint-disable-next-line no-await-in-loop
-    fs.writeFileSync(filename, recordsToXML(messages.records));
+    fs.writeFileSync(filepath, recordsToXML(messages.records));
   }
 
   fs.writeFileSync(path.join(__dirname, '../../.out/sitemap.xml'), indexSitemap(sitemapPageFiles));
