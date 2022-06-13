@@ -28,7 +28,7 @@
     "ulid-workers": "2.0.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "3.4.0",
+    "@cloudflare/workers-types": "3.11.0",
     "@esbuild-plugins/node-globals-polyfill": "0.1.1",
     "@esbuild-plugins/node-modules-polyfill": "0.1.4",
     "@graphql-codegen/cli": "2.6.2",

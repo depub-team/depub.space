@@ -1,0 +1,30 @@
+name = "sitemap"
+route = "depub.space/sitemap*"
+type = "javascript"
+
+account_id = '35641a6e50a31e745078ec7a010c2a6f'
+# route = ''
+# zone_id = ''
+
+compatibility_flags = []
+workers_dev = true
+compatibility_date = "2022-04-18"
+
+[build]
+command = "yarn build"
+
+[build.upload]
+format = "modules"
+main = "./index.mjs"
+
+[[r2_buckets]]
+binding = 'SITEMAP_BUCKET'
+bucket_name = 'sitemap'
+
+[triggers]
+crons = ["*/30 * * * *"]
+
+[miniflare]
+
+[vars]
+NODE_URL = "https://mainnet-node.like.co/"

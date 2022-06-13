@@ -1,32 +1,30 @@
 {
-  "name": "@depub/oauth",
+  "name": "@depub/sitemap",
   "version": "2.0.0",
   "private": true,
-  "description": "OAuth server",
+  "description": "Sitemap for Google indexing",
   "license": "gpl",
   "author": "0xNaN Team",
-  "type": "module",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
-  "browser": {
-    "crypto": false
-  },
+  "type": "module",
   "scripts": {
     "build": "node build.js",
-    "deploy:prod": "NODE_ENV=production npx @cloudflare/wrangler publish --env prod",
-    "deploy:stag": "npx @cloudflare/wrangler publish",
+    "deploy": "NODE_ENV=production npx @cloudflare/wrangler publish",
     "dev": "DEBUG=api:* npx miniflare --watch --live-reload --debug --env .env",
     "start": "npx miniflare --build-watch-path src",
     "test": "yarn build && node --experimental-vm-modules ../../node_modules/jest/bin/jest --config ./jest.config.json"
   },
   "dependencies": {
-    "oauth-1.0a": "2.2.6"
+    "xml": "1.0.1",
+    "axios": "0.27.2"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "3.11.0",
     "@esbuild-plugins/node-globals-polyfill": "0.1.1",
     "@esbuild-plugins/node-modules-polyfill": "0.1.4",
     "@types/node": "17.0.21",
+    "@types/xml": "1.0.8",
     "esbuild": "0.14.39",
     "jest-environment-miniflare": "2.3.0",
     "typescript": "4.7.2"

@@ -1,0 +1,47 @@
+{
+  "preset": "ts-jest/presets/default-esm",
+  "testEnvironment": "miniflare",
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  },
+  "moduleFileExtensions": [
+    "ts",
+    "tsx",
+    "js",
+    "json"
+  ],
+  "coverageReporters": [
+    "json",
+    "lcov",
+    "text",
+    "clover"
+  ],
+  "coverageDirectory": "coverage",
+  "collectCoverageFrom": [
+    "src/**/*.ts",
+    "!src/**/*.interface.ts"
+  ],
+  "testPathIgnorePatterns": [
+    "<rootDir>/node_modules/",
+    "node_modules"
+  ],
+  "transformIgnorePatterns": [
+    "<rootDir>/node_modules/",
+    "node_modules"
+  ],
+  "testMatch": [
+    "**/*.(spec|test).ts",
+    "**/*.(spec|test).js"
+  ],
+  "transform": {
+    "^.+\\.ts$": "ts-jest"
+  },
+  "globals": {
+    "ts-jest": {
+      "tsconfig": "./tsconfig.spec.json",
+      "diagnostics": false,
+      "useESM": true
+    }
+  }
+}
