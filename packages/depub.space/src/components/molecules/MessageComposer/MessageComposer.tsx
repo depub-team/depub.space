@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Yup from 'yup';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, useController } from 'react-hook-form';
 import {
   Text,
   Button,
@@ -99,6 +99,11 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   const validationOpt = { resolver: yupResolver(formSchema) };
   const { reset, formState, control, handleSubmit, watch } =
     useForm<MessageFormType>(validationOpt);
+  const { field: messageField, } = useController({
+      control,
+      defaultValue,
+      name: 'message',
+    })
   const { errors } = formState;
   const [messageText] = watch(['message']);
   const shortenAddress =
@@ -147,6 +152,12 @@ export const MessageComposer: FC<MessageComposerProps> = ({
 
     return decodedMessage
   }, [])
+
+  const handleOnChangeText = useCallback((message: string) => {
+    const decodedMessage = handleMessage(message)
+
+    return messageField.onChange(decodedMessage)
+  }, [handleMessage, messageField])
 
   const handleOnSubmit = useCallback(async () => {
     debug('handleOnSubmit()');
@@ -226,33 +237,26 @@ export const MessageComposer: FC<MessageComposerProps> = ({
         <VStack flex={2} space={4}>
           <FormControl isInvalid={'message' in errors} isRequired>
             <Stack>
-              <Controller
-                control={control}
-                defaultValue={defaultValue}
-                name="message"
-                render={({ field: { onChange, value } }) => (
-                  <AnimatedTextArea
-                    ref={textareaRef}
-                    autoCompleteType="off"
-                    borderRadius={isCollapsed ? '3xl' : 'md'}
-                    fontSize={textAreaFontSize}
-                    isReadOnly={isLoading}
-                    // maxLength={MAX_CHAR_LIMIT}
-                    minW={0}
-                    overflow="hidden"
-                    placeholder="Not your key, not your tweet. Be web3 native."
-                    returnKeyType="done"
-                    style={textAreaStyle}
-                    textOverflow="ellipsis"
-                    totalLines={totalLines}
-                    value={value}
-                    whiteSpace={isCollapsed ? 'nowrap' : 'normal'}
-                    onChangeText={(val) => onChange(handleMessage(val))}
-                    onFocus={onFocus}
-                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                    onSubmitEditing={handleOnSubmit}
-                  />
-                )}
+              <AnimatedTextArea
+                ref={textareaRef}
+                autoCompleteType="off"
+                borderRadius={isCollapsed ? '3xl' : 'md'}
+                fontSize={textAreaFontSize}
+                isReadOnly={isLoading}
+                // maxLength={MAX_CHAR_LIMIT}
+                minW={0}
+                overflow="hidden"
+                placeholder="Not your key, not your tweet. Be web3 native."
+                returnKeyType="done"
+                style={textAreaStyle}
+                textOverflow="ellipsis"
+                totalLines={totalLines}
+                value={messageField.value}
+                whiteSpace={isCollapsed ? 'nowrap' : 'normal'}
+                onChangeText={handleOnChangeText}
+                onFocus={onFocus}
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                onSubmitEditing={handleOnSubmit}
               />
               <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
                 {errors.message?.message}
