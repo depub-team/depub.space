@@ -67,7 +67,7 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
     md: 3,
     lg: 4,
   });
-  const isNFTPlatform = previewPlatform && checkIsNFTProfilePicture(previewPlatform);
+  const isNFTPlatform = checkIsNFTProfilePicture(previewPlatform);
 
   const handleOnOkPressed = useCallback(() => {
     if (preview && previewPlatform)
@@ -246,7 +246,7 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
               {!isLoading && nfts.length < 1 && (
                 <Center>
                   <Text fontSize="sm">
-                    {isNFTPlatform
+                    {checkIsNFTProfilePicture(platform)
                       ? 'No NFT found. Please try another platform.'
                       : 'No profile picture in your Desmos profile'}
                   </Text>
