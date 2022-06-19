@@ -23,7 +23,7 @@ export class CosmoStationDirectSigner implements OfflineDirectSigner {
     ];
   }
 
-  async signDirect(signerAddress: string, signDoc: SignDoc): Promise<DirectSignResponse> {
+  async signDirect(_signerAddress: string, signDoc: SignDoc): Promise<DirectSignResponse> {
     const w = window as any;
 
     const doc = {
