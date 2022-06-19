@@ -68,8 +68,7 @@ export class DesmosAPI extends DataSource {
     super();
   }
 
-  public async getProfile(address: string) {
-    const cosmosPrefixedAddress = /^like1/.test(address) ? toCosmos(address) : address;
+  private async getProfileWithLikecoinAddress(address: string): Promise<DesmosProfile | null> {
     const response = await fetch(this.baseURL, {
       method: 'POST',
       headers: {
@@ -78,15 +77,32 @@ export class DesmosAPI extends DataSource {
       body: JSON.stringify({
         query: FETCH_PROFILE_DOCUMENT,
         variables: {
-          address: cosmosPrefixedAddress,
+          address,
         },
       }),
     });
     const data = await response.json<any>();
-    const profile = data.data.profile[0] as DesmosProfile;
+
+    if (data.data.profile[0]) {
+      return data.data.profile[0] as DesmosProfile;
+    }
+
+    return null;
+  }
+
+  public async getProfile(address: string) {
+    const isLikePrefix = address.startsWith('like');
+    const profile = await this.getProfileWithLikecoinAddress(address);
 
     if (profile) {
       return { ...profile, profilePicProvider: 'desmos' };
+    }
+
+    // retry with cosmos prefixed address if not found
+    if (!isLikePrefix) {
+      const cosmosPrefixedAddress = toCosmos(address);
+
+      return this.getProfileWithLikecoinAddress(cosmosPrefixedAddress);
     }
 
     return null;
