@@ -86,10 +86,12 @@ export const MessageComposer: FC<MessageComposerProps> = ({
       .max(MAX_CHAR_LIMIT, `Message must not exceed ${MAX_CHAR_LIMIT} characters`),
   });
   const validationOpt = { resolver: yupResolver(formSchema) };
-  const { reset, formState, control, handleSubmit, watch } =
+  const { reset, formState, control, handleSubmit, watch, setValue } =
     useForm<MessageFormType>(validationOpt);
   const { errors } = formState;
   const [messageText] = watch(['message']);
+  const charCount = (messageText || '').length;
+  const isExceededCharLimit = charCount > MAX_CHAR_LIMIT;
   const shortenAddress =
     walletAddress &&
     getShortenAddress(`${walletAddress.slice(0, 10)}...${walletAddress.slice(-4)}`);
@@ -156,6 +158,23 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   }, [isTwitterLoggedIn, onTwitterLogout, onTwitterLogin]);
 
   useEffect(() => {
+    let updatedMessage = messageText || '';
+    const urlMatches = updatedMessage.match(/(https?:\/\/[^ ]*)/);
+
+    // has link
+    if (urlMatches) {
+      // eslint-disable-next-line no-plusplus
+      for (let i = 0; i < urlMatches.length; i++) {
+        updatedMessage = updatedMessage.replace(urlMatches[i], decodeURIComponent(urlMatches[i]));
+      }
+
+      if (updatedMessage !== messageText) {
+        setValue('message', updatedMessage);
+      }
+    }
+  }, [messageText, setValue]);
+
+  useEffect(() => {
     // reset state
     if (isSubmitted) {
       reset({ message: '' });
@@ -209,7 +228,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
                     borderRadius={isCollapsed ? '3xl' : 'md'}
                     fontSize={textAreaFontSize}
                     isReadOnly={isLoading}
-                    maxLength={MAX_CHAR_LIMIT}
+                    // maxLength={MAX_CHAR_LIMIT}
                     minW={0}
                     overflow="hidden"
                     placeholder="Not your key, not your tweet. Be web3 native."
@@ -260,11 +279,17 @@ export const MessageComposer: FC<MessageComposerProps> = ({
             <Text fontWeight="bold">Post on Twitter</Text>
           </HStack>
 
-          <Text color="gray.400" fontSize="xs" ml="auto" textAlign="right">
-            {(messageText || '').length} / {MAX_CHAR_LIMIT}
+          <Text
+            color={isExceededCharLimit ? 'red.400' : 'gray.400'}
+            fontSize="xs"
+            ml="auto"
+            textAlign="right"
+          >
+            {charCount} / {MAX_CHAR_LIMIT}
           </Text>
           <Button
             id="post-tweet-submit-button"
+            isDisabled={isExceededCharLimit}
             isLoading={isLoading}
             leftIcon={<Icon as={Ionicons} name="send" size="xs" />}
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
