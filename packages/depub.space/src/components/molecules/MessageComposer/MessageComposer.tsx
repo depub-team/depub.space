@@ -98,7 +98,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
   const likecoinAddress = profile && profile.address;
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : walletAddress;
   const profilePicSource = useMemo(
-    () => (profile ? { uri: profile?.profilePic } : undefined),
+    () => (profile && profile?.profilePic ? { uri: profile?.profilePic } : undefined),
     [profile]
   );
 
