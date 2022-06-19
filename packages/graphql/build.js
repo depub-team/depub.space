@@ -50,7 +50,6 @@ try {
     plugins: [
       NodeModulesPolyfillPlugin(),
       NodeGlobalsPolyfillPlugin({
-        process: true,
         buffer: true
       }),
     ],

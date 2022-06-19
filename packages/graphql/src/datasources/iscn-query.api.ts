@@ -32,6 +32,10 @@ export class ISCNQueryAPI extends DataSource {
 
     const json = await res.json<{ records: ISCNRecord[]; next_sequence: number }>();
 
-    return json.records[0] || null;
+    if (res.status === 200 && json.records[0]) {
+      return json.records[0];
+    }
+
+    return null;
   }
 }
