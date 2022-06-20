@@ -4,6 +4,7 @@ import { Text, Button, Image, VStack, Modal, Heading } from 'native-base';
 interface ConnectWalletModalProps extends ComponentProps<typeof Modal> {
   onPressWalletConnect?: () => void;
   onPressKeplr?: () => void;
+  onPressCosmostation?: () => void;
 }
 interface ConnectButtonProps extends ComponentProps<typeof Button> {
   icon: string;
@@ -49,6 +50,7 @@ const ConnectButton: FC<ConnectButtonProps> = ({ icon, title, description, ...pr
 export const ConnectWalletModal: FC<ConnectWalletModalProps> = ({
   onPressWalletConnect,
   onPressKeplr,
+  onPressCosmostation,
   ...props
 }) => (
   <Modal {...props}>
@@ -58,17 +60,24 @@ export const ConnectWalletModal: FC<ConnectWalletModalProps> = ({
       <Modal.Body p={4}>
         <VStack space={4}>
           <ConnectButton
-            description=" Keplr Browser Extension"
+            description="Keplr Browser Extension"
             icon="/images/keplr-icon.svg"
             title="Keplr Wallet"
             onPress={onPressKeplr}
           />
 
           <ConnectButton
-            description=" Liker Land APP"
+            description="Liker Land APP"
             icon="/images/walletconnect-icon.svg"
             title="WalletConnect"
             onPress={onPressWalletConnect}
+          />
+
+          <ConnectButton
+            description="Cosmostation Browser Extension"
+            icon="/images/cosmostation.png"
+            title="Cosmostation"
+            onPress={onPressCosmostation}
           />
         </VStack>
       </Modal.Body>
