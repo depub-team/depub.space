@@ -600,10 +600,25 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }) => {
       );
     };
 
+    const handleCosmostationAccountChanged = () => {
+      void actions.initCosmostation();
+    };
+
+    const cosmostationAccountChangedEvent =
+      (window as any).cosmostation &&
+      (window as any).cosmostation.tendermint.on(
+        'accountChanged',
+        handleCosmostationAccountChanged
+      );
+
     window.addEventListener('keplr_keystorechange', keystoreChangeHandler);
 
     return () => {
       window.removeEventListener('keplr_keystorechange', keystoreChangeHandler);
+
+      if (cosmostationAccountChangedEvent) {
+        (window as any).cosmostation.tendermint.off(cosmostationAccountChangedEvent);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
