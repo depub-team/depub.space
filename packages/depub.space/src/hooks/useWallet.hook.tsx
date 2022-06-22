@@ -304,7 +304,11 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
     const w = window as any;
 
     if (!w.cosmostation) {
-      throw new Error('Please install cosmostation wallet');
+      setError(
+        'Please install cosmostation wallet, if you just installed it, please refresh the page.'
+      );
+
+      return false;
     }
 
     const chainInfo = getChainInfo();
@@ -505,7 +509,7 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
       debug('connectKeplr()');
 
       if (typeof (window as any).keplr === 'undefined') {
-        setError('Keplr is not available');
+        setError('Keplr is not available, if you just installed it, please refresh the browser.');
 
         return;
       }
