@@ -13,6 +13,7 @@ import React, {
 import update from 'immutability-helper';
 import { useNavigation } from '@react-navigation/native';
 import Debug from 'debug';
+import { fromBech32 } from '@cosmjs/encoding';
 import type { HomeScreenNavigationProps } from '../navigation/MainStackParamList';
 import type { ISCNCreateRawLog, UserProfile, HashTag, List } from '../interfaces';
 import { useAlert } from '../components/molecules/Alert';
@@ -39,6 +40,7 @@ import {
   ProfilePictureModal,
   SelectedProfilePicture,
 } from '../components/organisms/ProfilePictureModal';
+import { getAccessToken } from '../utils/getAccessToken';
 
 const debug = Debug('web:useAppState');
 
@@ -382,7 +384,9 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
 
       try {
         if (offlineSigner && walletAddress) {
-          const authHeader = await generateAuthSignature(offlineSigner);
+          const { prefix } = fromBech32(walletAddress);
+          const encodedSignatureAndPublickey = await generateAuthSignature(offlineSigner);
+          const accessToken = await getAccessToken(encodedSignatureAndPublickey, prefix);
 
           pushGtmEvent('updatingProfilePicture', walletAddress, {
             ...selectedProfilePicture,
@@ -392,7 +396,7 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
             walletAddress,
             selectedProfilePicture.image,
             selectedProfilePicture.platform,
-            authHeader
+            accessToken
           );
 
           // update user profile

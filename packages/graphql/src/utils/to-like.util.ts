@@ -1,7 +1,7 @@
-import { fromBech32, toBech32 } from '@cosmjs/encoding';
+import { bech32 } from 'bech32';
 
 export const toLike = (address: string): string => {
-  const rawAddress = fromBech32(address);
+  const rawAddress = bech32.decode(address);
 
-  return toBech32('like', rawAddress.data);
+  return bech32.encode('like', new Uint8Array(rawAddress.words));
 };

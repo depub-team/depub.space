@@ -18,13 +18,12 @@
     "test": "yarn build && node --experimental-vm-modules ../../node_modules/jest/bin/jest --config ./jest.config.json"
   },
   "dependencies": {
-    "@cosmjs/amino": "0.28.4",
-    "@cosmjs/crypto": "0.28.4",
-    "@cosmjs/encoding": "0.28.4",
+    "bech32": "2.0.0",
     "apollo-datasource": "3.3.2",
     "apollo-server-cloudflare": "3.9.0",
     "apollo-server-errors": "3.3.1",
     "graphql": "16.5.0",
+    "@tsndr/cloudflare-worker-jwt": "1.4.4",
     "ulid-workers": "2.0.0"
   },
   "devDependencies": {
@@ -36,8 +35,8 @@
     "@graphql-codegen/typescript-resolvers": "2.6.6",
     "@types/long": "4.0.2",
     "@types/node": "18.0.0",
-    "esbuild": "0.14.39",
-    "jest-environment-miniflare": "2.5.0",
+    "esbuild": "0.14.47",
+    "jest-environment-miniflare": "2.5.1",
     "typescript": "4.7.4"
   }
 }

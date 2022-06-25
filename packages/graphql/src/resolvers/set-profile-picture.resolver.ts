@@ -1,5 +1,4 @@
-import { fromBech32 } from '@cosmjs/encoding';
-import { verifyArbitrary } from '../utils/verify-arbitrary';
+import jwt from '@tsndr/cloudflare-worker-jwt';
 import { Context } from '../context';
 import { MutationSetProfilePictureArgs, RequireFields, UserProfile } from './generated_types';
 import { toLike } from '../utils';
@@ -14,13 +13,7 @@ export const setProfilePicture = async (
   }: RequireFields<MutationSetProfilePictureArgs, 'picture' | 'address'>,
   ctx: Context
 ): Promise<UserProfile> => {
-  const { prefix } = fromBech32(address);
-  const isVerified = await verifyArbitrary(
-    ctx.env.SIGN_MESSAGE,
-    ctx.authPublicKey,
-    ctx.authSignature,
-    prefix
-  );
+  const isVerified = await jwt.verify(ctx.accessToken, ctx.env.JWT_SECRET);
 
   if (!isVerified) {
     throw new Error('Invalid signature');
