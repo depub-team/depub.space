@@ -1,0 +1,23 @@
+name = "auth"
+route = "auth.depub.space/*"
+type = "javascript"
+
+account_id = '35641a6e50a31e745078ec7a010c2a6f'
+# route = ''
+# zone_id = ''
+
+compatibility_flags = []
+workers_dev = true
+compatibility_date = "2022-04-18"
+
+[build]
+command = "yarn build"
+
+[build.upload]
+format = "modules"
+main = "./index.mjs"
+
+[miniflare]
+
+[vars]
+SIGN_MESSAGE = "Welcome to depub.space"

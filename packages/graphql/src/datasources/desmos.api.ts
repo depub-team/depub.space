@@ -1,5 +1,5 @@
 import { DataSource } from 'apollo-datasource';
-import { toCosmos } from '../utils';
+import { toCosmos, toLike } from '../utils';
 import type { DesmosProfile } from '../resolvers/generated_types';
 
 const FETCH_PROFILE_DOCUMENT = `query DesmosProfileLink($address: String) {
@@ -98,14 +98,16 @@ export class DesmosAPI extends DataSource {
       return { ...profile, profilePicProvider: 'desmos' };
     }
 
-    // retry with cosmos prefixed address if not found
-    if (!isLikePrefix) {
-      const cosmosPrefixedAddress = toCosmos(address);
+    // XXX: This is a hack to get the profile from the another prefixed address.
+    let updatedPrefixedAddress;
 
-      return this.getProfileWithLikecoinAddress(cosmosPrefixedAddress);
+    if (isLikePrefix) {
+      updatedPrefixedAddress = toCosmos(address);
+    } else {
+      updatedPrefixedAddress = toLike(address);
     }
 
-    return null;
+    return this.getProfileWithLikecoinAddress(updatedPrefixedAddress);
   }
 
   public async getProfileByDtag(dtag: string) {
