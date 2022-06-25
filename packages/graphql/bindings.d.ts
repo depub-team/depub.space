@@ -12,5 +12,5 @@ export interface Bindings {
   ENVIRONMENT: string;
   AUTH_TOKEN: string;
   STARGAZE_REST_ENDPOINT: string;
-  SIGN_MESSAGE: string;
+  JWT_SECRET: string;
 }

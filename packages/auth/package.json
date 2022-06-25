@@ -1,13 +1,13 @@
 {
-  "name": "@depub/sitemap",
+  "name": "@depub/auth",
   "version": "2.0.0",
   "private": true,
-  "description": "Sitemap for Google indexing",
+  "description": "Message signature verification and authentication",
   "license": "gpl",
   "author": "0xNaN Team",
+  "type": "module",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
-  "type": "module",
   "scripts": {
     "build": "node build.js",
     "deploy": "NODE_ENV=production npx @cloudflare/wrangler publish",
@@ -16,8 +16,10 @@
     "test": "yarn build && node --experimental-vm-modules ../../node_modules/jest/bin/jest --config ./jest.config.json"
   },
   "dependencies": {
-    "xml": "1.0.1",
-    "axios": "0.27.2"
+    "@cosmjs/amino": "0.28.4",
+    "@cosmjs/crypto": "0.28.4",
+    "@cosmjs/encoding": "0.28.4",
+    "@tsndr/cloudflare-worker-jwt": "1.4.4"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "3.13.0",

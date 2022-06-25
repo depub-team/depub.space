@@ -159,12 +159,12 @@ export const getChainInfo = () => {
       coinType: 118,
     },
     bech32Config: {
-      bech32PrefixAccAddr: 'cosmos',
-      bech32PrefixAccPub: 'cosmospub',
-      bech32PrefixValAddr: 'cosmosvaloper',
-      bech32PrefixValPub: 'cosmosvaloperpub',
-      bech32PrefixConsAddr: 'cosmosvalcons',
-      bech32PrefixConsPub: 'cosmosvalconspub',
+      bech32PrefixAccAddr: 'like',
+      bech32PrefixAccPub: 'likepub',
+      bech32PrefixValAddr: 'likevaloper',
+      bech32PrefixValPub: 'likevaloperpub',
+      bech32PrefixConsAddr: 'likevalcons',
+      bech32PrefixConsPub: 'likevalconspub',
     },
     currencies: [
       {
@@ -304,7 +304,11 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
     const w = window as any;
 
     if (!w.cosmostation) {
-      throw new Error('Please install cosmostation wallet');
+      setError(
+        'Please install cosmostation wallet, if you just installed it, please refresh the page.'
+      );
+
+      return false;
     }
 
     const chainInfo = getChainInfo();
@@ -505,7 +509,7 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
       debug('connectKeplr()');
 
       if (typeof (window as any).keplr === 'undefined') {
-        setError('Keplr is not available');
+        setError('Keplr is not available, if you just installed it, please refresh the browser.');
 
         return;
       }
@@ -596,10 +600,25 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }) => {
       );
     };
 
+    const handleCosmostationAccountChanged = () => {
+      void actions.initCosmostation();
+    };
+
+    const cosmostationAccountChangedEvent =
+      (window as any).cosmostation &&
+      (window as any).cosmostation.tendermint.on(
+        'accountChanged',
+        handleCosmostationAccountChanged
+      );
+
     window.addEventListener('keplr_keystorechange', keystoreChangeHandler);
 
     return () => {
       window.removeEventListener('keplr_keystorechange', keystoreChangeHandler);
+
+      if (cosmostationAccountChangedEvent) {
+        (window as any).cosmostation.tendermint.off(cosmostationAccountChangedEvent);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

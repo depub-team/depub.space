@@ -15,7 +15,7 @@ export const USER_PROFILE_DURABLE_OBJECT = 'http://user-profile';
 const mergeProfile = (userProfile: UserProfile, desmosProfile: DesmosProfile | null) => {
   const hasDesmosProfilePic = !!desmosProfile?.profilePic;
   const profilePicProvider =
-    userProfile.profilePicProvider || (hasDesmosProfilePic ? 'desmos' : '');
+    userProfile.profilePicProvider || (hasDesmosProfilePic ? 'desmos' : null);
 
   return {
     ...userProfile,
