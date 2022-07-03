@@ -38,7 +38,7 @@ try {
   await build({
     bundle: true,
     sourcemap: false,
-    minify: false,
+    minify: true,
     format: 'esm',
     target: ['esnext'],
     entryPoints,

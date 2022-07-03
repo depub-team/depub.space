@@ -38,7 +38,7 @@ try {
   await build({
     bundle: true,
     sourcemap: false,
-    minify: true,
+    minify: false,
     format: 'esm',
     target: ['esnext'],
     entryPoints,
@@ -50,6 +50,7 @@ try {
     plugins: [
       NodeModulesPolyfillPlugin(),
       NodeGlobalsPolyfillPlugin({
+        process: true,
         buffer: true
       }),
     ],

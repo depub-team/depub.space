@@ -6,6 +6,20 @@ import Debug from 'debug';
 import { submitToArweaveAndISCN } from '../arweave';
 import { signISCN } from './sign';
 
+const extractHashtags = (str: string) => {
+  const hashtagRegex = /#[\p{L}\d_-]+/giu;
+  const hashtags = str.match(hashtagRegex);
+
+  return hashtags ? hashtags.map(hashtag => hashtag.toLowerCase()) : [];
+};
+
+const extractMentions = (str: string) => {
+  const mentionRegex = /@[\p{L}\d_-]+/giu;
+  const mentions = str.match(mentionRegex);
+
+  return mentions ? mentions.map(mention => mention.toLowerCase()) : [];
+};
+
 const debug = Debug('postMessage()');
 const ISCN_FINGERPRINT = process.env.NEXT_PUBLIC_ISCN_FINGERPRINT || '';
 
@@ -23,6 +37,8 @@ export const postMessage = async (
     Crypto.CryptoDigestAlgorithm.SHA256,
     message
   );
+  const tags = extractHashtags(message);
+  const mentions = extractMentions(message);
   const payload = {
     contentFingerprints: [ISCN_FINGERPRINT, `hash://sha256/${messageSha256Hash}`],
     recordTimestamp,
@@ -49,6 +65,7 @@ export const postMessage = async (
     recordNotes: 'A Message posted on depub.space',
     type: 'Article',
     author: wallet.address,
+    keywords: [...tags, ...mentions],
     description: message,
     version: 1,
     usageInfo: 'https://creativecommons.org/licenses/by/4.0',

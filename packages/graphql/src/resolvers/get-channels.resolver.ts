@@ -44,7 +44,7 @@ export const getListFromNotionAPI = async (
 
   // put records into kv cache
   await ctx.env.WORKERS_GRAPHQL_CACHE.put(CACHE_KEY, JSON.stringify(list), {
-    expirationTtl: 1 * 60, // 1 minute
+    expirationTtl: 10 * 60, // 10 minute
   });
 
   return list;
