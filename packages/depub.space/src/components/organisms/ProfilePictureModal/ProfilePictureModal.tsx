@@ -175,7 +175,7 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
               onValueChange={handleOnPlatformChange}
             >
               <Select.Item label="Desmos" value="desmos" />
-              {/* <Select.Item label="Stargaze" value="stargaze" /> */}
+              <Select.Item label="Stargaze" value="stargaze" />
               <Select.Item label="OmniFlix" value="omniflix" />
             </Select>
 
