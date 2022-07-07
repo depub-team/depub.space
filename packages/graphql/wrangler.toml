@@ -70,6 +70,7 @@ ENVIRONMENT = "production"
 NOTION_API_ENDPOINT = "https://api.notion.com/v1"
 OMNIFLIX_REST_ENDPOINT = "https://data-api.omniflix.studio/"
 STARGAZE_REST_ENDPOINT = "https://nft-api.stargaze-apis.com/"
+SIGN_MESSAGE = "Welcome to depub.space"
 
 [[env.prod.migrations]]
 tag = "v1"

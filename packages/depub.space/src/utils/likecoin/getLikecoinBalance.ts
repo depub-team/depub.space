@@ -1,4 +1,5 @@
 import { QueryClient, setupBankExtension } from '@cosmjs/stargate';
+import * as Sentry from '@sentry/nextjs';
 import { Tendermint34Client } from '@cosmjs/tendermint-rpc';
 import BigNumber from 'bignumber.js';
 import Debug from 'debug';
@@ -6,13 +7,6 @@ import Debug from 'debug';
 const RPC_ENDPOINT = process.env.NEXT_PUBLIC_CHAIN_RPC_ENDPOINT || '';
 const COSMOS_DENOM = process.env.NEXT_PUBLIC_COSMOS_DENOM || '';
 const debug = Debug('web:sendLike');
-
-export class AccountNotFoundException extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AccountNotFoundError';
-  }
-}
 
 export async function getLikeCoinBalance(address: string) {
   debug('getLikeCoinBalance() -> address: %s', address);
@@ -31,13 +25,11 @@ export async function getLikeCoinBalance(address: string) {
 
       return likecoinBalanceBN.dividedBy(1e9).toFixed();
     }
-
-    return 0;
   } catch (ex) {
-    if (ex.message.includes('invalid address')) {
-      throw new AccountNotFoundException('account not found');
+    if (!ex.message.includes('invalid address')) {
+      Sentry.captureException(ex);
     }
-
-    throw ex;
   }
+
+  return 0;
 }

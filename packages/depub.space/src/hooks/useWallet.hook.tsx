@@ -12,6 +12,7 @@ import update from 'immutability-helper';
 import WalletConnect from '@walletconnect/client';
 import QRCodeModal from '@walletconnect/qrcode-modal';
 import Debug from 'debug';
+import * as Sentry from '@sentry/nextjs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { payloadId } from '@walletconnect/utils';
 import { AccountData, OfflineSigner } from '@cosmjs/proto-signing';
@@ -69,6 +70,10 @@ const reducer: Reducer<WalletContextProps, Action> = (state, action) => {
         connector: { $set: action.connector },
       });
     case ActionType.SET_WALLET_ADDRESS:
+      Sentry.setUser({
+        walletAddress: action.walletAddress,
+      });
+
       return update(state, {
         walletAddress: { $set: action.walletAddress },
       });
