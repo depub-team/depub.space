@@ -50,7 +50,7 @@ export const UserHeader: FC<UserHeaderProps> = memo(
             <Avatar
               isNFTProfilePicture={isNFTProfilePicture}
               mr={collapse ? 4 : 0}
-              size={collapse ? 'md' : 'xl'}
+              size={collapse ? 'md' : '2xl'}
               source={profilePic}
             >
               {abbrNickname}

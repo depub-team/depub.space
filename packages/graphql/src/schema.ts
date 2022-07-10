@@ -76,6 +76,7 @@ const typeDefs = gql`
     nickname: String
     profilePic: String
     profilePicProvider: String
+    numOfTweets: Int
   }
 
   type DesmosProfile {

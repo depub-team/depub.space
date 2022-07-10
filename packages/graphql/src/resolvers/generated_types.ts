@@ -183,6 +183,7 @@ export type UserProfile = {
   coverPic?: Maybe<Scalars['String']>;
   dtag?: Maybe<Scalars['String']>;
   nickname?: Maybe<Scalars['String']>;
+  numOfTweets?: Maybe<Scalars['Int']>;
   profilePic?: Maybe<Scalars['String']>;
   profilePicProvider?: Maybe<Scalars['String']>;
 };
@@ -389,6 +390,7 @@ export type UserProfileResolvers<ContextType = Context, ParentType extends Resol
   coverPic?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   dtag?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   nickname?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  numOfTweets?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   profilePic?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   profilePicProvider?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

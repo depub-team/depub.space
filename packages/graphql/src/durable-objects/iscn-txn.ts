@@ -137,6 +137,40 @@ export class IscnTxn implements DurableObject {
     return new Response(JSON.stringify(transaction));
   }
 
+  public async countByAuthor(request: Request) {
+    const url = new URL(request.url.replace(/^\//, ''));
+    const author = decodeURIComponent(url.pathname.split('/').pop() || '');
+    let count = 0;
+
+    if (author) {
+      const keyList = await this.state.storage.list<string>({
+        prefix: `${AUTHOR_KEY}:${author}`,
+      });
+
+      let keyListValues = [...keyList.values()];
+
+      if (author.startsWith('like')) {
+        // also get the keys by legacy address
+        const legacyAddress = toCosmos(author);
+        const legacyKeyList = await this.state.storage.list<string>({
+          prefix: `${AUTHOR_KEY}:${legacyAddress}`,
+        });
+
+        keyListValues = keyListValues.concat(...legacyKeyList.values());
+      }
+
+      count = keyListValues.length;
+    }
+
+    console.log('count =', count);
+
+    return new Response(
+      JSON.stringify({
+        count,
+      })
+    );
+  }
+
   public async getTransactions(request: Request) {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '12', 10);
@@ -318,13 +352,19 @@ export class IscnTxn implements DurableObject {
         }
       }
 
+      if (url.pathname.startsWith('/countByAuthor')) {
+        if (request.method === 'GET') {
+          return await this.countByAuthor(request);
+        }
+      }
+
       if (url.pathname === '/hashTags') {
         if (request.method === 'GET') {
           return await this.getHashTags();
         }
       }
 
-      if (/^\/transactions\/.+/.test(url.pathname)) {
+      if (url.pathname.startsWith('/transactions')) {
         if (request.method === 'GET') {
           return await this.getTransaction(request);
         }

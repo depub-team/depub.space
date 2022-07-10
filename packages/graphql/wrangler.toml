@@ -19,6 +19,9 @@ bindings = [
   { name = "USER_PROFILE", class_name = "UserProfile" }
 ]
 
+[triggers]
+crons = ["*/10 * * * *"]
+
 [build]
 command = "yarn build"
 

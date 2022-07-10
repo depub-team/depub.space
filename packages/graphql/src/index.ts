@@ -6,7 +6,7 @@ import { setCorsHeaders as setCors } from './utils';
 
 export { IscnTxn, UserProfile } from './durable-objects';
 
-const clearListCache = async (env: Bindings) => {
+const updateListCache = async (env: Bindings) => {
   const LIST_KEY = 'list';
   const notionAPI = new NotionAPI(env.NOTION_API_ENDPOINT, env.NOTION_API_SECRET);
   const databases = await notionAPI.getDatabases();
@@ -25,6 +25,9 @@ const clearListCache = async (env: Bindings) => {
       // eslint-disable-next-line no-continue
       continue;
     }
+
+    // eslint-disable-next-line no-console
+    console.info('Clearing cache for', databaseKey);
 
     // eslint-disable-next-line no-await-in-loop
     const list = await notionAPI.getList(databaseIdByCountryCode);
@@ -95,8 +98,8 @@ const handleRequest = async (request: Request, env: Bindings) => {
       return response;
     }
 
-    if (url.pathname === '/clear-list-cache') {
-      await clearListCache(env);
+    if (url.pathname === '/update-list-cache') {
+      await updateListCache(env);
 
       return new Response('', { status: 204 });
     }
@@ -121,5 +124,9 @@ const handleRequest = async (request: Request, env: Bindings) => {
 };
 
 export default {
-  fetch: (request: Request, env: Bindings) => handleRequest(request, env),
+  fetch: handleRequest,
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async scheduled(_event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
+    ctx.waitUntil(updateListCache(env));
+  },
 };

@@ -12,6 +12,8 @@ import { toLike } from '../utils';
 
 export const USER_PROFILE_DURABLE_OBJECT = 'http://user-profile';
 
+const ISCN_TXN_DURABLE_OBJECT = 'http://iscn-txn';
+
 const mergeProfile = (userProfile: UserProfile, desmosProfile: DesmosProfile | null) => {
   const hasDesmosProfilePic = !!desmosProfile?.profilePic;
   const profilePicProvider =
@@ -36,6 +38,7 @@ export const getUserProfileResolver = async (
   ctx: Context
 ): Promise<UserProfile> => {
   let address = dtagOrAddress;
+  let numOfTweets = 0;
 
   // get desmos profile
   const desmosProfile = await getDesmosProfileResolver({ dtagOrAddress }, ctx);
@@ -60,15 +63,27 @@ export const getUserProfileResolver = async (
   // get user profile from durable object
   const durableObjId = ctx.env.USER_PROFILE.idFromName('user-profile');
   const stub = ctx.env.USER_PROFILE.get(durableObjId);
+  const iscnTxnDurableObjId = ctx.env.ISCN_TXN.idFromName('iscn-txn');
+  const iscnTxnStub = ctx.env.ISCN_TXN.get(iscnTxnDurableObjId);
   const getUserProfileRequest = new Request(`${USER_PROFILE_DURABLE_OBJECT}/profiles/${address}`, {
     method: 'GET',
   });
+  const getTweetCountByUser = new Request(`${ISCN_TXN_DURABLE_OBJECT}/countByAuthor/${address}`, {
+    method: 'GET',
+  });
   const getUserProfileResponse = await stub.fetch(getUserProfileRequest);
+  const getTweetCountByUserResponse = await iscnTxnStub.fetch(getTweetCountByUser);
+
+  if (getTweetCountByUserResponse.status === 200) {
+    const getTweetCountByUserJSON = await getTweetCountByUserResponse.json<{ count: number }>();
+
+    numOfTweets = getTweetCountByUserJSON.count;
+  }
 
   if (getUserProfileResponse.status === 200) {
     const { userProfile } = await getUserProfileResponse.json<{ userProfile: UserProfile }>();
 
-    return mergeProfile({ ...userProfile, address }, desmosProfile);
+    return mergeProfile({ ...userProfile, address, numOfTweets }, desmosProfile);
   }
 
   if (!address) {
@@ -79,6 +94,7 @@ export const getUserProfileResolver = async (
   return mergeProfile(
     {
       address,
+      numOfTweets,
     },
     desmosProfile
   );
