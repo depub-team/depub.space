@@ -10,13 +10,13 @@ export const getListFromNotionAPI = async (
   countryCode?: string
 ): Promise<ChannelList[]> => {
   let myCountryCode = 'universal';
-  const CACHE_KEY = `${LIST_KEY}_${myCountryCode}`;
 
   if (countryCode) {
     myCountryCode = countryCode;
   }
 
   // get cached data
+  const CACHE_KEY = `${LIST_KEY}_${myCountryCode}`;
   const cachedListData = await ctx.env.WORKERS_GRAPHQL_CACHE.get(CACHE_KEY);
 
   if (cachedListData) {
@@ -43,9 +43,7 @@ export const getListFromNotionAPI = async (
   const list = await ctx.dataSources.notionAPI.getList(databaseIdByCountryCode);
 
   // put records into kv cache
-  await ctx.env.WORKERS_GRAPHQL_CACHE.put(CACHE_KEY, JSON.stringify(list), {
-    expirationTtl: 10 * 60, // 10 minute
-  });
+  await ctx.env.WORKERS_GRAPHQL_CACHE.put(CACHE_KEY, JSON.stringify(list)); // never expires until the manual clear
 
   return list;
 };

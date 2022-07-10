@@ -12,5 +12,8 @@ export interface Bindings {
   ENVIRONMENT: string;
   AUTH_TOKEN: string;
   STARGAZE_REST_ENDPOINT: string;
+  OMNIFLIX_REST_ENDPOINT: string;
   JWT_SECRET: string;
+  NOTION_API_ENDPOINT: string;
+  NOTION_API_SECRET: string;
 }

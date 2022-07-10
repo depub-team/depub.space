@@ -4,9 +4,10 @@ import { typeDefs } from '../schema';
 import { resolvers } from '../resolvers';
 import { DesmosAPI, StargazeAPI, NotionAPI, ISCNQueryAPI, OmniflixAPI } from '../datasources';
 import { GqlHandlerOptions } from './handler.types';
+import { Context } from '../context';
 
 const createServer = (graphQLOptions: GqlHandlerOptions): ApolloServer => {
-  const context = graphQLOptions.context ? graphQLOptions.context() : {};
+  const context = (graphQLOptions.context ? graphQLOptions.context() : {}) as Context;
   const { env } = context;
 
   return new ApolloServer({
