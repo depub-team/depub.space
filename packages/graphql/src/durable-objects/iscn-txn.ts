@@ -162,8 +162,6 @@ export class IscnTxn implements DurableObject {
       count = keyListValues.length;
     }
 
-    console.log('count =', count);
-
     return new Response(
       JSON.stringify({
         count,

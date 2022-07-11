@@ -1,4 +1,4 @@
-import { Box, Text, Heading, Stack, VStack, View, Button } from 'native-base';
+import { Box, Text, Heading, Stack, VStack, View, Button, HStack } from 'native-base';
 import React, { FC, memo } from 'react';
 import { getAbbrNickname } from '../../../utils';
 import { Avatar } from '../../atoms';
@@ -9,6 +9,7 @@ export interface UserHeaderProps {
   dtag?: string;
   profilePic?: { uri: string };
   nickname: string;
+  numOfTweets?: number;
   isNFTProfilePicture?: boolean;
   editable?: boolean;
   onEditProfilePicture?: () => void;
@@ -29,6 +30,7 @@ export const UserHeader: FC<UserHeaderProps> = memo(
     dtag,
     nickname,
     profilePic,
+    numOfTweets,
     bio,
     isNFTProfilePicture,
     editable,
@@ -117,6 +119,12 @@ export const UserHeader: FC<UserHeaderProps> = memo(
               ) : null}
             </Box>
             {!collapse && bio ? <Text fontSize="sm">{bio}</Text> : null}
+            <HStack>
+              <Text fontWeight="bold" mr="1">
+                {numOfTweets}
+              </Text>
+              <Text color="gray.500">Tweets</Text>
+            </HStack>
           </VStack>
         </Stack>
       </Box>

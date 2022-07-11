@@ -6,6 +6,7 @@ export const GRAPHQL_TYPE_PROFILE = `{
   coverPic
   profilePic
   profilePicProvider
+  numOfTweets
 }
 `;
 

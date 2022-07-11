@@ -144,6 +144,7 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
         editable={isEditable}
         isNFTProfilePicture={profile?.isNFTProfilePicture}
         nickname={nickname}
+        numOfTweets={profile?.numOfTweets || 0}
         profilePic={profilePic}
         onEditProfilePicture={showProfilePictureModal}
       />
@@ -169,7 +170,7 @@ export const UserScreen: FC<UserScreenProps> = assertRouteParams(({ route, navig
       setIsReady(false);
       setMessages(emptyMessages);
       setIsListReachedEnd(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [navigation, revision, nickname])
   );
 

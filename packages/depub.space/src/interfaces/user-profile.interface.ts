@@ -7,4 +7,5 @@ export interface UserProfile {
   profilePic?: string;
   profilePicProvider?: string;
   isNFTProfilePicture?: boolean;
+  numOfTweets?: number;
 }
