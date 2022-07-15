@@ -65,5 +65,4 @@ const SvgDepubSpinner = (props: SvgProps) => (
 );
 
 export default SvgDepubSpinner;
-
 /* eslint-enable @typescript-eslint/ban-ts-comment */

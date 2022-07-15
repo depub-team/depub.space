@@ -41,7 +41,7 @@ import type { HomeScreenNavigationProps } from '../../../navigation';
 import { MessageCardContainer } from './MessageCardContainer';
 import { MessageContent } from './MessageContent';
 import { useAppState } from '../../../hooks';
-import { Avatar } from '../../atoms';
+import { Avatar, LikeClap } from '../../atoms';
 
 dayjs.extend(relativeTime);
 
@@ -82,7 +82,7 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
   const displayName = profile?.nickname || profile?.dtag || shortenAddress;
   const abbrNickname = getAbbrNickname(displayName);
   const { onCopy } = useClipboard();
-  const { showImageModal } = useAppState();
+  const { showImageModal, likePost } = useAppState();
   const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>(emptyImageSizes);
   const likecoinAddress = profile && profile.address;
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
@@ -102,9 +102,16 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
     [id, isDarkMode]
   );
 
-  const handleOnImagePress = (image: string, aspectRatio: number) => () => {
-    showImageModal(image, aspectRatio);
-  };
+  const handleOnImagePress = useCallback(
+    (image: string, aspectRatio: number) => () => {
+      showImageModal(image, aspectRatio);
+    },
+    [showImageModal]
+  );
+
+  const handleOnLike = useCallback(() => {
+    likePost(id);
+  }, [id, likePost]);
 
   const copyAddress = useCallback(async () => {
     await onCopy(from);
@@ -304,11 +311,25 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
         </VStack>
 
         <HStack alignItems="center" justifyContent="space-between" space={4}>
-          <Box>
+          <HStack alignItems="center" space={4}>
+            <IconButton
+              _hover={{
+                backgroundColor: 'primary.500:alpha.20',
+                borderColor: 'primary.500',
+              }}
+              backgroundColor="primary.500:alpha.5"
+              borderColor="primary.600"
+              borderRadius="full"
+              borderStyle="solid"
+              borderWidth={2}
+              color="primary.500"
+              icon={<LikeClap height="28" width="28" />}
+              onPress={handleOnLike}
+            />
             <Text color="gray.400" fontSize="xs">
               {dayFrom}
             </Text>
-          </Box>
+          </HStack>
 
           <HStack alignItems="center" space={1}>
             <Tooltip label="Check ISCN record" openDelay={250}>
