@@ -312,20 +312,22 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
 
         <HStack alignItems="center" justifyContent="space-between" space={4}>
           <HStack alignItems="center" space={4}>
-            <IconButton
-              _hover={{
-                backgroundColor: 'primary.500:alpha.20',
-                borderColor: 'primary.500',
-              }}
-              backgroundColor="primary.500:alpha.5"
-              borderColor="primary.600"
-              borderRadius="full"
-              borderStyle="solid"
-              borderWidth={2}
-              color="primary.500"
-              icon={<LikeClap height="28" width="28" />}
-              onPress={handleOnLike}
-            />
+            <Tooltip label="Like it? clap to show your appreciation">
+              <IconButton
+                _hover={{
+                  backgroundColor: 'primary.500:alpha.20',
+                  borderColor: 'primary.500',
+                }}
+                backgroundColor="primary.500:alpha.5"
+                borderColor="primary.600"
+                borderRadius="full"
+                borderStyle="solid"
+                borderWidth={2}
+                color="primary.500"
+                icon={<LikeClap height="28" width="28" />}
+                onPress={handleOnLike}
+              />
+            </Tooltip>
             <Text color="gray.400" fontSize="xs">
               {dayFrom}
             </Text>
