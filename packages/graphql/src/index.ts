@@ -47,6 +47,10 @@ const graphQLOptions: GqlHandlerOptions = {
   kvCache: false,
 };
 
+const handleScheduled = async (env: Bindings) => {
+  await updateListCache(env);
+};
+
 const handleRequest = async (request: Request, env: Bindings) => {
   const url = new URL(request.url);
   const isDev = env.ENVIRONMENT !== 'production';
@@ -127,6 +131,6 @@ export default {
   fetch: handleRequest,
   // eslint-disable-next-line @typescript-eslint/require-await
   async scheduled(_event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
-    ctx.waitUntil(updateListCache(env));
+    ctx.waitUntil(handleScheduled(env));
   },
 };

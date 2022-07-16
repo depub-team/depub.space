@@ -82,7 +82,12 @@ export const getMessagesFromDurableObject = async (
     // only getting new transactions from RPC when not in paginated
     if (!previousId) {
       // get latest sequence
-      const latestSequence = await getLatestSequence(stub);
+      let latestSequence = await getLatestSequence(stub);
+
+      // XXX: avoid getting new transactions when there is no latest sequence
+      if (latestSequence < 2241800) {
+        latestSequence = 2241800;
+      }
 
       // check new records
       let { records, nextSequence } = await ctx.dataSources.iscnQueryAPI.getRecords(
