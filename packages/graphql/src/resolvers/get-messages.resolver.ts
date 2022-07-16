@@ -1,4 +1,4 @@
-import { Context } from '../context';
+import type { Context } from '../context';
 import type { GetTransactionsOptions, GetMessagesArgs, ISCNRecord } from '../interfaces';
 import { getAuthorAddress, transformRecord } from '../utils';
 import { getUserProfileResolver } from './get-user-profile.resolver';
@@ -64,7 +64,11 @@ export const addTransactions = async (records: ISCNRecord[], stub: DurableObject
   }
 };
 
-export const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
+export const getMessagesFromDurableObject = async (
+  args: GetMessagesArgs,
+  ctx: Context,
+  withoutUserProfile = false
+) => {
   try {
     // initial durable object
     const durableObjId = ctx.env.ISCN_TXN.idFromName('iscn-txn');
@@ -81,10 +85,23 @@ export const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
       const latestSequence = await getLatestSequence(stub);
 
       // check new records
-      const { records, nextSequence } = await ctx.dataSources.iscnQueryAPI.getRecords(
+      let { records, nextSequence } = await ctx.dataSources.iscnQueryAPI.getRecords(
         ctx.env.ISCN_FINGERPRINT,
         latestSequence
       );
+
+      // in case of latest sequence corrupted
+      if (nextSequence !== 0 && nextSequence < latestSequence) {
+        await updateLatestSequence(nextSequence, stub);
+
+        const updatedRecords = await ctx.dataSources.iscnQueryAPI.getRecords(
+          ctx.env.ISCN_FINGERPRINT,
+          0
+        );
+
+        records = updatedRecords.records;
+        nextSequence = updatedRecords.nextSequence;
+      }
 
       if (nextSequence > latestSequence) {
         await updateLatestSequence(nextSequence, stub);
@@ -107,18 +124,20 @@ export const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
     const messages = await Promise.all(
       transactions.map(async t => {
         const authorAddress = getAuthorAddress(t);
+        let userProfile;
 
         if (!authorAddress) {
           return null;
         }
 
-        const userProfile = await getUserProfileResolver(
-          { dtagOrAddress: authorAddress },
-          ctx
-        ).catch(() => null);
+        if (!withoutUserProfile) {
+          userProfile = await getUserProfileResolver({ dtagOrAddress: authorAddress }, ctx).catch(
+            () => null
+          );
 
-        if (!userProfile) {
-          return null;
+          if (!userProfile) {
+            return null;
+          }
         }
 
         const message = transformRecord(authorAddress, t, userProfile);
@@ -135,3 +154,6 @@ export const getMessages = async (args: GetMessagesArgs, ctx: Context) => {
     throw new ISCNError(ex.message);
   }
 };
+
+export const getMessages = async (args: GetMessagesArgs, ctx: Context) =>
+  getMessagesFromDurableObject(args, ctx);

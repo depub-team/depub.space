@@ -2,8 +2,7 @@ import jwt from '@tsndr/cloudflare-worker-jwt';
 import { Context } from '../context';
 import { MutationSetProfilePictureArgs, RequireFields, UserProfile } from './generated_types';
 import { toLike } from '../utils';
-
-export const USER_PROFILE_DURABLE_OBJECT = 'http://user-profile';
+import { USER_PROFILE_DURABLE_OBJECT } from './get-user-profile.resolver';
 
 export const setProfilePicture = async (
   {

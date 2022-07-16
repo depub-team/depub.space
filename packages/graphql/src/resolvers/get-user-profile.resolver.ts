@@ -1,6 +1,6 @@
 import { ISCNError } from '../iscn-error';
 import { getLikecoinAddressByProfile } from '../datasources/desmos.api';
-import { Context } from '../context';
+import type { Context } from '../context';
 import type {
   QueryGetUserProfileArgs,
   RequireFields,
@@ -12,7 +12,9 @@ import { toLike } from '../utils';
 
 export const USER_PROFILE_DURABLE_OBJECT = 'http://user-profile';
 
+const USER_PROFILE_KEY = 'user_profile';
 const ISCN_TXN_DURABLE_OBJECT = 'http://iscn-txn';
+const CACHE_TTL = 5 * 60; // 5 minutes
 
 const mergeProfile = (userProfile: UserProfile, desmosProfile: DesmosProfile | null) => {
   const hasDesmosProfilePic = !!desmosProfile?.profilePic;
@@ -39,6 +41,12 @@ export const getUserProfileResolver = async (
 ): Promise<UserProfile> => {
   let address = dtagOrAddress;
   let numOfTweets = 0;
+  const cacheKey = `${USER_PROFILE_KEY}:${address}`;
+  const cachedUserProfile = await ctx.env.WORKERS_GRAPHQL_CACHE.get(cacheKey);
+
+  if (cachedUserProfile) {
+    return JSON.parse(cachedUserProfile);
+  }
 
   // get desmos profile
   const desmosProfile = await getDesmosProfileResolver({ dtagOrAddress }, ctx);
@@ -82,20 +90,32 @@ export const getUserProfileResolver = async (
 
   if (getUserProfileResponse.status === 200) {
     const { userProfile } = await getUserProfileResponse.json<{ userProfile: UserProfile }>();
+    const mergedUserProfile = mergeProfile({ ...userProfile, address, numOfTweets }, desmosProfile);
 
-    return mergeProfile({ ...userProfile, address, numOfTweets }, desmosProfile);
+    // put records into kv cache
+    await ctx.env.WORKERS_GRAPHQL_CACHE.put(cacheKey, JSON.stringify(mergedUserProfile), {
+      expirationTtl: CACHE_TTL,
+    });
+
+    return mergedUserProfile;
   }
 
   if (!address) {
     throw new ISCNError('Not found');
   }
 
-  // return basic profile
-  return mergeProfile(
+  const mergedUserProfile = mergeProfile(
     {
       address,
       numOfTweets,
     },
     desmosProfile
   );
+
+  await ctx.env.WORKERS_GRAPHQL_CACHE.put(cacheKey, JSON.stringify(mergedUserProfile), {
+    expirationTtl: CACHE_TTL,
+  });
+
+  // return basic profile
+  return mergedUserProfile;
 };
