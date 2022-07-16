@@ -458,7 +458,7 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
   );
 
   const likePost = useCallback((iscnId: string) => {
-    const likecoinButtonUrl = `https://${LIKE_BUTTON_URL}/in/like/iscn/?iscn_id=${encodeURIComponent(
+    const likecoinButtonUrl = `${LIKE_BUTTON_URL}/in/like/iscn/?iscn_id=${encodeURIComponent(
       iscnId
     )}`;
     // const likecoinButtonUrl = `https://button.like.co/in/like/iscn/?iscn_id=iscn:%2F%2Flikecoin-chain%2F361INYhUj4xWzYZ52AkZAEhh_TWoslk8twOLKrYrRfE%2F1`;
