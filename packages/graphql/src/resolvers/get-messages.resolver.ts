@@ -67,7 +67,7 @@ export const addTransactions = async (records: ISCNRecord[], stub: DurableObject
 export const getMessagesFromDurableObject = async (
   args: GetMessagesArgs,
   ctx: Context,
-  withoutUserProfile = false
+  skipUserProfile = false
 ) => {
   try {
     // initial durable object
@@ -135,7 +135,7 @@ export const getMessagesFromDurableObject = async (
           return null;
         }
 
-        if (!withoutUserProfile) {
+        if (!skipUserProfile) {
           userProfile = await getUserProfileResolver({ dtagOrAddress: authorAddress }, ctx).catch(
             () => null
           );

@@ -20,7 +20,7 @@ bindings = [
 ]
 
 [triggers]
-crons = ["*/10 * * * *"]
+crons = ["*/5 * * * *"]
 
 [build]
 command = "yarn build"
