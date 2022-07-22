@@ -15,13 +15,12 @@ import {
   Text,
   HStack,
   VStack,
-  Link as NBLink,
   Tooltip,
   useClipboard,
   Icon,
   IconButton,
-  useColorMode,
   useToast,
+  Menu,
 } from 'native-base';
 import dayjs from 'dayjs';
 import Debug from 'debug';
@@ -49,7 +48,6 @@ const debug = Debug('web:<MessageCard />');
 const PROXY_URL = process.env.NEXT_PUBLIC_PROXY_URL;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 const ISCN_SCHEME = process.env.NEXT_PUBLIC_ISCN_SCHEME;
-const ISCN_BADGE_URL = process.env.NEXT_PUBLIC_ISCN_BADGE_URL;
 const isDev = process.env.NODE_ENV !== 'production';
 
 export interface MessageCardProps extends ComponentProps<typeof HStack> {
@@ -66,12 +64,9 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
   const { id, from, date, profile, message = '', images = emptyImages } = messageItem;
   const toast = useToast();
   const [contentContainerWidth, setContentContainerWidth] = useState(0);
-  const { colorMode } = useColorMode();
   const navigation = useNavigation<HomeScreenNavigationProps>();
-  const isDarkMode = colorMode === 'dark';
   const contentContainerRef = useRef<HTMLDivElement>(null);
   const [iscnId, revision] = id.replace(new RegExp(`^${ISCN_SCHEME}/`), '').split('/');
-  const [copyUrlIconState, setCopyUrlIconState] = useState<'copied' | 'normal'>('normal');
   const shareableUrl = isDev
     ? `${APP_URL}/post?id=${iscnId}/${revision}`
     : `${APP_URL}/${iscnId}/${revision}`;
@@ -86,7 +81,6 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
   const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>(emptyImageSizes);
   const likecoinAddress = profile && profile.address;
   const handle = likecoinAddress && profile?.dtag ? profile.dtag : from;
-  const isCopied = copyUrlIconState === 'copied';
   const profilePicSource = useMemo(
     () => (profile && profile?.profilePic ? { uri: profile.profilePic } : undefined),
     [profile]
@@ -94,13 +88,6 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
   const imageSources = useMemo(() => images.map(image => ({ uri: image })), [images]);
   const isNFTProfilePicture =
     profile?.isNFTProfilePicture || checkIsNFTProfilePicture(profile?.profilePicProvider || '');
-
-  const iscnBadgeSource = useMemo(
-    () => ({
-      uri: `${ISCN_BADGE_URL}/${id}.svg?dark=${isDarkMode ? '1' : '0'}&responsive=0&width=120`,
-    }),
-    [id, isDarkMode]
-  );
 
   const handleOnImagePress = useCallback(
     (image: string, aspectRatio: number) => () => {
@@ -113,6 +100,14 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
     likePost(id);
   }, [id, likePost]);
 
+  const handleCheckISCN = useCallback(() => {
+    const link = `https://app.like.co/view/${encodeURIComponent(id)}`;
+
+    if (typeof window !== 'undefined') {
+      window.open(link, '_blank', 'noopener noreferrer');
+    }
+  }, [id]);
+
   const copyAddress = useCallback(async () => {
     await onCopy(from);
 
@@ -124,15 +119,9 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
   const copyUrl = useCallback(async () => {
     await onCopy(shareableUrl);
 
-    setCopyUrlIconState('copied');
-
     toast.show({
       description: 'Copied',
     });
-
-    setTimeout(() => {
-      setCopyUrlIconState('normal');
-    }, 2000);
 
     return null;
   }, [onCopy, toast, shareableUrl]);
@@ -273,6 +262,21 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
               </Tooltip>
             </HStack>
           </VStack>
+
+          <Box alignItems="flex-start">
+            <Menu
+              // eslint-disable-next-line react/no-unstable-nested-components
+              trigger={triggerProps => (
+                <Pressable accessibilityLabel="More options menu" {...triggerProps}>
+                  <Icon as={MaterialCommunityIcons} name="dots-vertical" size="sm" />
+                </Pressable>
+              )}
+            >
+              <Menu.Item onPress={handleCheckISCN}>Check ISCN Record</Menu.Item>
+              {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
+              <Menu.Item onPress={copyUrl}>Copy sharable URL</Menu.Item>
+            </Menu>
+          </Box>
         </HStack>
 
         <VStack ref={contentContainerRef} space={4}>
@@ -310,8 +314,8 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
           {linkPreview ? <LinkPreview flex={1} preview={linkPreview} /> : null}
         </VStack>
 
-        <HStack alignItems="center" justifyContent="space-between" space={4}>
-          <HStack alignItems="center" space={4}>
+        <HStack alignItems="center" justifyContent="space-between" pt={4} space={4}>
+          <HStack alignItems="center" space={2}>
             <Tooltip label="Like it? clap to show your appreciation">
               <IconButton
                 _hover={{
@@ -324,42 +328,17 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
                 borderStyle="solid"
                 borderWidth={2}
                 color="primary.500"
-                icon={<LikeClap height="28" width="28" />}
+                icon={<LikeClap height="24" width="24" />}
+                paddingBottom="4px"
+                paddingLeft="4px"
+                paddingRight="4px"
+                paddingTop="4px"
                 onPress={handleOnLike}
               />
             </Tooltip>
             <Text color="gray.400" fontSize="xs">
               {dayFrom}
             </Text>
-          </HStack>
-
-          <HStack alignItems="center" space={1}>
-            <Tooltip label="Check ISCN record" openDelay={250}>
-              <NBLink href={`https://app.like.co/view/${encodeURIComponent(id)}`} isExternal>
-                <Image alt="ISCN badge" h={26} source={iscnBadgeSource} w={120} />
-              </NBLink>
-            </Tooltip>
-
-            <Tooltip closeOnClick={false} label={isCopied ? 'Copied!' : 'Copy URL'} openDelay={250}>
-              <IconButton
-                _icon={{
-                  color: isCopied ? 'primary.500' : 'gray.400',
-                  size: 'sm',
-                }}
-                _pressed={{
-                  bg: 'transparent',
-                }}
-                borderRadius="full"
-                icon={
-                  <Icon
-                    as={MaterialCommunityIcons}
-                    name={isCopied ? 'link-variant-plus' : 'link-variant'}
-                  />
-                }
-                // eslint-disable-next-line  @typescript-eslint/no-misused-promises
-                onPress={copyUrl}
-              />
-            </Tooltip>
           </HStack>
         </HStack>
       </VStack>
