@@ -47,6 +47,7 @@ const debug = Debug('web:useAppState');
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 const TWITTER_ACCESS_TOKEN_STORAGE_KEY = 'TWITTER_ACCESS_TOKEN';
+const LIKE_BUTTON_URL = process.env.NEXT_PUBLIC_LIKE_BUTTON_URL;
 
 export class AppStateError extends Error {}
 
@@ -76,6 +77,7 @@ export interface AppStateContextProps {
   image?: string; // image modal
   imageAspectRatio?: number; // image modal
   hashTags: HashTag[];
+  likePost: (iscnId: string) => void;
   setList: (list: List[]) => void;
   setHashTags: (hashTags: HashTag[]) => void;
   showLoading: () => void;
@@ -99,6 +101,7 @@ const initialState: AppStateContextProps = {
   isPostSuccessfulModalOpen: false,
   isNoBalanceModalOpen: false,
   isMessageComposerModalOpen: false,
+  likePost: FunctionNever,
   setList: FunctionNever,
   setHashTags: FunctionNever,
   showLoading: FunctionNever,
@@ -454,6 +457,25 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
     [actions, offlineSigner, walletAddress, alert, navigateToUserProfile]
   );
 
+  const likePost = useCallback(
+    (iscnId: string) => {
+      const likecoinButtonUrl = `${LIKE_BUTTON_URL}/in/like/iscn/?iscn_id=${encodeURIComponent(
+        iscnId
+      )}`;
+
+      pushGtmEvent('like', walletAddress, {
+        iscnId,
+      });
+
+      window.open(
+        likecoinButtonUrl,
+        'Likecoin Button',
+        'status=1,toolbar=no,location=0,status=no,titlebar=no,menubar=no,width=920,height=640'
+      );
+    },
+    [walletAddress]
+  );
+
   const postAndUpload = useCallback(
     async (data: MessageFormType, image?: string | null) => {
       let file: File | undefined;
@@ -649,10 +671,10 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
     () => ({
       ...state,
       ...actions,
-      postAndUpload,
+      likePost,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [postAndUpload, state]
+    [likePost, state]
   );
 
   return (
