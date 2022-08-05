@@ -84,7 +84,7 @@ export class DesmosAPI extends DataSource {
     const data = await response.json<any>();
 
     if (data.data.profile[0]) {
-      return data.data.profile[0] as DesmosProfile;
+      return { ...data.data.profile[0], __typename: 'DesmosProfile' } as DesmosProfile;
     }
 
     return null;
@@ -127,7 +127,7 @@ export class DesmosAPI extends DataSource {
     const profile = data.data.profile[0];
 
     if (profile) {
-      return { ...profile, profilePicProvider: 'desmos' };
+      return { ...profile, profilePicProvider: 'desmos', __typename: 'DesmosProfile' };
     }
 
     return null;

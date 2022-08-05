@@ -21,6 +21,7 @@ import { checkIsNFTProfilePicture } from '../../../utils';
 import { MAX_WIDTH } from '../../../constants';
 import {
   getDesmosProfile,
+  getLikerProfile,
   getStargazeNFTsByOwner,
   getOmniflixNFTsByOwner,
 } from '../../../utils/queries';
@@ -41,7 +42,7 @@ export interface PostedMessageModalProps {
   defaultAvatar?: string;
 }
 
-type Platform = 'desmos' | 'stargaze' | 'omniflix';
+type Platform = 'desmos' | 'stargaze' | 'omniflix' | 'liker';
 
 export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
   address,
@@ -97,6 +98,10 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
           setNfts(
             desmosProfile && desmosProfile.profilePic ? [{ uri: desmosProfile.profilePic }] : []
           );
+        } else if (value === 'liker') {
+          const likerProfile = await getLikerProfile(address);
+
+          setNfts(likerProfile && likerProfile.avatar ? [{ uri: likerProfile.avatar }] : []);
         } else if (value === 'stargaze') {
           const stargazeNFTs = await getStargazeNFTsByOwner(address);
 
@@ -174,6 +179,7 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
               // eslint-disable-next-line @typescript-eslint/no-misused-promises
               onValueChange={handleOnPlatformChange}
             >
+              <Select.Item label="Liker" value="liker" />
               <Select.Item label="Desmos" value="desmos" />
               <Select.Item label="Stargaze" value="stargaze" />
               <Select.Item label="OmniFlix" value="omniflix" />
@@ -248,7 +254,7 @@ export const ProfilePictureModal: FC<PostedMessageModalProps> = ({
                   <Text fontSize="sm">
                     {checkIsNFTProfilePicture(platform)
                       ? 'No NFT found. Please try another platform.'
-                      : 'No profile picture in your Desmos profile'}
+                      : 'No profile picture in your Liker profile'}
                   </Text>
                 </Center>
               )}

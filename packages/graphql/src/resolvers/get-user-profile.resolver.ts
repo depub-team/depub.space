@@ -1,14 +1,15 @@
+/* eslint-disable no-underscore-dangle */
 import { ISCNError } from '../iscn-error';
-import { getLikecoinAddressByProfile } from '../datasources/desmos.api';
 import type { Context } from '../context';
 import type {
   QueryGetUserProfileArgs,
   RequireFields,
   UserProfile,
   DesmosProfile,
+  LikerProfile,
 } from './generated_types';
-import { getDesmosProfileResolver } from './get-desmos-profile.resolver';
 import { toLike } from '../utils';
+import { getLikerProfileResolver } from './get-liker-profile.resolver';
 
 export const USER_PROFILE_DURABLE_OBJECT = 'http://user-profile';
 
@@ -16,24 +17,52 @@ const USER_PROFILE_KEY = 'user_profile';
 const ISCN_TXN_DURABLE_OBJECT = 'http://iscn-txn';
 const CACHE_TTL = 5 * 60; // 5 minutes
 
-const mergeProfile = (userProfile: UserProfile, desmosProfile: DesmosProfile | null) => {
-  const hasDesmosProfilePic = !!desmosProfile?.profilePic;
-  const profilePicProvider =
-    userProfile.profilePicProvider || (hasDesmosProfilePic ? 'desmos' : null);
+function mergeProfile(userProfile: UserProfile, otherProfile: LikerProfile): UserProfile;
+function mergeProfile(
+  userProfile: UserProfile,
+  otherProfile: LikerProfile | DesmosProfile
+): UserProfile {
+  if (otherProfile?.__typename === 'DesmosProfile') {
+    const hasDesmosProfilePic = !!otherProfile?.profilePic;
+    const profilePicProvider =
+      userProfile.profilePicProvider || (hasDesmosProfilePic ? 'desmos' : null);
 
-  return {
-    ...userProfile,
-    ...(desmosProfile
-      ? {
-          profilePic: userProfile.profilePic || desmosProfile.profilePic,
-          coverPic: userProfile.coverPic || desmosProfile.coverPic,
-          bio: userProfile.bio || desmosProfile.bio,
-          nickname: userProfile.nickname || desmosProfile.nickname,
-          profilePicProvider,
-        }
-      : undefined),
-  } as UserProfile;
-};
+    return {
+      ...userProfile,
+      ...(otherProfile
+        ? {
+            profilePic: userProfile.profilePic || otherProfile.profilePic,
+            coverPic: userProfile.coverPic || otherProfile.coverPic,
+            bio: userProfile.bio || otherProfile.bio,
+            nickname: userProfile.nickname || otherProfile.nickname,
+            profilePicProvider,
+          }
+        : undefined),
+    } as UserProfile;
+  }
+
+  if (otherProfile?.__typename === 'LikerProfile') {
+    const hasLikerProfilePic = !!otherProfile?.avatar;
+    const profilePicProvider =
+      userProfile.profilePicProvider || (hasLikerProfilePic ? 'liker' : null);
+
+    return {
+      ...userProfile,
+      ...(otherProfile
+        ? {
+            profilePic: userProfile.profilePic || otherProfile.avatar,
+            coverPic: userProfile.coverPic,
+            bio: userProfile.bio,
+            dtag: userProfile.dtag || otherProfile.user,
+            nickname: userProfile.nickname || otherProfile.displayName,
+            profilePicProvider,
+          }
+        : undefined),
+    } as UserProfile;
+  }
+
+  return userProfile;
+}
 
 export const getUserProfileResolver = async (
   { dtagOrAddress }: RequireFields<QueryGetUserProfileArgs, 'dtagOrAddress'>,
@@ -48,14 +77,12 @@ export const getUserProfileResolver = async (
     return JSON.parse(cachedUserProfile);
   }
 
-  // get desmos profile
-  const desmosProfile = await getDesmosProfileResolver({ dtagOrAddress }, ctx);
+  // get liker profile
+  const likerProfile = await getLikerProfileResolver({ dtagOrAddress }, ctx);
 
-  if (desmosProfile) {
-    const likecoinAddress = getLikecoinAddressByProfile(desmosProfile);
-
-    if (likecoinAddress) {
-      address = likecoinAddress;
+  if (likerProfile) {
+    if (likerProfile.likeWallet) {
+      address = likerProfile.likeWallet;
     }
   }
 
@@ -90,7 +117,9 @@ export const getUserProfileResolver = async (
 
   if (getUserProfileResponse.status === 200) {
     const { userProfile } = await getUserProfileResponse.json<{ userProfile: UserProfile }>();
-    const mergedUserProfile = mergeProfile({ ...userProfile, address, numOfTweets }, desmosProfile);
+    const mergedUserProfile = !likerProfile
+      ? { ...userProfile, address, numOfTweets }
+      : mergeProfile({ ...userProfile, address, numOfTweets }, likerProfile);
 
     // put records into kv cache
     await ctx.env.WORKERS_GRAPHQL_CACHE.put(cacheKey, JSON.stringify(mergedUserProfile), {
@@ -104,13 +133,18 @@ export const getUserProfileResolver = async (
     throw new ISCNError('Not found');
   }
 
-  const mergedUserProfile = mergeProfile(
-    {
-      address,
-      numOfTweets,
-    },
-    desmosProfile
-  );
+  const mergedUserProfile = !likerProfile
+    ? {
+        address,
+        numOfTweets,
+      }
+    : mergeProfile(
+        {
+          address,
+          numOfTweets,
+        },
+        likerProfile
+      );
 
   await ctx.env.WORKERS_GRAPHQL_CACHE.put(cacheKey, JSON.stringify(mergedUserProfile), {
     expirationTtl: CACHE_TTL,
@@ -119,3 +153,5 @@ export const getUserProfileResolver = async (
   // return basic profile
   return mergedUserProfile;
 };
+
+/* eslint-enable no-underscore-dangle */

@@ -457,18 +457,24 @@ export const AppStateProvider: FC<AppStateProviderProps> = ({ children }) => {
     [actions, offlineSigner, walletAddress, alert, navigateToUserProfile]
   );
 
-  const likePost = useCallback((iscnId: string) => {
-    const likecoinButtonUrl = `${LIKE_BUTTON_URL}/in/like/iscn/?iscn_id=${encodeURIComponent(
-      iscnId
-    )}`;
-    // const likecoinButtonUrl = `https://button.like.co/in/like/iscn/?iscn_id=iscn:%2F%2Flikecoin-chain%2F361INYhUj4xWzYZ52AkZAEhh_TWoslk8twOLKrYrRfE%2F1`;
+  const likePost = useCallback(
+    (iscnId: string) => {
+      const likecoinButtonUrl = `${LIKE_BUTTON_URL}/in/like/iscn/?iscn_id=${encodeURIComponent(
+        iscnId
+      )}`;
 
-    window.open(
-      likecoinButtonUrl,
-      'Likecoin Button',
-      'status=1,toolbar=no,location=0,status=no,titlebar=no,menubar=no,width=920,height=640'
-    );
-  }, []);
+      pushGtmEvent('like', walletAddress, {
+        iscnId,
+      });
+
+      window.open(
+        likecoinButtonUrl,
+        'Likecoin Button',
+        'status=1,toolbar=no,location=0,status=no,titlebar=no,menubar=no,width=920,height=640'
+      );
+    },
+    [walletAddress]
+  );
 
   const postAndUpload = useCallback(
     async (data: MessageFormType, image?: string | null) => {

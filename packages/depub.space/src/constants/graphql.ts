@@ -10,6 +10,16 @@ export const GRAPHQL_TYPE_PROFILE = `{
 }
 `;
 
+export const GRAPHQL_TYPE_LIKER_PROFILE = `{
+  user
+  displayName
+  avatar
+  cosmosWallet
+  likeWallet
+  civicLikerSince
+  isSubscribedCivicLiker
+}`;
+
 export const GRAPHQL_TYPE_MESSAGE = `{
   id
   from
@@ -94,6 +104,12 @@ export const GRAPHQL_QUERY_CHANNELS = `
 export const GRAPHQL_QUERY_GET_DESMOS_PROFILE = `
   query GetDesmosProfile($dtagOrAddress: String!) {
     getDesmosProfile(dtagOrAddress: $dtagOrAddress) ${GRAPHQL_TYPE_PROFILE}
+  }
+`;
+
+export const GRAPHQL_QUERY_GET_LIKER_PROFILE = `
+  query GetLikerProfile($dtagOrAddress: String!) {
+    getLikerProfile(dtagOrAddress: $dtagOrAddress) ${GRAPHQL_TYPE_LIKER_PROFILE}
   }
 `;
 

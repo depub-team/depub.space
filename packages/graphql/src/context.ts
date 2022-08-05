@@ -1,5 +1,12 @@
 import { Bindings } from '../bindings';
-import { OmniflixAPI, DesmosAPI, ISCNQueryAPI, NotionAPI, StargazeAPI } from './datasources';
+import {
+  OmniflixAPI,
+  DesmosAPI,
+  ISCNQueryAPI,
+  NotionAPI,
+  StargazeAPI,
+  LikerLandApi,
+} from './datasources';
 
 type ContextFunctionParams = {
   request: Request;
@@ -15,6 +22,7 @@ type Context = {
     omniflixAPI: OmniflixAPI;
     notionAPI: NotionAPI;
     stargazeAPI: StargazeAPI;
+    likerLandAPI: LikerLandApi;
   };
 };
 

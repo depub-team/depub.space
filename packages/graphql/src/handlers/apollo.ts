@@ -2,7 +2,14 @@ import { ApolloServer } from 'apollo-server-cloudflare';
 import { graphqlCloudflare } from 'apollo-server-cloudflare/dist/cloudflareApollo';
 import { typeDefs } from '../schema';
 import { resolvers } from '../resolvers';
-import { DesmosAPI, StargazeAPI, NotionAPI, ISCNQueryAPI, OmniflixAPI } from '../datasources';
+import {
+  DesmosAPI,
+  StargazeAPI,
+  NotionAPI,
+  ISCNQueryAPI,
+  OmniflixAPI,
+  LikerLandApi,
+} from '../datasources';
 import { GqlHandlerOptions } from './handler.types';
 import { Context } from '../context';
 
@@ -20,6 +27,7 @@ const createServer = (graphQLOptions: GqlHandlerOptions): ApolloServer => {
       notionAPI: new NotionAPI(env.NOTION_API_ENDPOINT, env.NOTION_API_SECRET),
       stargazeAPI: new StargazeAPI(env.STARGAZE_REST_ENDPOINT),
       omniflixAPI: new OmniflixAPI(env.OMNIFLIX_REST_ENDPOINT),
+      likerLandAPI: new LikerLandApi(env.LIKE_API_ENDPOINT),
     }),
     ...graphQLOptions,
   });

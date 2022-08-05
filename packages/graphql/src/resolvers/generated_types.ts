@@ -54,6 +54,17 @@ export type HashTag = {
   name: Scalars['String'];
 };
 
+export type LikerProfile = {
+  __typename?: 'LikerProfile';
+  avatar?: Maybe<Scalars['String']>;
+  civicLikerSince: Scalars['Int'];
+  cosmosWallet: Scalars['String'];
+  displayName: Scalars['String'];
+  isSubscribedCivicLiker: Scalars['Boolean'];
+  likeWallet: Scalars['String'];
+  user: Scalars['String'];
+};
+
 export type List = {
   __typename?: 'List';
   hashTag: Scalars['String'];
@@ -95,6 +106,7 @@ export type Query = {
   __typename?: 'Query';
   getChannels?: Maybe<Channels>;
   getDesmosProfile?: Maybe<DesmosProfile>;
+  getLikerProfile?: Maybe<LikerProfile>;
   getMessage?: Maybe<Message>;
   getOmniflixNFTsByOwner?: Maybe<Array<Maybe<NftAsset>>>;
   getStargazeNFTsByOwner?: Maybe<Array<Maybe<NftAsset>>>;
@@ -112,6 +124,11 @@ export type QueryGetChannelsArgs = {
 
 
 export type QueryGetDesmosProfileArgs = {
+  dtagOrAddress: Scalars['String'];
+};
+
+
+export type QueryGetLikerProfileArgs = {
   dtagOrAddress: Scalars['String'];
 };
 
@@ -265,6 +282,7 @@ export type ResolversTypes = {
   HashTag: ResolverTypeWrapper<HashTag>;
   ID: ResolverTypeWrapper<Scalars['ID']>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
+  LikerProfile: ResolverTypeWrapper<LikerProfile>;
   List: ResolverTypeWrapper<List>;
   Message: ResolverTypeWrapper<Message>;
   Mutation: ResolverTypeWrapper<{}>;
@@ -285,6 +303,7 @@ export type ResolversParentTypes = {
   HashTag: HashTag;
   ID: Scalars['ID'];
   Int: Scalars['Int'];
+  LikerProfile: LikerProfile;
   List: List;
   Message: Message;
   Mutation: {};
@@ -334,6 +353,17 @@ export type HashTagResolvers<ContextType = Context, ParentType extends Resolvers
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type LikerProfileResolvers<ContextType = Context, ParentType extends ResolversParentTypes['LikerProfile'] = ResolversParentTypes['LikerProfile']> = {
+  avatar?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  civicLikerSince?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  cosmosWallet?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  displayName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  isSubscribedCivicLiker?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  likeWallet?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  user?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type ListResolvers<ContextType = Context, ParentType extends ResolversParentTypes['List'] = ResolversParentTypes['List']> = {
   hashTag?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -366,6 +396,7 @@ export type NftAssetResolvers<ContextType = Context, ParentType extends Resolver
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   getChannels?: Resolver<Maybe<ResolversTypes['Channels']>, ParentType, ContextType, Partial<QueryGetChannelsArgs>>;
   getDesmosProfile?: Resolver<Maybe<ResolversTypes['DesmosProfile']>, ParentType, ContextType, RequireFields<QueryGetDesmosProfileArgs, 'dtagOrAddress'>>;
+  getLikerProfile?: Resolver<Maybe<ResolversTypes['LikerProfile']>, ParentType, ContextType, RequireFields<QueryGetLikerProfileArgs, 'dtagOrAddress'>>;
   getMessage?: Resolver<Maybe<ResolversTypes['Message']>, ParentType, ContextType, RequireFields<QueryGetMessageArgs, 'iscnId'>>;
   getOmniflixNFTsByOwner?: Resolver<Maybe<Array<Maybe<ResolversTypes['NFTAsset']>>>, ParentType, ContextType, RequireFields<QueryGetOmniflixNfTsByOwnerArgs, 'owner'>>;
   getStargazeNFTsByOwner?: Resolver<Maybe<Array<Maybe<ResolversTypes['NFTAsset']>>>, ParentType, ContextType, RequireFields<QueryGetStargazeNfTsByOwnerArgs, 'owner'>>;
@@ -402,6 +433,7 @@ export type Resolvers<ContextType = Context> = {
   Channels?: ChannelsResolvers<ContextType>;
   DesmosProfile?: DesmosProfileResolvers<ContextType>;
   HashTag?: HashTagResolvers<ContextType>;
+  LikerProfile?: LikerProfileResolvers<ContextType>;
   List?: ListResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;

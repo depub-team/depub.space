@@ -16,4 +16,5 @@ export interface Bindings {
   JWT_SECRET: string;
   NOTION_API_ENDPOINT: string;
   NOTION_API_SECRET: string;
+  LIKE_API_ENDPOINT: string;
 }

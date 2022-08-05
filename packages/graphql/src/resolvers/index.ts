@@ -9,6 +9,7 @@ import { setProfilePicture } from './set-profile-picture.resolver';
 import { getStargazeNFTsByOwner } from './get-stargaze-nfts-by-owner';
 import { getOmniflixNFTsByOwner } from './get-omniflix-nfts-by-owner';
 import { toLike } from '../utils';
+import { getLikerProfileResolver } from './get-liker-profile.resolver';
 
 const resolvers: Resolvers = {
   Query: {
@@ -17,6 +18,7 @@ const resolvers: Resolvers = {
     messagesByHashTag: async (_parent, args, ctx) => getMessages(args, ctx),
     messagesByMentioned: async (_parent, args, ctx) => getMessages(args, ctx),
     getDesmosProfile: (_parent, args, ctx) => getDesmosProfileResolver(args, ctx),
+    getLikerProfile: (_parent, args, ctx) => getLikerProfileResolver(args, ctx),
     getUserProfile: (_parent, args, ctx) => getUserProfileResolver(args, ctx),
     getMessage: (_parent, args, ctx) => getMessage(args, ctx),
     getChannels: (_parent, args, ctx) => getChannels(args, ctx),
