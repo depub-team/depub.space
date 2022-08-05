@@ -1,6 +1,7 @@
 export * from './getChannels';
 export * from './getCountryCode';
 export * from './getDesmosProfile';
+export * from './getLikeProfile';
 export * from './getMessageById';
 export * from './getMessages';
 export * from './getMessagesByHashTag';

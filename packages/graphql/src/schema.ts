@@ -9,6 +9,7 @@ const typeDefs = gql`
     getUser(dtagOrAddress: String!, previousId: String, limit: Int): User
     getUserProfile(dtagOrAddress: String!): UserProfile
     getDesmosProfile(dtagOrAddress: String!): DesmosProfile
+    getLikerProfile(dtagOrAddress: String!): LikerProfile
     getChannels(countryCode: String): Channels
     getStargazeNFTsByOwner(owner: String!): [NFTAsset]
     getOmniflixNFTsByOwner(owner: String!): [NFTAsset]
@@ -77,6 +78,16 @@ const typeDefs = gql`
     profilePic: String
     profilePicProvider: String
     numOfTweets: Int
+  }
+
+  type LikerProfile {
+    user: String!
+    displayName: String!
+    avatar: String
+    cosmosWallet: String!
+    likeWallet: String!
+    civicLikerSince: Int!
+    isSubscribedCivicLiker: Boolean!
   }
 
   type DesmosProfile {

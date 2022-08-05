@@ -43,6 +43,7 @@ durable_objects_persist = true
 
 [vars]
 NODE_URL = "https://likecoin-public-testnet-5.oursky.dev/"
+LIKE_API_ENDPOINT = "https://api.like.co"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
 ENVIRONMENT = "staging"
@@ -67,6 +68,7 @@ bindings = [
 
 [env.prod.vars]
 NODE_URL = "https://mainnet-node.like.co/"
+LIKE_API_ENDPOINT = "https://api.like.co"
 ISCN_FINGERPRINT = "https://depub.blog"
 DESMOS_GRAPHQL_ENDPOINT = "https://gql.mainnet.desmos.network/v1/graphql"
 ENVIRONMENT = "production"
