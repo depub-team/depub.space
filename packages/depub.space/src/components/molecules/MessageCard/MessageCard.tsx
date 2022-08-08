@@ -28,6 +28,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useNavigation } from '@react-navigation/native';
+import { getLikeCount } from 'packages/depub.space/src/utils/likecoin/getLikeCount';
 import { LinkPreviewItem, Message } from '../../../interfaces';
 import { LinkPreview } from '../LinkPreview';
 import {
@@ -76,6 +77,7 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
   const isMessageContainsUrl = /https?/.test(message);
   const displayName = profile?.nickname || profile?.dtag || shortenAddress;
   const abbrNickname = getAbbrNickname(displayName);
+  const [likeCount, setLikeCount] = useState(0);
   const { onCopy } = useClipboard();
   const { showImageModal, likePost } = useAppState();
   const [imageSizes, setImageSizes] = useState<Array<[w: number, h: number]>>(emptyImageSizes);
@@ -229,6 +231,18 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
     };
   }, []);
 
+  useEffect(() => {
+    if (!likecoinAddress) {
+      return;
+    }
+
+    getLikeCount(id)
+      .then(({ total }) => setLikeCount(total))
+      .catch(err => {
+        debug('getLikeCount() -> error: %O', err);
+      });
+  }, [id, likecoinAddress]);
+
   return (
     <MessageCardContainer {...props}>
       <Box alignSelf="flex-start">
@@ -315,27 +329,59 @@ export const MessageCard: FC<MessageCardProps> = memo(({ message: messageItem, .
         </VStack>
 
         <HStack alignItems="center" justifyContent="space-between" pt={4} space={4}>
-          <HStack alignItems="center" space={2}>
-            <Tooltip label="Like it? clap to show your appreciation">
-              <IconButton
-                _hover={{
-                  backgroundColor: 'primary.500:alpha.20',
-                  borderColor: 'primary.500',
-                }}
-                backgroundColor="primary.500:alpha.5"
-                borderColor="primary.600"
+          <HStack alignItems="center" space={4}>
+            <HStack alignItems="center" position="relative">
+              <Tooltip label="Like it? clap to show your appreciation">
+                <IconButton
+                  _dark={{
+                    bg: 'darkBlue.900',
+                  }}
+                  _hover={{
+                    backgroundColor: 'primary.500',
+                    borderColor: 'primary.500',
+                    color: 'white',
+                  }}
+                  _light={{
+                    bg: 'white',
+                  }}
+                  borderColor="primary.600"
+                  borderRadius="full"
+                  borderStyle="solid"
+                  borderWidth={2}
+                  color="primary.500"
+                  icon={<LikeClap height="24" width="24" />}
+                  paddingBottom="4px"
+                  paddingLeft="4px"
+                  paddingRight="4px"
+                  paddingTop="4px"
+                  zIndex={2}
+                  onPress={handleOnLike}
+                />
+              </Tooltip>
+              <Box
+                bg="primary.500:alpha.40"
+                borderLeftRadius={0}
                 borderRadius="full"
-                borderStyle="solid"
-                borderWidth={2}
-                color="primary.500"
-                icon={<LikeClap height="24" width="24" />}
-                paddingBottom="4px"
-                paddingLeft="4px"
-                paddingRight="4px"
-                paddingTop="4px"
-                onPress={handleOnLike}
-              />
-            </Tooltip>
+                marginLeft="-2"
+                paddingBottom={1}
+                paddingLeft="3"
+                paddingRight="2"
+                paddingTop={1}
+                zIndex={1}
+              >
+                <Text
+                  _dark={{
+                    color: 'white',
+                  }}
+                  _light={{
+                    color: 'text',
+                  }}
+                  fontSize="sm"
+                >
+                  {likeCount}
+                </Text>
+              </Box>
+            </HStack>
             <Text color="gray.400" fontSize="xs">
               {dayFrom}
             </Text>
