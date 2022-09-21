@@ -102,7 +102,7 @@ const reducer: Reducer<WalletContextProps, Action> = (state, action) => {
 export const getChainInfo = () => {
   const mainnet = {
     chainId: 'likecoin-mainnet-2',
-    chainName: 'LikeCoin',
+    chainName: 'likecoin',
     rpc: 'https://mainnet-node.like.co/rpc/',
     rest: 'https://mainnet-node.like.co',
     stakeCurrency: {
@@ -150,7 +150,7 @@ export const getChainInfo = () => {
 
   const testnet = {
     chainId: 'likecoin-public-testnet-5',
-    chainName: 'LikeCoin public test chain',
+    chainName: 'likecoin-testnet',
     rpc: 'https://likecoin-public-testnet-5.oursky.dev/rpc/',
     rest: 'https://likecoin-public-testnet-5.oursky.dev/',
     stakeCurrency: {
@@ -321,6 +321,8 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
     const supportedChains = await w.cosmostation.tendermint.request({
       method: 'ten_supportedChainNames',
     });
+
+    console.log(supportedChains);
 
     if (
       !supportedChains.official.includes(chainName) &&
