@@ -24,6 +24,7 @@
     "@depub/theme": "*",
     "@expo/next-adapter": "4.0.5",
     "@expo/vector-icons": "13.0.0",
+    "@cosmostation/wc-modal": "0.0.3",
     "@hookform/resolvers": "2.8.10",
     "@likecoin/iscn-js": "0.1.1",
     "@likecoin/iscn-message-types": "0.0.2",

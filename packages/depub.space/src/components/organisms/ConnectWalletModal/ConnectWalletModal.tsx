@@ -1,5 +1,6 @@
 import React, { ComponentProps, FC, useMemo } from 'react';
 import { Text, Button, Image, VStack, Modal, Heading } from 'native-base';
+import { isMobileDevice } from '../../../utils';
 
 interface ConnectWalletModalProps extends ComponentProps<typeof Modal> {
   onPressWalletConnect?: () => void;
@@ -52,35 +53,45 @@ export const ConnectWalletModal: FC<ConnectWalletModalProps> = ({
   onPressKeplr,
   onPressCosmostation,
   ...props
-}) => (
-  <Modal {...props}>
-    <Modal.Content maxWidth="400px">
-      <Modal.CloseButton />
-      <Modal.Header>Connect Wallet</Modal.Header>
-      <Modal.Body p={4}>
-        <VStack space={4}>
-          <ConnectButton
-            description="Keplr Browser Extension"
-            icon="/images/keplr-icon.svg"
-            title="Keplr Wallet"
-            onPress={onPressKeplr}
-          />
+}) => {
+  const [isMobile, setIsMobile] = React.useState(false);
 
-          <ConnectButton
-            description="Liker Land APP"
-            icon="/images/walletconnect-icon.svg"
-            title="WalletConnect"
-            onPress={onPressWalletConnect}
-          />
+  React.useEffect(() => {
+    setIsMobile(isMobileDevice());
+  }, []);
 
-          <ConnectButton
-            description="Cosmostation Browser Extension"
-            icon="/images/cosmostation.png"
-            title="Cosmostation"
-            onPress={onPressCosmostation}
-          />
-        </VStack>
-      </Modal.Body>
-    </Modal.Content>
-  </Modal>
-);
+  return (
+    <Modal {...props}>
+      <Modal.Content maxWidth="400px">
+        <Modal.CloseButton />
+        <Modal.Header>Connect Wallet</Modal.Header>
+        <Modal.Body p={4}>
+          <VStack space={4}>
+            <ConnectButton
+              description="Keplr Browser Extension"
+              icon="/images/keplr-icon.svg"
+              title="Keplr Wallet"
+              onPress={onPressKeplr}
+            />
+
+            <ConnectButton
+              description={isMobile ? 'Cosmostation' : 'Liker Land APP'}
+              icon="/images/walletconnect-icon.svg"
+              title="WalletConnect"
+              onPress={onPressWalletConnect}
+            />
+
+            {!isMobile && (
+              <ConnectButton
+                description="Cosmostation Browser Extension"
+                icon="/images/cosmostation.png"
+                title="Cosmostation"
+                onPress={onPressCosmostation}
+              />
+            )}
+          </VStack>
+        </Modal.Body>
+      </Modal.Content>
+    </Modal>
+  );
+};

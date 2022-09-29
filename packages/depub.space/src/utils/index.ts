@@ -12,6 +12,7 @@ export * from './dataUrlToFile';
 export * from './generateAuthSignature';
 export * from './getAbbrNickname';
 export * from './getAccessToken';
+export * from './isMobile';
 export * from './getShortenAddress';
 export * from './getSystemDarkMode';
 export * from './getUrlFromContent';

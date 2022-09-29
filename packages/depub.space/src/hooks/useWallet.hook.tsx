@@ -10,15 +10,15 @@ import React, {
 } from 'react';
 import update from 'immutability-helper';
 import WalletConnect from '@walletconnect/client';
-import QRCodeModal from '@walletconnect/qrcode-modal';
 import Debug from 'debug';
+import QRCodeModal from '@walletconnect/qrcode-modal';
 import * as Sentry from '@sentry/nextjs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { payloadId } from '@walletconnect/utils';
 import { AccountData, OfflineSigner } from '@cosmjs/proto-signing';
 import { SignDoc } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { ConnectWalletModal } from '../components/organisms/ConnectWalletModal';
-import { CosmoStationDirectSigner } from '../utils';
+import { isMobileDevice, CosmoStationDirectSigner } from '../utils';
 
 const debug = Debug('web:useSigningCosmWasmClient');
 const PUBLIC_CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID || '';
@@ -27,7 +27,7 @@ const KEY_WALLET_CONNECT = 'walletconnect';
 const KEY_CONNECTED_WALLET_TYPE = 'KEY_CONNECTED_WALLET_TYPE';
 const isTestnet = /testnet/.test(PUBLIC_CHAIN_ID);
 
-type ConnectedWalletType = 'keplr' | 'likerland_app';
+type ConnectedWalletType = 'keplr' | 'walletconnect';
 
 export class WalletStateError extends Error {}
 export interface WalletContextProps {
@@ -222,6 +222,7 @@ export const useWallet = () => {
 };
 
 export const useWalletActions = (state: WalletContextProps, dispatch: React.Dispatch<Action>) => {
+  const isMobile = isMobileDevice();
   const setIsLoading = (isLoading: boolean) =>
     dispatch({ type: ActionType.SET_IS_LOADING, isLoading });
 
@@ -369,59 +370,26 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
     return true;
   };
 
-  const initWalletConnect = async () => {
-    let account: any;
-    let newConnector = new WalletConnect({
-      bridge: 'https://bridge.walletconnect.org',
-      qrcodeModal: QRCodeModal,
-      qrcodeModalOptions: {
-        desktopLinks: [],
-        mobileLinks: [],
-      },
-    });
+  const getAccount = async (connector: WalletConnect) => {
+    let account: any | undefined;
 
-    setConnector(newConnector);
-
-    if (newConnector?.connected) {
-      await newConnector.killSession();
-
-      newConnector = new WalletConnect({
-        bridge: 'https://bridge.walletconnect.org',
-        qrcodeModal: QRCodeModal,
-        qrcodeModalOptions: {
-          desktopLinks: [],
-          mobileLinks: [],
-        },
-      });
-    }
-
-    newConnector.on('disconnect', () => {
-      debug('initWalletConnect() -> connector.on("disconnect")');
-
-      void disconnect();
-    });
-
-    if (!newConnector.connected) {
-      debug('initWalletConnect() -> not connected');
-
-      await newConnector.connect();
-
-      [account] = await newConnector.sendCustomRequest({
+    if (connector.connected) {
+      [account] = await connector.sendCustomRequest({
         id: payloadId(),
         jsonrpc: '2.0',
-        method: 'cosmos_getAccounts',
+        method: isMobile ? 'cosmostation_wc_accounts_v1' : 'cosmos_getAccounts', // if in mobile device, use cosmostation wallet
         params: [PUBLIC_CHAIN_ID],
       });
 
       debug('initWalletConnect() -> account: %O', account);
 
       await AsyncStorage.setItem(
-        `${KEY_WALLET_CONNECT_ACCOUNT_PREFIX}_${newConnector.peerId}`,
+        `${KEY_WALLET_CONNECT_ACCOUNT_PREFIX}_${connector.peerId}`,
         JSON.stringify(account)
       );
     } else {
       const serializedWalletConnectAccount = await AsyncStorage.getItem(
-        `${KEY_WALLET_CONNECT_ACCOUNT_PREFIX}_${newConnector.peerId}`
+        `${KEY_WALLET_CONNECT_ACCOUNT_PREFIX}_${connector.peerId}`
       );
       const walletConnectConnectSession = await AsyncStorage.getItem(KEY_WALLET_CONNECT);
 
@@ -435,40 +403,87 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
       }
     }
 
-    if (!account) return false;
+    return account;
+  };
 
-    const { bech32Address: address, algo, pubKey: pubKeyInHex } = account;
-
-    setIsWalletModalOpen(false); // close modal
-
-    if (!address || !algo || !pubKeyInHex) return false;
-
-    const pubkey = new Uint8Array(Buffer.from(pubKeyInHex, 'hex'));
-    const accounts: readonly AccountData[] = [{ address, pubkey, algo }];
-    const myOfflineSigner: OfflineSigner = {
-      getAccounts: () => Promise.resolve(accounts),
-      signDirect: async (signerAddress, signDoc) => {
-        const signDocInJSON = SignDoc.toJSON(signDoc);
-        const resInJSON = await newConnector.sendCustomRequest({
-          id: payloadId(),
-          jsonrpc: '2.0',
-          method: 'cosmos_signDirect',
-          params: [signerAddress, signDocInJSON],
-        });
-
-        return {
-          signed: SignDoc.fromJSON(resInJSON.signed),
-          signature: resInJSON.signature,
+  const initWalletConnect = async () => {
+    const { CosmostationWCModal } = await import('@cosmostation/wc-modal');
+    const walletConnectOptions = !isMobile
+      ? {
+          bridge: 'https://bridge.walletconnect.org',
+          qrcodeModal: QRCodeModal,
+          qrcodeModalOptions: {
+            desktopLinks: [],
+            mobileLinks: [],
+          },
+        }
+      : {
+          bridge: 'https://bridge.walletconnect.org',
+          qrcodeModal: new CosmostationWCModal(),
+          signingMethods: ['cosmostation_wc_accounts_v1', 'cosmostation_wc_sign_tx_v1'],
         };
-      },
-    };
+    const newConnector = new WalletConnect(walletConnectOptions);
 
-    setWalletAddress(address);
-    setOfflineSigner(myOfflineSigner);
+    setConnector(newConnector);
 
-    await AsyncStorage.setItem(KEY_CONNECTED_WALLET_TYPE, 'likerland_app');
+    if (newConnector?.connected) {
+      await newConnector.killSession();
+    }
 
-    return true;
+    newConnector.on('disconnect', () => {
+      debug('initWalletConnect() -> connector.on("disconnect")');
+
+      void disconnect();
+    });
+
+    await newConnector.createSession();
+
+    return new Promise<boolean>((resolve, reject) => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      newConnector.on('connect', async error => {
+        if (error) {
+          return reject(error);
+        }
+
+        const account = await getAccount(newConnector);
+
+        if (!account) return resolve(false);
+
+        const { bech32Address: address, algo, pubKey: pubKeyInHex } = account;
+
+        setIsWalletModalOpen(false); // close modal
+
+        if (!address || !algo || !pubKeyInHex) return resolve(false);
+
+        const pubkey = new Uint8Array(Buffer.from(pubKeyInHex, 'hex'));
+        const accounts: readonly AccountData[] = [{ address, pubkey, algo }];
+        const myOfflineSigner: OfflineSigner = {
+          // eslint-disable-next-line promise/no-promise-in-callback
+          getAccounts: () => Promise.resolve(accounts),
+          signDirect: async (signerAddress, signDoc) => {
+            const signDocInJSON = SignDoc.toJSON(signDoc);
+            const resInJSON = await newConnector.sendCustomRequest({
+              id: payloadId(),
+              jsonrpc: '2.0',
+              method: 'cosmos_signDirect',
+              params: [signerAddress, signDocInJSON],
+            });
+
+            return {
+              signed: SignDoc.fromJSON(resInJSON.signed),
+              signature: resInJSON.signature,
+            };
+          },
+        };
+
+        setWalletAddress(address);
+        setOfflineSigner(myOfflineSigner);
+
+        await AsyncStorage.setItem(KEY_CONNECTED_WALLET_TYPE, 'walletconnect');
+
+        return resolve(true);
+      });
+    });
   };
 
   const setupAccount = async () => {
@@ -487,7 +502,7 @@ export const useWalletActions = (state: WalletContextProps, dispatch: React.Disp
     setIsLoading(true);
 
     try {
-      if (connectedWalletType === 'likerland_app') {
+      if (connectedWalletType === 'walletconnect') {
         connected = await initWalletConnect();
       } else if (connectedWalletType === 'keplr') {
         connected = await initKeplr();
